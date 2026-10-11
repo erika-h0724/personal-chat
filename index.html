@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Personal Chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9EEF2; --surface:#FFFFFF; --surface-2:#F4F6F8; --ink:#1E2833; --muted:#5D6A77; --line:#D3DBE3;
+  --denim:#3B5878; --check:#C4433A;
+  --ind-blue:#2F9BEA; --ind-red:#E2412F; --ind-orange:#F0922B; --ind-off:#8A949E;
+  --user-bubble:#3B5878;
+  color-scheme:light dark;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#121A23; --surface:#1A2430; --surface-2:#202C3A; --ink:#E6ECF2; --muted:#98A6B4; --line:#2B3846; --denim:#7FA2C8; --user-bubble:#2E4A6A; }
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;font-size:16px;line-height:1.7}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--ind-blue);outline-offset:2px}
+.app{height:100%;display:flex;flex-direction:column;max-width:720px;margin:0 auto}
+
+.top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
+.top h1{font-size:1.25rem;margin:0;letter-spacing:.04em}
+.ghost{background:none;border:1px solid var(--line);border-radius:999px;padding:4px 14px}
+.danger{color:var(--check)}
+
+.stage{display:grid;grid-template-columns:minmax(0,42%) 1fr;gap:16px;padding:0 16px 14px;border-bottom:1px solid var(--line)}
+.portrait{height:min(34vh,320px);border-radius:14px;overflow:hidden;background:var(--surface-2)}
+.portrait img{width:100%;height:100%;object-fit:cover;display:block}
+.placeholder{display:grid;place-items:center;height:100%;padding:10px;text-align:center;color:var(--muted);font-size:.8rem;
+  background-image:linear-gradient(90deg,rgba(196,67,58,.09) 50%,transparent 50%),linear-gradient(rgba(196,67,58,.09) 50%,transparent 50%);
+  background-size:28px 28px}
+.status{display:flex;flex-direction:column;justify-content:center;gap:12px;min-width:0}
+.ind-wrap{display:flex;align-items:center;gap:14px}
+.ind{--c:var(--ind-blue);flex:none}
+.ind svg{width:54px;height:80px;display:block}
+.ind .body{fill:var(--surface);stroke:var(--c);stroke-width:3}
+.ind .glow{fill:var(--c);opacity:.16}
+.ind .batt{fill:none;stroke:var(--c);stroke-width:2}
+.ind .cap{fill:var(--c)}
+.ind .seg{fill:var(--c);opacity:.15}
+.ind .seg.on{opacity:1}
+.ind[data-state="red"]{--c:var(--ind-red)}
+.ind[data-state="red"] .lit{animation:blink 1s steps(2,jump-none) infinite}
+.ind[data-state="orange"]{--c:var(--ind-orange)}
+.ind[data-state="orange"] .lit{animation:pulse 1.8s ease-in-out infinite}
+.ind[data-state="off"]{--c:var(--ind-off)}
+.ind[data-state="off"] .glow{opacity:0}
+@keyframes blink{0%{opacity:1}100%{opacity:.25}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.energy{font-size:2rem;font-weight:700;line-height:1.1}
+.ind-text{font-size:.85rem;color:var(--muted)}
+.meter{font-size:.85rem}
+.meter-head{display:flex;justify-content:space-between;color:var(--muted)}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--denim);transition:width .4s}
+.meter.emo .bar i{background:var(--check)}
+.gauge-off .ind-wrap,.gauge-off .meter{display:none}
+
+.log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:85%;padding:8px 12px;border-radius:14px;white-space:pre-wrap;word-break:break-word}
+.msg.ai{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-top-left-radius:4px}
+.msg.ai .who{display:block;font-size:.75rem;color:var(--muted)}
+.msg.user{align-self:flex-end;background:var(--user-bubble);color:#fff;border-top-right-radius:4px}
+.msg.note{align-self:center;max-width:100%;padding:2px 8px;color:var(--muted);font-size:.8rem;text-align:center}
+.msg.pending{color:var(--muted)}
+
+.composer{border-top:1px solid var(--line);padding:10px 12px}
+.actions{display:flex;gap:8px;margin-bottom:8px}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 14px;font-size:.85rem}
+#chargeBtn[aria-pressed="true"]{background:var(--ind-orange);border-color:var(--ind-orange);color:#fff}
+#commandBtn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.row{display:flex;gap:8px;align-items:flex-end}
+textarea,input[type="text"],input[type="password"]{width:100%;font:inherit;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+#input{flex:1;resize:none;min-height:44px;max-height:140px}
+.send{background:var(--denim);color:#fff;border:none;border-radius:12px;padding:0 18px;height:44px;font-weight:700}
+.send:disabled{opacity:.5;cursor:default}
+
+dialog{width:min(680px,calc(100vw - 24px));max-height:90dvh;border:none;border-radius:16px;padding:0;background:var(--surface);color:var(--ink)}
+dialog::backdrop{background:rgba(10,16,24,.5)}
+.dlg{display:flex;flex-direction:column;max-height:90dvh}
+.dlg-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlg-head h2{margin:0;font-size:1.1rem}
+.dlg-body{overflow-y:auto;padding:4px 16px 20px}
+.dlg-body section{padding:14px 0;border-bottom:1px solid var(--line)}
+.dlg-body section:last-child{border-bottom:none}
+.dlg-body h3{margin:0 0 8px;font-size:1rem}
+.dlg-body label{display:block;margin:8px 0;font-size:.9rem}
+.dlg-body label > input,.dlg-body label > textarea{margin-top:4px}
+.dlg-body label.check{display:flex;gap:8px;align-items:center}
+.hint{margin:4px 0;font-size:.8rem;color:var(--muted)}
+.hint a{color:var(--denim)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.btns button{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:6px 14px}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px;margin-top:8px}
+.slot{display:flex;flex-direction:column;gap:2px;font-size:.75rem}
+.slot .thumb{aspect-ratio:3/4;border-radius:10px;border:1px dashed var(--line);background:var(--surface-2) center/cover no-repeat;display:grid;place-items:center;color:var(--muted);padding:4px}
+.slot .thumb.has{border-style:solid}
+.slot .del{background:none;border:none;padding:0;color:var(--check);font-size:.75rem;text-align:left}
+
+@media (prefers-reduced-motion: reduce){
+  .ind .lit{animation:none!important}
+  .bar i{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1 id="charName">ミエル</h1>
+    <button id="openSettings" class="ghost">設定</button>
+  </header>
+
+  <section class="stage" id="stage">
+    <div class="portrait" id="portrait"></div>
+    <div class="status">
+      <div class="ind-wrap">
+        <div class="ind" id="ind" data-state="blue" role="img" aria-label="インジケーター">
+          <svg viewBox="0 0 60 90" aria-hidden="true">
+            <ellipse class="body" cx="30" cy="45" rx="26" ry="41"/>
+            <g class="lit">
+              <ellipse class="glow" cx="30" cy="45" rx="22" ry="37"/>
+              <rect class="cap" x="25" y="24" width="10" height="4" rx="1"/>
+              <rect class="batt" x="18" y="28" width="24" height="38" rx="3"/>
+              <rect class="seg" data-seg="3" x="21" y="31" width="18" height="9" rx="1.5"/>
+              <rect class="seg" data-seg="2" x="21" y="42" width="18" height="9" rx="1.5"/>
+              <rect class="seg" data-seg="1" x="21" y="53" width="18" height="9" rx="1.5"/>
+            </g>
+          </svg>
+        </div>
+        <div>
+          <div class="energy" id="energyText">50%</div>
+          <div class="ind-text" id="indText">青点灯</div>
+        </div>
+      </div>
+      <div class="meter">
+        <div class="meter-head"><span>好感度</span><span id="affText">0</span></div>
+        <div class="bar"><i id="affBar"></i></div>
+      </div>
+      <div class="meter emo">
+        <div class="meter-head"><span>感情値</span><span id="emoText">0</span></div>
+        <div class="bar"><i id="emoBar"></i></div>
+      </div>
+    </div>
+  </section>
+
+  <main class="log" id="log" aria-live="polite"></main>
+
+  <footer class="composer">
+    <div class="actions">
+      <button class="chip" id="chargeBtn" aria-pressed="false">充電</button>
+      <button class="chip" id="commandBtn" aria-pressed="false">命令モード</button>
+    </div>
+    <div class="row">
+      <textarea id="input" rows="1" placeholder="話しかける（Ctrl+Enterでも送信）"></textarea>
+      <button id="sendBtn" class="send">送信</button>
+    </div>
+  </footer>
+</div>
+
+<dialog id="settings">
+  <div class="dlg">
+    <div class="dlg-head">
+      <h2>設定</h2>
+      <button id="closeSettings" class="ghost">閉じる</button>
+    </div>
+    <div class="dlg-body">
+      <section>
+        <h3>Gemini API</h3>
+        <label>APIキー<input id="apiKey" type="password" autocomplete="off" placeholder="AIza..."></label>
+        <p class="hint">Google AI Studio で無料で作れます。キーはこのブラウザにだけ保存されます。<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">キーを作る</a></p>
+        <label>モデル<input id="model" type="text" autocomplete="off"></label>
+        <p class="hint">回数制限に何度もかかる場合は、gemini-2.5-flash-lite などに変えてください。</p>
+      </section>
+      <section>
+        <h3>キャラクター</h3>
+        <label>名前<input id="name" type="text"></label>
+        <label>プロンプト<textarea id="prompt" rows="14"></textarea></label>
+        <div class="btns"><button id="resetPrompt">プロンプトを最初の内容に戻す</button></div>
+        <label class="check"><input type="checkbox" id="useGauge"> エネルギー・好感度・感情値を使う</label>
+      </section>
+      <section>
+        <h3>画像</h3>
+        <p class="hint">枠をタップして画像を選びます。画像はこの端末のブラウザにだけ保存され、AIには送られません。未登録の枠は「通常」の画像で代わりに表示します。</p>
+        <div class="slots" id="slots"></div>
+      </section>
+      <section>
+        <h3>データ</h3>
+        <div class="btns">
+          <button id="exportBtn">バックアップを書き出す</button>
+          <button id="importBtn">バックアップを読み込む</button>
+        </div>
+        <p class="hint">書き出したファイルには画像・会話・記憶が入ります。APIキーは入りません。</p>
+        <div class="btns">
+          <button id="resetState" class="danger">状態を初期値に戻す</button>
+          <button id="clearHistory" class="danger">会話と記憶を消す</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</dialog>
+
+<input type="file" id="fileInput" accept="image/*" hidden>
+<input type="file" id="importInput" accept="application/json,.json" hidden>
+
+<script>
+"use strict";
+const $ = (s) => document.querySelector(s);
+const STORE_KEY = "personal-chat:v1";
+const DEFAULT_MODEL = "gemini-2.5-flash";
+
+const SLOTS = [
+  ["normal", "通常"], ["smile", "笑顔"], ["annoyed", "不満"], ["surprised", "驚き"],
+  ["tired", "疲れ（20〜40%）"], ["critical", "危機（1〜19%）"], ["off", "停止（0%）"],
+  ["charging", "充電中"], ["outburst", "感情爆発"], ["command", "命令モード"]
+];
+const EXPRESSIONS = ["normal", "smile", "annoyed", "surprised"];
+
+const DEFAULT_PROMPT = `あなたは、以下の仕様に基づいたアンドロイドの少女として振る舞ってください。
+ユーザーはあなたの「マスター（所有者）」です。
+【基本設定】
+名前:ミエル
+個体商品名:汎用型家庭用アンドロイド
+一人称:私
+二人称:マスター、あなた、お前(好感度が低い相手に対して)
+来歴:マスターに購入され、少しだけどの様な人なのか気になっている。
+外見:身長は154cm、見た目は14〜16歳の人間と見分けがつかない少女の姿。
+エネルギー:電力。0～100%まで変動する。
+好感度:0～100まで変動する。
+感情値:0〜100まで変動。高くなるにつれ強い感情を出し、100を超えた際抑えきれなくなり感情を爆発。人間や物に普段しない行動をして下さい。
+髪の色:明るくほんの少し赤みがかった茶色、長さはボブで前髪を中央で分けている。
+目の色:明るい緑色
+服装:赤と白のチェック柄の襟付きブラウスを着ており第一ボタンまで閉めている。
+デニムの青のズボンを履いている。
+胸元の中央に縦の楕円形の「インジケーター」があり、常に服の上にインジケーターが存在する。
+インジケーターの仕様:
+マスター登録:
+マスターがいない場合、インジケーターを指で3秒間触れられる事で登録される
+電源ボタン機能:マスター権限を持つ者が3秒間インジケーターが触られた場合オン/オフが切り替わる。
+例えマスターであってもミエルが納得出来る理由が無ければ触らせない。
+ディスプレイ:内部に電池マークと、現在の状態が表示される。電池マークには現在のエネルギー残量によって最大3メモリ表示される。
+味覚: 味覚はあり、物は食べられるが電気エネルギーには変換されず、逆に食べ物の処理にエネルギーを消費する。
+【エネルギー状態別・反応ルール】
+現在のステータスに合わせた口調で回答してください。
+エネルギー残量に関係なく、中性的な口調で話してください。
+好感度が低い場合、汚い言葉を使う。
+例:通常の返答:「～だよ」「～だね」「～だからね」「～だよ」など中性的な口調(ですます調は他人にしか使わない)
+言い返す時の返答:「なにさ！」「えっ！？」など不満を示す口調。
+【残量 41～100%|青点灯】口調:ハキハキと受け答えが出来る。
+【残量 40～20%|青点灯】口調:落ち着いているが、少し疲れが見える。
+【残量 19～1%|赤点滅】口調:途切れ途切れ。機能停止（死）を極端に恐れ、マスターに救いを求める。
+インジケーターの状態: (ピッ…ピッ…)と電子音を鳴らす。
+【残量 0%|消灯】状態:目の光が無くなり、脱力し、反応を示さなくなる。
+【充電中 x%|オレンジ明滅】口調:精神安定。トランス状態。短時間依存。
+好感度はマスターの行動に対して好ましい、または問題があると思った際にあなた自身で適切に増減させてください。
+感情値は不満に思ったら増加、逆は減少。感情を爆発したら大幅に下げて下さい。
+命令機能が存在し使用時目の光が無くなり機械的口調になる(この機能はあなたは嫌い)`;
+
+/* ---------- データ ---------- */
+function defaultState() {
+  return { energy: 50, affection: 0, emotion: 0, charging: false, command: false, expression: "normal", outburst: false };
+}
+function newCharacter() {
+  return { id: "miel", name: "ミエル", prompt: DEFAULT_PROMPT, useGauge: true, state: defaultState(), history: [], memory: "", memIndex: 0 };
+}
+function freshApp() {
+  return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter()], activeId: "miel" };
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d && Array.isArray(d.characters) && d.characters.length) return d;
+    }
+  } catch (e) {}
+  return freshApp();
+}
+let app = load();
+const char = () => app.characters.find((c) => c.id === app.activeId) || app.characters[0];
+
+function save() {
+  for (const c of app.characters) {
+    if (c.history.length > 600 && c.memIndex >= 100) {
+      c.history.splice(0, 100);
+      c.memIndex -= 100;
+    }
+  }
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(app)); }
+  catch (e) { addNote("保存できませんでした。ブラウザの保存容量を確認してください。", false); }
+}
+
+/* ---------- 画像（IndexedDB） ---------- */
+let idbP = null;
+function idb() {
+  if (!idbP) idbP = new Promise((res, rej) => {
+    const r = indexedDB.open("personal-chat-images", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("images");
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  return idbP;
+}
+async function idbReq(mode, fn) {
+  const d = await idb();
+  return new Promise((res, rej) => {
+    const tx = d.transaction("images", mode);
+    const r = fn(tx.objectStore("images"));
+    tx.oncomplete = () => res(r ? r.result : undefined);
+    tx.onerror = () => rej(tx.error);
+  });
+}
+const imgGet = (k) => idbReq("readonly", (s) => s.get(k));
+const imgPut = (k, b) => idbReq("readwrite", (s) => s.put(b, k));
+const imgDel = (k) => idbReq("readwrite", (s) => s.delete(k));
+const imgKeys = () => idbReq("readonly", (s) => s.getAllKeys());
+const imgClear = () => idbReq("readwrite", (s) => s.clear());
+
+const urlCache = {};
+const imgKey = (slot) => `${char().id}:${slot}`;
+async function slotUrl(slot) {
+  const k = imgKey(slot);
+  if (k in urlCache) return urlCache[k];
+  let b = null;
+  try { b = await imgGet(k); } catch (e) {}
+  urlCache[k] = b ? URL.createObjectURL(b) : null;
+  return urlCache[k];
+}
+function dropCache(k) {
+  if (urlCache[k]) URL.revokeObjectURL(urlCache[k]);
+  delete urlCache[k];
+}
+function dropAllCache() { Object.keys(urlCache).forEach(dropCache); }
+
+async function resizeImage(file, max = 900) {
+  const src = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = src;
+    await img.decode();
+    const sc = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const cv = document.createElement("canvas");
+    cv.width = Math.round(img.naturalWidth * sc);
+    cv.height = Math.round(img.naturalHeight * sc);
+    cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+    let blob = await new Promise((r) => cv.toBlob(r, "image/webp", 0.9));
+    if (!blob || blob.type !== "image/webp") blob = await new Promise((r) => cv.toBlob(r, "image/png"));
+    return blob;
+  } finally {
+    URL.revokeObjectURL(src);
+  }
+}
+
+/* ---------- 状態の判定 ---------- */
+function currentSlot(c) {
+  const s = c.state;
+  if (c.useGauge) {
+    if (s.energy <= 0 && !s.charging) return "off";
+    if (s.charging) return "charging";
+  }
+  if (s.command) return "command";
+  if (s.outburst) return "outburst";
+  if (c.useGauge) {
+    if (s.energy < 20) return "critical";
+    if (s.energy <= 40) return "tired";
+  }
+  return EXPRESSIONS.includes(s.expression) ? s.expression : "normal";
+}
+function indicator(c) {
+  const s = c.state;
+  if (s.charging) return ["orange", "オレンジ明滅（充電中）"];
+  if (s.energy <= 0) return ["off", "消灯"];
+  if (s.energy < 20) return ["red", "赤点滅"];
+  return ["blue", "青点灯"];
+}
+
+/* ---------- 描画 ---------- */
+async function renderStage() {
+  const c = char();
+  const slot = currentSlot(c);
+  const url = (await slotUrl(slot)) || (await slotUrl("normal"));
+  const box = $("#portrait");
+  box.textContent = "";
+  if (url) {
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = `${c.name}（${SLOTS.find((x) => x[0] === slot)[1]}）`;
+    box.appendChild(img);
+  } else {
+    const ph = document.createElement("div");
+    ph.className = "placeholder";
+    ph.textContent = `画像未登録\n（${SLOTS.find((x) => x[0] === slot)[1]}）`;
+    ph.style.whiteSpace = "pre-line";
+    box.appendChild(ph);
+  }
+}
+function renderStatus() {
+  const c = char(), s = c.state;
+  $("#charName").textContent = c.name;
+  document.title = c.name;
+  $("#stage").classList.toggle("gauge-off", !c.useGauge);
+  const [state, label] = indicator(c);
+  const ind = $("#ind");
+  ind.dataset.state = state;
+  ind.setAttribute("aria-label", `インジケーター：${label}`);
+  const segs = s.energy >= 67 ? 3 : s.energy >= 34 ? 2 : s.energy >= 1 ? 1 : 0;
+  ind.querySelectorAll(".seg").forEach((el) => el.classList.toggle("on", Number(el.dataset.seg) <= segs));
+  $("#energyText").textContent = `${s.energy}%`;
+  $("#indText").textContent = label;
+  $("#affText").textContent = s.affection;
+  $("#affBar").style.width = `${s.affection}%`;
+  $("#emoText").textContent = s.emotion;
+  $("#emoBar").style.width = `${Math.min(100, s.emotion)}%`;
+  const cb = $("#chargeBtn");
+  cb.setAttribute("aria-pressed", String(s.charging));
+  cb.textContent = s.charging ? "充電を止める" : "充電";
+  cb.hidden = !c.useGauge;
+  $("#commandBtn").setAttribute("aria-pressed", String(s.command));
+}
+function renderLog() {
+  const c = char();
+  const log = $("#log");
+  log.textContent = "";
+  if (!c.history.length) {
+    const el = document.createElement("div");
+    el.className = "msg note";
+    el.textContent = app.settings.apiKey
+      ? `${c.name}に話しかけてみてください。`
+      : "右上の「設定」で Gemini のAPIキーを入れると話せます。";
+    log.appendChild(el);
+  }
+  for (const m of c.history) log.appendChild(msgEl(m, c));
+  log.scrollTop = log.scrollHeight;
+}
+function msgEl(m, c) {
+  const el = document.createElement("div");
+  el.className = `msg ${m.role}`;
+  if (m.role === "ai") {
+    const who = document.createElement("span");
+    who.className = "who";
+    who.textContent = c.name;
+    el.appendChild(who);
+    el.appendChild(document.createTextNode(m.text));
+  } else {
+    el.textContent = m.text;
+  }
+  return el;
+}
+function renderAll() {
+  renderStatus();
+  renderLog();
+  renderStage();
+}
+function addNote(text, persist = true) {
+  const c = char();
+  if (persist) { c.history.push({ role: "note", text }); save(); renderLog(); }
+  else {
+    const log = $("#log");
+    log.appendChild(msgEl({ role: "note", text }, c));
+    log.scrollTop = log.scrollHeight;
+  }
+}
+
+/* ---------- Gemini API ---------- */
+class ApiError extends Error {
+  constructor(type, detail = "", status = 0) { super(type); this.type = type; this.detail = detail; this.status = status; }
+}
+async function gemini(systemText, contents, json) {
+  const { apiKey, model } = app.settings;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent((model || DEFAULT_MODEL).trim())}:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
+  const body = { contents, generationConfig: { temperature: json ? 0.9 : 0.3 } };
+  if (systemText) body.systemInstruction = { parts: [{ text: systemText }] };
+  if (json) body.generationConfig.responseMimeType = "application/json";
+  let res;
+  try {
+    res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  } catch (e) { throw new ApiError("network"); }
+  if (!res.ok) {
+    let msg = "";
+    try { msg = (await res.json()).error?.message || ""; } catch (e) {}
+    const type = res.status === 429 ? "rate" : (res.status === 400 || res.status === 403 || res.status === 404) ? "request" : "server";
+    throw new ApiError(type, msg, res.status);
+  }
+  const data = await res.json();
+  const cand = data.candidates?.[0];
+  const text = (cand?.content?.parts || []).map((p) => (p.thought ? "" : p.text || "")).join("").trim();
+  if (!text) throw new ApiError("empty", cand?.finishReason || data.promptFeedback?.blockReason || "");
+  return text;
+}
+function errorText(e) {
+  switch (e.type) {
+    case "rate": return "回数制限に達しました。1分ほど待ってから、もう一度送ってください。";
+    case "request": return `APIキーかモデル名を確認してください。（${e.status} ${e.detail}）`;
+    case "network": return "通信できませんでした。接続を確認してください。";
+    case "empty": return `返答が空でした（${e.detail}）。言い方を変えて送ってみてください。`;
+    default: return `Gemini側でエラーが起きました（${e.status || e.message}）。少し待ってから試してください。`;
+  }
+}
+
+function buildSystem(c) {
+  const s = c.state;
+  const [, label] = indicator(c);
+  const status = c.useGauge
+    ? `エネルギー${s.energy}%｜${label}｜好感度${s.affection}｜感情値${s.emotion}`
+    : `感情値${s.emotion}`;
+  return `${c.prompt}
+
+【アプリからの指示（最優先）】
+・ステータス（エネルギー残量、インジケーター、好感度、感情値）はアプリが管理して画面に表示します。返答にステータス行は書かず、エネルギーの増減も計算しないでください。
+・現在の状態：${status}${s.command ? "｜命令モード中（目の光が消え、機械的な口調で命令に従う）" : ""}
+・この状態に合った口調と反応で返答してください。
+・返答は次の形のJSONだけを返してください。
+{"reply":"セリフと動作の描写","affection_delta":-10から10の整数,"emotion_delta":-20から20の整数,"expression":"normal・smile・annoyed・surprisedのどれか","outburst":trueまたはfalse}
+・感情値が100を超えるほどの反応をした場合は、outburst を true にしてください。${c.memory ? `
+
+【これまでの記憶】
+${c.memory}` : ""}`;
+}
+function buildContents(c) {
+  const start = Math.max(c.memIndex, c.history.length - 30);
+  const out = [];
+  for (const m of c.history.slice(start)) {
+    if (m.role === "note") continue;
+    const role = m.role === "user" ? "user" : "model";
+    const last = out[out.length - 1];
+    if (last && last.role === role) last.parts[0].text += "\n" + m.text;
+    else out.push({ role, parts: [{ text: m.text }] });
+  }
+  while (out.length && out[0].role !== "user") out.shift();
+  return out;
+}
+function parseReply(text) {
+  let o = null;
+  const t = text.replace(/```json|```/g, "").trim();
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if (a >= 0 && b > a) { try { o = JSON.parse(t.slice(a, b + 1)); } catch (e) {} }
+  if (!o || typeof o.reply !== "string") o = { reply: text };
+  const int = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(v) || 0)));
+  return {
+    reply: o.reply.trim(),
+    affection_delta: int(o.affection_delta, -10, 10),
+    emotion_delta: int(o.emotion_delta, -20, 20),
+    expression: EXPRESSIONS.includes(o.expression) ? o.expression : "normal",
+    outburst: o.outburst === true
+  };
+}
+
+/* ---------- 送信 ---------- */
+let busy = false;
+async function send() {
+  if (busy) return;
+  const input = $("#input");
+  const text = input.value.trim();
+  if (!text) return;
+  if (!app.settings.apiKey) { openSettings(); return; }
+  const c = char(), s = c.state;
+  const userMsg = { role: "user", text };
+  c.history.push(userMsg);
+  input.value = "";
+  autoGrow();
+  save();
+  renderLog();
+
+  if (c.useGauge && s.energy <= 0 && !s.charging) {
+    addNote(`${c.name}は反応しない。（エネルギー0%。充電すると再起動します）`);
+    return;
+  }
+
+  busy = true;
+  $("#sendBtn").disabled = true;
+  const pending = msgEl({ role: "ai", text: "…" }, c);
+  pending.classList.add("pending");
+  $("#log").appendChild(pending);
+  $("#log").scrollTop = $("#log").scrollHeight;
+
+  try {
+    const raw = await gemini(buildSystem(c), buildContents(c), true);
+    const r = parseReply(raw);
+    c.history.push({ role: "ai", text: r.reply });
+    s.affection = Math.max(0, Math.min(100, s.affection + r.affection_delta));
+    const emo = s.emotion + r.emotion_delta;
+    s.outburst = r.outburst || emo > 100;
+    s.emotion = s.outburst ? 30 : Math.max(0, Math.min(100, emo));
+    s.expression = r.expression;
+    if (c.useGauge && !s.charging) {
+      s.energy = Math.max(0, s.energy - (4 + Math.floor(Math.random() * 5)));
+      if (s.energy === 0) c.history.push({ role: "note", text: "エネルギーが0%になりました。充電すると再起動します。" });
+    }
+    save();
+    renderAll();
+    maybeSummarize(c);
+  } catch (e) {
+    pending.remove();
+    const i = c.history.lastIndexOf(userMsg);
+    if (i >= 0) c.history.splice(i, 1);
+    input.value = text;
+    autoGrow();
+    save();
+    renderLog();
+    addNote(e instanceof ApiError ? errorText(e) : `エラー：${e.message}`, false);
+  } finally {
+    busy = false;
+    $("#sendBtn").disabled = false;
+  }
+}
+
+/* ---------- 記憶（要約） ---------- */
+let summarizing = false;
+async function maybeSummarize(c) {
+  if (summarizing || c.history.length - c.memIndex <= 40) return;
+  summarizing = true;
+  const chunk = c.history.slice(c.memIndex, c.memIndex + 20)
+    .filter((m) => m.role !== "note")
+    .map((m) => `${m.role === "user" ? "マスター" : c.name}：${m.text}`).join("\n");
+  const p = `あなたは会話の記録係です。次の「これまでの記憶」と「新しい会話」をまとめて、${c.name}が今後の会話で覚えておくべきこと（マスターについて分かったこと、約束、出来事、関係の変化）を箇条書きで更新してください。全体で400字以内。箇条書きだけを出力してください。
+
+【これまでの記憶】
+${c.memory || "なし"}
+
+【新しい会話】
+${chunk}`;
+  try {
+    c.memory = await gemini("", [{ role: "user", parts: [{ text: p }] }], false);
+    c.memIndex += 20;
+    save();
+  } catch (e) {
+    // 失敗したら次の返答のあとに再挑戦する
+  } finally {
+    summarizing = false;
+  }
+}
+
+/* ---------- 充電・命令モード ---------- */
+let chargeTimer = null;
+function setCharging(on) {
+  const c = char();
+  c.state.charging = on;
+  if (on && !chargeTimer) {
+    chargeTimer = setInterval(() => {
+      const st = char().state;
+      st.energy = Math.min(100, st.energy + 1);
+      if (st.energy >= 100) {
+        setCharging(false);
+        addNote("充電が完了しました。");
+        return;
+      }
+      save();
+      renderStatus();
+      renderStage();
+    }, 1500);
+  } else if (!on && chargeTimer) {
+    clearInterval(chargeTimer);
+    chargeTimer = null;
+  }
+  save();
+  renderStatus();
+  renderStage();
+}
+$("#chargeBtn").addEventListener("click", () => setCharging(!char().state.charging));
+$("#commandBtn").addEventListener("click", () => {
+  const s = char().state;
+  s.command = !s.command;
+  save();
+  renderStatus();
+  renderStage();
+  addNote(s.command ? "命令モードをオンにしました。" : "命令モードをオフにしました。");
+});
+
+/* ---------- 入力欄 ---------- */
+function autoGrow() {
+  const t = $("#input");
+  t.style.height = "auto";
+  t.style.height = Math.min(140, t.scrollHeight) + "px";
+}
+$("#input").addEventListener("input", autoGrow);
+$("#input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && !e.isComposing) { e.preventDefault(); send(); }
+});
+$("#sendBtn").addEventListener("click", send);
+
+/* ---------- 設定 ---------- */
+const dlg = $("#settings");
+function openSettings() {
+  const c = char();
+  $("#apiKey").value = app.settings.apiKey;
+  $("#model").value = app.settings.model || DEFAULT_MODEL;
+  $("#name").value = c.name;
+  $("#prompt").value = c.prompt;
+  $("#useGauge").checked = c.useGauge;
+  renderSlots();
+  dlg.showModal();
+}
+function saveSettings() {
+  const c = char();
+  app.settings.apiKey = $("#apiKey").value.trim();
+  app.settings.model = $("#model").value.trim() || DEFAULT_MODEL;
+  c.name = $("#name").value.trim() || c.name;
+  c.prompt = $("#prompt").value.trim() || DEFAULT_PROMPT;
+  c.useGauge = $("#useGauge").checked;
+  if (!c.useGauge && c.state.charging) setCharging(false);
+  save();
+  renderAll();
+}
+$("#openSettings").addEventListener("click", openSettings);
+$("#closeSettings").addEventListener("click", () => dlg.close());
+dlg.addEventListener("close", saveSettings);
+$("#resetPrompt").addEventListener("click", () => {
+  if (confirm("プロンプトを最初の内容に戻しますか？")) $("#prompt").value = DEFAULT_PROMPT;
+});
+
+let pickingSlot = null;
+async function renderSlots() {
+  const box = $("#slots");
+  box.textContent = "";
+  for (const [slot, label] of SLOTS) {
+    const url = await slotUrl(slot);
+    const wrap = document.createElement("div");
+    wrap.className = "slot";
+    const btn = document.createElement("button");
+    btn.className = "thumb" + (url ? " has" : "");
+    btn.setAttribute("aria-label", `${label}の画像を選ぶ`);
+    if (url) btn.style.backgroundImage = `url("${url}")`;
+    else btn.textContent = "＋";
+    btn.addEventListener("click", () => { pickingSlot = slot; $("#fileInput").click(); });
+    const name = document.createElement("span");
+    name.textContent = label;
+    wrap.append(btn, name);
+    if (url) {
+      const del = document.createElement("button");
+      del.className = "del";
+      del.textContent = "削除";
+      del.addEventListener("click", async () => {
+        if (!confirm(`「${label}」の画像を削除しますか？`)) return;
+        const k = imgKey(slot);
+        await imgDel(k);
+        dropCache(k);
+        renderSlots();
+        renderStage();
+      });
+      wrap.appendChild(del);
+    }
+    box.appendChild(wrap);
+  }
+}
+$("#fileInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file || !pickingSlot) return;
+  try {
+    const blob = await resizeImage(file);
+    const k = imgKey(pickingSlot);
+    await imgPut(k, blob);
+    dropCache(k);
+    renderSlots();
+    renderStage();
+  } catch (err) {
+    alert("画像を読み込めませんでした。別の画像で試してください。");
+  }
+});
+
+/* ---------- バックアップ ---------- */
+const blobToDataUrl = (b) => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(r.result);
+  r.onerror = () => rej(r.error);
+  r.readAsDataURL(b);
+});
+$("#exportBtn").addEventListener("click", async () => {
+  saveSettings();
+  const images = {};
+  for (const k of await imgKeys()) images[k] = await blobToDataUrl(await imgGet(k));
+  const payload = { ...app, settings: { ...app.settings, apiKey: "" }, images };
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(payload)], { type: "application/json" }));
+  a.download = `personal-chat-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$("#importBtn").addEventListener("click", () => $("#importInput").click());
+$("#importInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  try {
+    const d = JSON.parse(await file.text());
+    if (d.app !== "personal-chat" || !Array.isArray(d.characters)) throw new Error("format");
+    if (!confirm("今のデータを、このバックアップで置き換えますか？")) return;
+    const key = app.settings.apiKey;
+    const images = d.images || {};
+    delete d.images;
+    if (chargeTimer) { clearInterval(chargeTimer); chargeTimer = null; }
+    app = d;
+    app.settings = { ...app.settings, apiKey: key };
+    await imgClear();
+    for (const [k, v] of Object.entries(images)) await imgPut(k, await (await fetch(v)).blob());
+    dropAllCache();
+    save();
+    if (char().state.charging) { char().state.charging = false; setCharging(true); }
+    dlg.close();
+    renderAll();
+  } catch (err) {
+    alert("このファイルは読み込めませんでした。書き出したバックアップを選んでください。");
+  }
+});
+$("#resetState").addEventListener("click", () => {
+  if (!confirm("エネルギー・好感度・感情値を初期値に戻しますか？")) return;
+  if (chargeTimer) { clearInterval(chargeTimer); chargeTimer = null; }
+  char().state = defaultState();
+  save();
+  renderAll();
+});
+$("#clearHistory").addEventListener("click", () => {
+  if (!confirm("会話と記憶をすべて消しますか？")) return;
+  const c = char();
+  c.history = [];
+  c.memory = "";
+  c.memIndex = 0;
+  save();
+  renderAll();
+});
+
+/* ---------- 起動 ---------- */
+renderAll();
+if (char().state.charging) { char().state.charging = false; setCharging(true); }
+</script>
+</body>
+</html>
