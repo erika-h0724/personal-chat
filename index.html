@@ -11,7 +11,7 @@
 :root{
   --bg:#E9EEF2; --surface:#FFFFFF; --surface-2:#F4F6F8; --ink:#1E2833; --muted:#5D6A77; --line:#D3DBE3;
   --denim:#3B5878; --check:#C4433A;
-  --ind-blue:#2F9BEA; --ind-red:#E2412F; --ind-orange:#F0922B; --ind-off:#8A949E;
+  --ind-blue:#2F9BEA; --ind-red:#E2412F; --ind-orange:#F0922B; --ind-yellow:#E8B820; --ind-green:#2FB36B; --ind-pink:#EC5FA0; --ind-off:#8A949E;
   --user-bubble:#3B5878;
   color-scheme:light dark;
   box-sizing:border-box;
@@ -60,11 +60,8 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .ind .cap{fill:var(--c)}
 .ind .seg{fill:var(--c);opacity:.15}
 .ind .seg.on{opacity:1}
-.ind[data-state="red"]{--c:var(--ind-red)}
-.ind[data-state="red"] .lit{animation:blink 1s steps(2,jump-none) infinite}
-.ind[data-state="orange"]{--c:var(--ind-orange)}
-.ind[data-state="orange"] .lit{animation:pulse 1.8s ease-in-out infinite}
-.ind[data-state="off"]{--c:var(--ind-off)}
+.ind[data-mode="blink"] .lit{animation:blink 1s steps(2,jump-none) infinite}
+.ind[data-mode="pulse"] .lit{animation:pulse 1.8s ease-in-out infinite}
 .ind[data-state="off"] .glow{opacity:0}
 @keyframes blink{0%{opacity:1}100%{opacity:.25}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
@@ -128,6 +125,8 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
 .hint{margin:4px 0;font-size:.8rem;color:var(--muted)}
 .dlg-body h4.sub{margin:16px 0 0;font-size:.9rem}
 .state-head{display:block}
+.ind-sel{display:flex;flex-wrap:wrap;gap:4px 12px;margin:4px 0}
+.ind-sel select{font:inherit;padding:2px 6px;margin-left:4px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 .th-input{width:4.2em;padding:2px 6px;margin:0 2px;font:inherit;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:right}
 .gen-preview img{width:160px;max-width:100%;border-radius:10px;display:block;margin:8px 0}
 button:disabled{opacity:.5;cursor:default}
@@ -257,6 +256,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
     <nav class="dlg-nav" aria-label="設定メニュー">
       <button data-go="character">キャラクター</button>
       <button data-go="images" class="sub">外見</button>
+      <button data-go="detail" class="sub">詳細設定</button>
       <button data-go="api">Gemini API</button>
       <button data-go="data">データ</button>
     </nav>
@@ -278,12 +278,15 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
       <section data-page="character">
         <label>名前<input id="name" type="text"></label>
         <div id="promptParts"></div>
-        <h4 class="sub">状態ごとの話し方</h4>
-        <p class="hint">今の状態に当てはまるものだけが、AIに渡されます。</p>
-        <div id="stateParts"></div>
         <p class="hint">名前は上の「名前」欄から自動で入ります。</p>
         <div class="btns"><button id="resetPrompt">プロンプトを最初の内容に戻す</button></div>
         <label class="check"><input type="checkbox" id="useGauge"> エネルギー・好感度・感情値を使う</label>
+      </section>
+      <section data-page="detail">
+        <div id="rulesPart"></div>
+        <h4 class="sub">状態ごとの話し方</h4>
+        <p class="hint">今の状態に当てはまるものだけが、AIに渡されます。</p>
+        <div id="stateParts"></div>
       </section>
       <section data-page="images">
         <div id="appearancePart"></div>
@@ -360,7 +363,7 @@ const DEFAULT_IMAGE_MODEL = "gemini-2.5-flash-image";
 
 const SLOTS = [
   ["normal", "通常"], ["smile", "笑顔"], ["annoyed", "不満"], ["surprised", "驚き"],
-  ["tired", "疲れ"], ["critical", "危機"], ["off", "停止（0%）"],
+  ["tired", "疲労"], ["critical", "瀕死"], ["off", "停止（0%）"],
   ["charging", "充電中"], ["outburst", "感情爆発"], ["command", "マスターモード"]
 ];
 const EXPRESSIONS = ["normal", "smile", "annoyed", "surprised"];
@@ -439,7 +442,7 @@ const DEFAULT_PARTS = {
 感情値:0〜100まで変動。高くなるにつれ強い感情を出し、100を超えた際抑えきれなくなり感情を爆発。人間や物に普段しない行動をして下さい。
 インジケーターの仕様:
 マスター登録:マスターがいない場合、インジケーターを指で3秒間触れられる事で登録される
-電源ボタン機能:マスター権限を持つ者が3秒間インジケーターが触られた場合オン/オフが切り替わる。
+マスターモード切替:マスター権限を持つ者が3秒間インジケーターに触れた場合、マスターモードのオン/オフが切り替わる。
 例えマスターであっても、あなたが納得出来る理由が無ければ触らせない。
 ディスプレイ:内部に電池マークと、現在の状態が表示される。電池マークには現在のエネルギー残量によって最大3メモリ表示される。
 味覚: 味覚はあり、物は食べられるが電気エネルギーには変換されず、逆に食べ物の処理にエネルギーを消費する。
@@ -451,15 +454,15 @@ const DEFAULT_TH = { tired: 40, critical: 19 };
 const th = (c) => ({ ...DEFAULT_TH, ...(c.thresholds || {}) });
 function slotLabel(slot, label, c = char()) {
   const t = th(c);
-  if (slot === "tired") return `疲れ（${t.critical + 1}〜${t.tired}%）`;
-  if (slot === "critical") return `危機（1〜${t.critical}%）`;
+  if (slot === "tired") return `疲労（${t.critical + 1}〜${t.tired}%）`;
+  if (slot === "critical") return `瀕死（1〜${t.critical}%）`;
   return label;
 }
 const STATE_PARTS = [
   ["high", "元気"],
-  ["tired", "疲れ"],
-  ["critical", "危機"],
-  ["charging", "充電中（オレンジ明滅）"],
+  ["tired", "疲労"],
+  ["critical", "瀕死"],
+  ["charging", "充電中"],
   ["command", "マスターモード"]
 ];
 const DEFAULT_STATES = {
@@ -469,13 +472,26 @@ const DEFAULT_STATES = {
   charging: "精神安定。トランス状態。短時間依存。",
   command: "目の光が無くなり、機械的な口調で命令に従う。"
 };
+const IND_COLORS = [["red", "赤"], ["blue", "青"], ["yellow", "黄"], ["green", "緑"], ["orange", "オレンジ"], ["pink", "ピンク"]];
+const IND_MODES = [["on", "点灯"], ["blink", "点滅"], ["pulse", "明滅"]];
+const DEFAULT_IND = {
+  high: { color: "blue", mode: "on" },
+  tired: { color: "blue", mode: "on" },
+  critical: { color: "red", mode: "blink" },
+  charging: { color: "orange", mode: "pulse" }
+};
+const indOf = (c, key) => ({ ...DEFAULT_IND[key], ...((c.indicators || {})[key] || {}) });
+const indLabel = (v) => `${IND_COLORS.find((x) => x[0] === v.color)[1]}${IND_MODES.find((x) => x[0] === v.mode)[1]}`;
+const energyKey = (c) => {
+  const s = c.state, t = th(c);
+  return s.charging ? "charging" : s.energy <= t.critical ? "critical" : s.energy <= t.tired ? "tired" : "high";
+};
 function currentStateText(c) {
   const s = c.state, st = (c.promptParts && c.promptParts.states) || DEFAULT_STATES;
   const out = [];
   if (s.command && st.command) out.push(st.command);
   if (c.useGauge) {
-    const t = th(c);
-    const key = s.charging ? "charging" : s.energy <= t.critical ? "critical" : s.energy <= t.tired ? "tired" : "high";
+    const key = energyKey(c);
     if (st[key]) out.push(st[key]);
   }
   return out.join(" ");
@@ -494,7 +510,7 @@ function defaultState() {
   return { energy: 50, affection: 0, emotion: 0, charging: false, command: false, master: false, expression: "normal", outburst: false };
 }
 function newCharacter() {
-  return { id: "miel", name: "ミエル", promptParts: { ...DEFAULT_PARTS, states: { ...DEFAULT_STATES } }, useGauge: true, state: defaultState(), history: [], memory: "", memIndex: 0 };
+  return { id: "miel", name: "ミエル", promptParts: { ...DEFAULT_PARTS, states: { ...DEFAULT_STATES } }, indicators: JSON.parse(JSON.stringify(DEFAULT_IND)), useGauge: true, state: defaultState(), history: [], memory: "", memIndex: 0 };
 }
 function freshApp() {
   return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter()], activeId: "miel" };
@@ -508,6 +524,7 @@ function migrate(d) {
       delete c.prompt;
     }
     if (!c.promptParts.states) c.promptParts.states = { ...DEFAULT_STATES };
+    if (!c.indicators) c.indicators = JSON.parse(JSON.stringify(DEFAULT_IND));
   }
   return d;
 }
@@ -613,10 +630,9 @@ function currentSlot(c) {
 }
 function indicator(c) {
   const s = c.state;
-  if (s.charging) return ["orange", "オレンジ明滅（充電中）"];
-  if (s.energy <= 0) return ["off", "消灯"];
-  if (s.energy <= th(c).critical) return ["red", "赤点滅"];
-  return ["blue", "青点灯"];
+  if (!s.charging && s.energy <= 0) return ["off", "on", "消灯"];
+  const key = energyKey(c), v = indOf(c, key);
+  return [v.color, v.mode, key === "charging" ? `${indLabel(v)}（充電中）` : indLabel(v)];
 }
 
 /* ---------- 描画 ---------- */
@@ -647,9 +663,11 @@ function renderStatus() {
   $("#charName").textContent = c.name;
   document.title = c.name;
   $("#stage").classList.toggle("gauge-off", !c.useGauge);
-  const [state, label] = indicator(c);
+  const [color, mode, label] = indicator(c);
   const ind = $("#ind");
-  ind.dataset.state = state;
+  ind.dataset.state = color === "off" ? "off" : "on";
+  ind.dataset.mode = mode;
+  ind.style.setProperty("--c", `var(--ind-${color})`);
   ind.setAttribute("aria-label", `バッテリー：${label}（3秒長押しで充電）`);
   const segs = s.energy >= 67 ? 3 : s.energy >= 34 ? 2 : s.energy >= 1 ? 1 : 0;
   ind.querySelectorAll(".seg").forEach((el) => el.classList.toggle("on", Number(el.dataset.seg) <= segs));
@@ -745,7 +763,7 @@ function errorText(e) {
 
 function buildSystem(c) {
   const s = c.state;
-  const [, label] = indicator(c);
+  const [, , label] = indicator(c);
   const status = c.useGauge
     ? `エネルギー${s.energy}%｜${label}｜好感度${s.affection}｜感情値${s.emotion}`
     : `感情値${s.emotion}`;
@@ -1018,7 +1036,7 @@ $("#portrait").addEventListener("transitionend", placePendant);
 
 /* ---------- 設定 ---------- */
 const dlg = $("#settings");
-const PAGE_TITLES = { character: "キャラクター", images: "外見", api: "Gemini API", data: "データ" };
+const PAGE_TITLES = { character: "キャラクター", images: "外見", detail: "詳細設定", api: "Gemini API", data: "データ" };
 const narrowDlg = () => window.matchMedia("(max-width:600px)").matches;
 let currentPage = null;
 function showPage(name) {
@@ -1045,6 +1063,7 @@ function openSettings() {
   const pp = $("#promptParts");
   pp.textContent = "";
   $("#appearancePart").textContent = "";
+  $("#rulesPart").textContent = "";
   for (const [key, label, rows] of PROMPT_PARTS) {
     const l = document.createElement("label");
     l.textContent = label;
@@ -1053,32 +1072,48 @@ function openSettings() {
     t.dataset.part = key;
     t.value = (c.promptParts || {})[key] || "";
     l.appendChild(t);
-    (key === "appearance" ? $("#appearancePart") : pp).appendChild(l);
+    (key === "appearance" ? $("#appearancePart") : key === "rules" ? $("#rulesPart") : pp).appendChild(l);
   }
   const sp = $("#stateParts");
   sp.textContent = "";
   const t0 = th(c);
-  const numInput = (key, val) => {
+  const numInput = (key, val, min) => {
     const n = document.createElement("input");
-    n.type = "number"; n.min = 1; n.max = 99; n.inputMode = "numeric";
+    n.type = "number"; n.min = min; n.max = 100; n.inputMode = "numeric";
     n.className = "th-input"; n.dataset.th = key; n.value = val;
     n.addEventListener("input", updateHighLabel);
     return n;
+  };
+  const rangeEnd = (id) => Object.assign(document.createElement("span"), { id });
+  const sel = (key, k, list, val) => {
+    const w = document.createElement("span");
+    const x = document.createElement("select");
+    x.dataset.ind = key; x.dataset.k = k;
+    for (const [v, name] of list) x.add(new Option(name, v, false, v === val));
+    w.append(k === "color" ? "色" : "光り方", x);
+    return w;
   };
   for (const [key, label] of STATE_PARTS) {
     const l = document.createElement("label");
     const head = document.createElement("span");
     head.className = "state-head";
     if (key === "high") {
-      head.append(`${label}（`, Object.assign(document.createElement("span"), { id: "highRange" }), "・青点灯）");
+      head.append(`${label}（残量 `, numInput("high", t0.tired + 1, 3), "%〜100%）");
     } else if (key === "tired") {
-      head.append(`${label}（残量 `, numInput("tired", t0.tired), "% 以下・青点灯）");
+      head.append(`${label}（残量 `, numInput("tired", t0.critical + 1, 2), "%〜", rangeEnd("tiredEnd"), "%）");
     } else if (key === "critical") {
-      head.append(`${label}（残量 `, numInput("critical", t0.critical), "% 以下・赤点滅）");
+      head.append(`${label}（残量 1%〜`, rangeEnd("criticalEnd"), "%）");
     } else {
-      head.append(key === "charging" ? `${label}（オレンジ明滅）` : label);
+      head.append(label);
     }
     l.appendChild(head);
+    if (DEFAULT_IND[key]) {
+      const v = indOf(c, key);
+      const row = document.createElement("span");
+      row.className = "ind-sel";
+      row.append("インジケーター", sel(key, "color", IND_COLORS, v.color), sel(key, "mode", IND_MODES, v.mode));
+      l.appendChild(row);
+    }
     const t = document.createElement("textarea");
     t.rows = 2;
     t.dataset.state = key;
@@ -1099,10 +1134,12 @@ function saveSettings() {
   c.name = $("#name").value.trim() || c.name;
   c.promptParts = {};
   document.querySelectorAll("#settings textarea[data-part]").forEach((t) => { c.promptParts[t.dataset.part] = t.value.trim(); });
-  const tv = Number($('#stateParts [data-th="tired"]').value) || DEFAULT_TH.tired;
-  const cv = Number($('#stateParts [data-th="critical"]').value) || DEFAULT_TH.critical;
-  const crit = Math.max(1, Math.min(98, Math.round(cv)));
-  c.thresholds = { critical: crit, tired: Math.max(crit + 1, Math.min(99, Math.round(tv))) };
+  const a = Number($('#stateParts [data-th="high"]').value) || DEFAULT_TH.tired + 1;
+  const b = Number($('#stateParts [data-th="tired"]').value) || DEFAULT_TH.critical + 1;
+  const crit = Math.max(1, Math.min(98, Math.round(b) - 1));
+  c.thresholds = { critical: crit, tired: Math.max(crit + 1, Math.min(99, Math.round(a) - 1)) };
+  c.indicators = JSON.parse(JSON.stringify(DEFAULT_IND));
+  document.querySelectorAll("#stateParts select").forEach((x) => { c.indicators[x.dataset.ind][x.dataset.k] = x.value; });
   c.promptParts.states = {};
   document.querySelectorAll("#stateParts textarea").forEach((t) => { c.promptParts.states[t.dataset.state] = t.value.trim(); });
   c.useGauge = $("#useGauge").checked;
@@ -1111,8 +1148,10 @@ function saveSettings() {
   renderAll();
 }
 function updateHighLabel() {
-  const el = $("#highRange"), n = $('#stateParts [data-th="tired"]');
-  if (el && n) el.textContent = `残量 ${(Number(n.value) || DEFAULT_TH.tired) + 1}% 以上`;
+  const a = $('#stateParts [data-th="high"]'), b = $('#stateParts [data-th="tired"]');
+  if (!a || !b) return;
+  $("#tiredEnd").textContent = (Number(a.value) || DEFAULT_TH.tired + 1) - 1;
+  $("#criticalEnd").textContent = (Number(b.value) || DEFAULT_TH.critical + 1) - 1;
 }
 $("#openSettings").addEventListener("click", openSettings);
 $("#closeSettings").addEventListener("click", () => dlg.close());
@@ -1121,8 +1160,9 @@ $("#resetPrompt").addEventListener("click", () => {
   if (!confirm("プロンプトを最初の内容に戻しますか？")) return;
   document.querySelectorAll("#settings textarea[data-part]").forEach((t) => { t.value = DEFAULT_PARTS[t.dataset.part] || ""; });
   document.querySelectorAll("#stateParts textarea").forEach((t) => { t.value = DEFAULT_STATES[t.dataset.state] || ""; });
-  $('#stateParts [data-th="tired"]').value = DEFAULT_TH.tired;
-  $('#stateParts [data-th="critical"]').value = DEFAULT_TH.critical;
+  $('#stateParts [data-th="high"]').value = DEFAULT_TH.tired + 1;
+  $('#stateParts [data-th="tired"]').value = DEFAULT_TH.critical + 1;
+  document.querySelectorAll("#stateParts select").forEach((x) => { x.value = DEFAULT_IND[x.dataset.ind][x.dataset.k]; });
   updateHighLabel();
 });
 
