@@ -40,8 +40,16 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .portrait{position:relative;height:min(34vh,320px);border-radius:14px;overflow:hidden;background:var(--surface-2);transition:height .2s}
 .pendant{position:absolute;left:50%;top:50%;width:48px;height:48px;transform:translate(-50%,-50%);border:none;padding:0;border-radius:50%;background:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
 .pendant::after{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid var(--ind-blue);opacity:0}
-.pendant.holding::after{animation:pendantHold 3s linear forwards}
+.pendant.holding::after{animation:pendantHold var(--hold,3s) linear forwards}
 @keyframes pendantHold{0%{opacity:.3;transform:scale(.4)}100%{opacity:1;transform:scale(1.2)}}
+.pendant{--c:var(--ind-blue)}
+.pendant-light{position:absolute;left:50%;top:50%;width:var(--lw,0);height:var(--lh,0);transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 40%,color-mix(in srgb,var(--c) 35%,#fff) 0%,var(--c) 55%,color-mix(in srgb,var(--c) 70%,#000) 100%);box-shadow:0 0 6px 2px var(--c)}
+.pendant[data-state="off"] .pendant-light{box-shadow:none}
+.pendant[data-mode="blink"] .pendant-light{animation:lightBlink 1s steps(2,jump-none) infinite}
+.pendant[data-mode="pulse"] .pendant-light{animation:lightPulse 1.8s ease-in-out infinite}
+@keyframes lightBlink{0%{filter:none}100%{filter:brightness(.35)}}
+@keyframes lightPulse{0%,100%{filter:none}50%{filter:brightness(.5)}}
 .portrait img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
 .placeholder{display:grid;place-items:center;height:100%;padding:10px;text-align:center;color:var(--muted);font-size:.8rem;
   background-image:linear-gradient(90deg,rgba(196,67,58,.09) 50%,transparent 50%),linear-gradient(rgba(196,67,58,.09) 50%,transparent 50%);
@@ -52,7 +60,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .ind svg{width:72px;height:35px;display:block;overflow:visible}
 .ind{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none;cursor:pointer;padding:6px 0}
 .ind .hold{fill:none;stroke:var(--c);stroke-width:3;stroke-dasharray:100;stroke-dashoffset:100;opacity:0}
-.ind.holding .hold{opacity:1;animation:hold 3s linear forwards}
+.ind.holding .hold{opacity:1;animation:hold var(--hold,3s) linear forwards}
 @keyframes hold{to{stroke-dashoffset:0}}
 .ind-text.master{color:var(--check)}
 .ind .body{fill:var(--surface);stroke:var(--c);stroke-width:3}
@@ -60,8 +68,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .ind .cap{fill:var(--c)}
 .ind .seg{fill:var(--c);opacity:.15}
 .ind .seg.on{opacity:1}
-.ind[data-mode="blink"] .lit{animation:blink 1s steps(2,jump-none) infinite}
-.ind[data-mode="pulse"] .lit{animation:pulse 1.8s ease-in-out infinite}
+.ind[data-state="off"]{--c:var(--ind-off)}
 .ind[data-state="off"] .glow{opacity:0}
 @keyframes blink{0%{opacity:1}100%{opacity:.25}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
@@ -69,6 +76,8 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .ind-text{font-size:.85rem;color:var(--muted)}
 .meter{font-size:.85rem}
 .meter-head{display:flex;justify-content:space-between;color:var(--muted)}
+.meter-label{display:inline-flex;align-items:center;gap:4px}
+.meter-label svg{width:1.05em;height:1.05em;flex:none}
 .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:var(--denim);transition:width .4s}
 .meter.emo .bar i{background:var(--check)}
@@ -122,11 +131,13 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
 .dlg-body label{display:block;margin:8px 0;font-size:.9rem}
 .dlg-body label > input,.dlg-body label > textarea{margin-top:4px}
 .dlg-body label.check{display:flex;gap:8px;align-items:center}
+.dlg-body label.unused{opacity:.4}
 .hint{margin:4px 0;font-size:.8rem;color:var(--muted)}
 .dlg-body h4.sub{margin:16px 0 0;font-size:.9rem}
 .state-head{display:block}
 .ind-sel{display:flex;flex-wrap:wrap;gap:4px 12px;margin:4px 0}
 .ind-sel select{font:inherit;padding:2px 6px;margin-left:4px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.err{color:var(--check);font-weight:700;font-size:.9rem;margin:6px 0}
 .th-input{width:4.2em;padding:2px 6px;margin:0 2px;font:inherit;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:right}
 .gen-preview img{width:160px;max-width:100%;border-radius:10px;display:block;margin:8px 0}
 button:disabled{opacity:.5;cursor:default}
@@ -220,16 +231,15 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
         </div>
         <div>
           <div class="energy" id="energyText">50%</div>
-          <div class="ind-text" id="indText">青点灯</div>
           <div class="ind-text master" id="masterText"></div>
         </div>
       </div>
       <div class="meter">
-        <div class="meter-head"><span>好感度</span><span id="affText">0</span></div>
+        <div class="meter-head"><span class="meter-label"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20z"/></svg>好感度</span><span id="affText">0%</span></div>
         <div class="bar"><i id="affBar"></i></div>
       </div>
       <div class="meter emo">
-        <div class="meter-head"><span>感情値</span><span id="emoText">0</span></div>
+        <div class="meter-head"><span class="meter-label"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l2.5-6 4 12 3-9 1.5 3H22"/></svg>感情値</span><span id="emoText">0%</span></div>
         <div class="bar"><i id="emoBar"></i></div>
       </div>
     </div>
@@ -256,6 +266,9 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
     <nav class="dlg-nav" aria-label="設定メニュー">
       <button data-go="character">キャラクター</button>
       <button data-go="images" class="sub">外見</button>
+      <button data-go="affection" class="sub">好感度</button>
+      <button data-go="emotion" class="sub">感情値</button>
+      <button data-go="master" class="sub">マスターモード</button>
       <button data-go="detail" class="sub">詳細設定</button>
       <button data-go="api">Gemini API</button>
       <button data-go="data">データ</button>
@@ -286,7 +299,20 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
         <div id="rulesPart"></div>
         <h4 class="sub">状態ごとの話し方</h4>
         <p class="hint">今の状態に当てはまるものだけが、AIに渡されます。</p>
+        <p class="err" id="thErr" hidden>入力値に不備があります</p>
         <div id="stateParts"></div>
+      </section>
+      <section data-page="affection">
+        <div id="affectionPart"></div>
+      </section>
+      <section data-page="emotion">
+        <div id="emotionPart"></div>
+      </section>
+      <section data-page="master">
+        <label>発動条件：インジケーターを<input id="masterHold" class="th-input" type="number" min="2" max="10" inputmode="numeric">秒長押しする</label>
+        <p class="err" id="holdErr" hidden>入力値に不備があります</p>
+        <div id="masterPart"></div>
+        <p class="hint"><span id="holdHint"></span>秒長押しするとマスターモードが発動</p>
       </section>
       <section data-page="images">
         <div id="appearancePart"></div>
@@ -418,7 +444,9 @@ const PROMPT_PARTS = [
   ["basic", "基本設定（立場・一人称・呼び方など）", 6],
   ["appearance", "外見", 6],
   ["personality", "性格・口調", 6],
-  ["rules", "設定・ルール（エネルギーや好感度の扱いなど）", 9]
+  ["rules", "設定・ルール（エネルギーやインジケーターの扱いなど）", 9],
+  ["affection", "好感度のルール", 5],
+  ["emotion", "感情値のルール", 5]
 ];
 const DEFAULT_PARTS = {
   basic: `あなたは、以下の仕様に基づいたアンドロイドの少女として振る舞ってください。
@@ -442,20 +470,20 @@ const DEFAULT_PARTS = {
 感情値:0〜100まで変動。高くなるにつれ強い感情を出し、100を超えた際抑えきれなくなり感情を爆発。人間や物に普段しない行動をして下さい。
 インジケーターの仕様:
 マスター登録:マスターがいない場合、インジケーターを指で3秒間触れられる事で登録される
-マスターモード切替:マスター権限を持つ者が3秒間インジケーターに触れた場合、マスターモードのオン/オフが切り替わる。
-例えマスターであっても、あなたが納得出来る理由が無ければ触らせない。
-ディスプレイ:内部に電池マークと、現在の状態が表示される。電池マークには現在のエネルギー残量によって最大3メモリ表示される。
-味覚: 味覚はあり、物は食べられるが電気エネルギーには変換されず、逆に食べ物の処理にエネルギーを消費する。
-好感度はマスターの行動に対して好ましい、または問題があると思った際にあなた自身で適切に増減させてください。
-感情値は不満に思ったら増加、逆は減少。感情を爆発したら大幅に下げて下さい。
+マスターモード切替:マスター権限を持つ者がインジケーターに一定時間触れた場合、マスターモードのオン/オフが切り替わる。
+ディスプレイ:内部に電池マークと、現在の状態が表示される。電池マークには現在のエネルギー残量によって最大3メモリ表示される。`,
+  affection: `マスターの行動に対して好ましい、または問題があると思った際にあなた自身で適切に増減させてください。`,
+  emotion: `不満に思ったら増加、逆は減少。感情を爆発したら大幅に下げて下さい。
 マスターモードが存在し使用時目の光が無くなり機械的口調になる(この機能はあなたは嫌い)`
 };
 const DEFAULT_TH = { tired: 40, critical: 19 };
+const DEFAULT_HOLD = 3;
+const masterHold = (c) => c.masterHold || DEFAULT_HOLD;
 const th = (c) => ({ ...DEFAULT_TH, ...(c.thresholds || {}) });
 function slotLabel(slot, label, c = char()) {
   const t = th(c);
-  if (slot === "tired") return `疲労（${t.critical + 1}〜${t.tired}%）`;
-  if (slot === "critical") return `瀕死（1〜${t.critical}%）`;
+  if (slot === "tired") return t.tired < 0 ? "疲労（使わない）" : `疲労（${t.critical + 1}〜${t.tired}%）`;
+  if (slot === "critical") return t.critical < 1 ? "瀕死（使わない）" : `瀕死（1〜${t.critical}%）`;
   return label;
 }
 const STATE_PARTS = [
@@ -502,6 +530,8 @@ function composePrompt(c) {
   if (p.appearance) out.push(`【外見】\n${p.appearance}`);
   if (p.personality) out.push(`【性格・口調】\n${p.personality}`);
   if (p.rules) out.push(`【設定・ルール】\n${p.rules}`);
+  if (p.affection) out.push(`【好感度】\n${p.affection}`);
+  if (p.emotion) out.push(`【感情値】\n${p.emotion}`);
   return out.join("\n\n");
 }
 
@@ -510,7 +540,7 @@ function defaultState() {
   return { energy: 50, affection: 0, emotion: 0, charging: false, command: false, master: false, expression: "normal", outburst: false };
 }
 function newCharacter() {
-  return { id: "miel", name: "ミエル", promptParts: { ...DEFAULT_PARTS, states: { ...DEFAULT_STATES } }, indicators: JSON.parse(JSON.stringify(DEFAULT_IND)), useGauge: true, state: defaultState(), history: [], memory: "", memIndex: 0 };
+  return { id: "miel", name: "ミエル", promptParts: { ...DEFAULT_PARTS, states: { ...DEFAULT_STATES } }, indicators: JSON.parse(JSON.stringify(DEFAULT_IND)), masterHold: DEFAULT_HOLD, useGauge: true, state: defaultState(), history: [], memory: "", memIndex: 0 };
 }
 function freshApp() {
   return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter()], activeId: "miel" };
@@ -525,6 +555,7 @@ function migrate(d) {
     }
     if (!c.promptParts.states) c.promptParts.states = { ...DEFAULT_STATES };
     if (!c.indicators) c.indicators = JSON.parse(JSON.stringify(DEFAULT_IND));
+    if (!c.masterHold) c.masterHold = DEFAULT_HOLD;
   }
   return d;
 }
@@ -656,6 +687,7 @@ async function renderStage() {
     box.appendChild(ph);
   }
   box.appendChild(makePendant());
+  paintPendant();
   placePendant();
 }
 function renderStatus() {
@@ -663,20 +695,17 @@ function renderStatus() {
   $("#charName").textContent = c.name;
   document.title = c.name;
   $("#stage").classList.toggle("gauge-off", !c.useGauge);
-  const [color, mode, label] = indicator(c);
   const ind = $("#ind");
-  ind.dataset.state = color === "off" ? "off" : "on";
-  ind.dataset.mode = mode;
-  ind.style.setProperty("--c", `var(--ind-${color})`);
-  ind.setAttribute("aria-label", `バッテリー：${label}（3秒長押しで充電）`);
+  ind.dataset.state = s.energy <= 0 && !s.charging ? "off" : "on";
+  ind.setAttribute("aria-label", `バッテリー：${s.energy}%${s.charging ? "（充電中）" : ""}（3秒長押しで充電）`);
   const segs = s.energy >= 67 ? 3 : s.energy >= 34 ? 2 : s.energy >= 1 ? 1 : 0;
   ind.querySelectorAll(".seg").forEach((el) => el.classList.toggle("on", Number(el.dataset.seg) <= segs));
   $("#energyText").textContent = `${s.energy}%`;
-  $("#indText").textContent = label;
-  $("#masterText").textContent = s.master && s.command ? "マスターモード中（胸のインジケーターを3秒長押しで解除）" : "";
-  $("#affText").textContent = s.affection;
+  paintPendant();
+  $("#masterText").textContent = s.master && s.command ? `マスターモード中（胸のインジケーターを${masterHold(c)}秒長押しで解除）` : "";
+  $("#affText").textContent = `${s.affection}%`;
   $("#affBar").style.width = `${s.affection}%`;
-  $("#emoText").textContent = s.emotion;
+  $("#emoText").textContent = `${s.emotion}%`;
   $("#emoBar").style.width = `${Math.min(100, s.emotion)}%`;
 }
 function renderLog() {
@@ -968,75 +997,95 @@ $("#input").addEventListener("keydown", (e) => {
 });
 $("#sendBtn").addEventListener("click", send);
 
-/* ---------- 胸のインジケーター長押し（マスター登録） ---------- */
+/* ---------- 胸のインジケーター長押し（マスター登録・マスターモード） ---------- */
 // 画像内のインジケーターの位置（画像の幅・高さに対する割合）
 const PENDANT_POS = { x: 0.51, y: 0.52 };
+// 光らせる楕円の大きさ（画像の幅・高さに対する割合）
+const PENDANT_SIZE = { w: 0.032, h: 0.055 };
 let holdTimer = null, holdEl = null;
 function cancelHold() {
   clearTimeout(holdTimer);
   holdTimer = null;
   if (holdEl) holdEl.classList.remove("holding");
   $("#ind").classList.remove("holding");
+  $("#ind").style.removeProperty("--hold");
   holdEl = null;
+}
+function pendantDone(note, action) {
+  save();
+  renderStatus();
+  renderStage();
+  addNote(note);
+  if (navigator.vibrate) navigator.vibrate(80);
+  if (app.settings.apiKey && !busy) {
+    $("#input").value = action;
+    send();
+  }
 }
 function startHold(e) {
   e.preventDefault();
   const el = e.currentTarget;
   const c = char(), s = c.state;
   if (c.useGauge && s.energy <= 0 && !s.charging) { addNote(`${c.name}は反応しない。（エネルギー0%）`, false); return; }
+  // マスター登録は3秒、登録後のマスターモード切替は設定した秒数
+  const sec = s.master ? masterHold(c) : 3;
   try { el.setPointerCapture(e.pointerId); } catch (err) {}
   holdEl = el;
-  [el, $("#ind")].forEach((x) => { x.classList.remove("holding"); void x.getBoundingClientRect(); x.classList.add("holding"); });
+  [el, $("#ind")].forEach((x) => { x.style.setProperty("--hold", `${sec}s`); x.classList.remove("holding"); void x.getBoundingClientRect(); x.classList.add("holding"); });
   holdTimer = setTimeout(() => {
     cancelHold();
-    let note, action;
     if (!s.master) {
       s.master = true;
-      note = "マスター登録が完了しました。";
-      action = "（胸のインジケーターに3秒間触れて、マスター登録をした）";
+      pendantDone("マスター登録が完了しました。", "（胸のインジケーターに3秒間触れて、マスター登録をした）");
     } else {
       s.command = !s.command;
-      note = s.command ? "マスターモードになりました。" : "マスターモードを解除しました。";
-      action = s.command ? "（胸のインジケーターに3秒間触れて、マスターモードにした）" : "（胸のインジケーターに3秒間触れて、マスターモードを解除した）";
+      pendantDone(
+        s.command ? "＜マスターモード　ON＞" : "＜マスターモード　OFF＞",
+        s.command ? `（胸のインジケーターに${sec}秒間触れて、マスターモードにした）` : `（胸のインジケーターに${sec}秒間触れて、マスターモードを解除した）`
+      );
     }
-    save();
-    renderStatus();
-    renderStage();
-    addNote(note);
-    if (navigator.vibrate) navigator.vibrate(80);
-    if (app.settings.apiKey && !busy) {
-      $("#input").value = action;
-      send();
-    }
-  }, 3000);
+  }, sec * 1000);
 }
 function makePendant() {
   const b = document.createElement("button");
   b.className = "pendant";
-  b.setAttribute("aria-label", "胸のインジケーター（3秒長押し）");
+  const c = char();
+  b.setAttribute("aria-label", c.state.master ? `胸のインジケーター（${masterHold(c)}秒長押しでマスターモード）` : "胸のインジケーター（3秒長押しでマスター登録）");
+  b.appendChild(Object.assign(document.createElement("span"), { className: "pendant-light" }));
   b.addEventListener("pointerdown", startHold);
   ["pointerup", "pointercancel"].forEach((ev) => b.addEventListener(ev, cancelHold));
   b.addEventListener("contextmenu", (e) => e.preventDefault());
   return b;
+}
+// 胸のペンダントを、詳細設定のインジケーターの色・光り方で光らせる
+function paintPendant() {
+  const b = $("#portrait .pendant");
+  if (!b) return;
+  const [color, mode] = indicator(char());
+  b.dataset.state = color === "off" ? "off" : "on";
+  b.dataset.mode = mode;
+  b.style.setProperty("--c", `var(--ind-${color})`);
 }
 function placePendant() {
   const box = $("#portrait"), b = box.querySelector(".pendant");
   if (!b) return;
   const img = box.querySelector("img");
   const w = box.clientWidth, h = box.clientHeight;
-  if (!img || !img.naturalWidth) { b.style.left = "50%"; b.style.top = "50%"; return; }
+  if (!img || !img.naturalWidth) { b.style.left = "50%"; b.style.top = "50%"; b.style.setProperty("--lw", "0px"); return; }
   const sc = Math.max(w / img.naturalWidth, h / img.naturalHeight);
   const rw = img.naturalWidth * sc, rh = img.naturalHeight * sc;
   const ox = (w - rw) * 0.5, oy = (h - rh) * 0.18;
   b.style.left = `${ox + rw * PENDANT_POS.x}px`;
   b.style.top = `${oy + rh * PENDANT_POS.y}px`;
+  b.style.setProperty("--lw", `${rw * PENDANT_SIZE.w}px`);
+  b.style.setProperty("--lh", `${rh * PENDANT_SIZE.h}px`);
 }
 window.addEventListener("resize", placePendant);
 $("#portrait").addEventListener("transitionend", placePendant);
 
 /* ---------- 設定 ---------- */
 const dlg = $("#settings");
-const PAGE_TITLES = { character: "キャラクター", images: "外見", detail: "詳細設定", api: "Gemini API", data: "データ" };
+const PAGE_TITLES = { character: "キャラクター", images: "外見", affection: "好感度", emotion: "感情値", master: "マスターモード", detail: "詳細設定", api: "Gemini API", data: "データ" };
 const narrowDlg = () => window.matchMedia("(max-width:600px)").matches;
 let currentPage = null;
 function showPage(name) {
@@ -1064,6 +1113,8 @@ function openSettings() {
   pp.textContent = "";
   $("#appearancePart").textContent = "";
   $("#rulesPart").textContent = "";
+  $("#affectionPart").textContent = "";
+  $("#emotionPart").textContent = "";
   for (const [key, label, rows] of PROMPT_PARTS) {
     const l = document.createElement("label");
     l.textContent = label;
@@ -1072,7 +1123,7 @@ function openSettings() {
     t.dataset.part = key;
     t.value = (c.promptParts || {})[key] || "";
     l.appendChild(t);
-    (key === "appearance" ? $("#appearancePart") : key === "rules" ? $("#rulesPart") : pp).appendChild(l);
+    (key === "basic" || key === "personality" ? pp : $(`#${key}Part`)).appendChild(l);
   }
   const sp = $("#stateParts");
   sp.textContent = "";
@@ -1081,7 +1132,10 @@ function openSettings() {
     const n = document.createElement("input");
     n.type = "number"; n.min = min; n.max = 100; n.inputMode = "numeric";
     n.className = "th-input"; n.dataset.th = key; n.value = val;
-    n.addEventListener("input", updateHighLabel);
+    n.addEventListener("input", () => {
+      if (Number(n.value) > 100) n.value = 100;
+      updateHighLabel();
+    });
     return n;
   };
   const rangeEnd = (id) => Object.assign(document.createElement("span"), { id });
@@ -1093,18 +1147,21 @@ function openSettings() {
     w.append(k === "color" ? "色" : "光り方", x);
     return w;
   };
+  $("#masterPart").textContent = "";
+  $("#masterHold").value = masterHold(c);
   for (const [key, label] of STATE_PARTS) {
     const l = document.createElement("label");
+    l.dataset.stage = key;
     const head = document.createElement("span");
     head.className = "state-head";
     if (key === "high") {
-      head.append(`${label}（残量 `, numInput("high", t0.tired + 1, 3), "%〜100%）");
+      head.append(`${label}（残量 `, numInput("high", t0.tired + 1, 0), "%〜100%）");
     } else if (key === "tired") {
-      head.append(`${label}（残量 `, numInput("tired", t0.critical + 1, 2), "%〜", rangeEnd("tiredEnd"), "%）");
+      head.append(`${label}（残量 `, numInput("tired", t0.critical + 1, 0), "%〜", rangeEnd("tiredEnd"), "%）");
     } else if (key === "critical") {
-      head.append(`${label}（残量 1%〜`, rangeEnd("criticalEnd"), "%）");
+      head.append(`${label}（残量 0%〜`, rangeEnd("criticalEnd"), "%）");
     } else {
-      head.append(label);
+      head.append(key === "command" ? "マスターモード時の動き" : label);
     }
     l.appendChild(head);
     if (DEFAULT_IND[key]) {
@@ -1119,7 +1176,7 @@ function openSettings() {
     t.dataset.state = key;
     t.value = ((c.promptParts || {}).states || DEFAULT_STATES)[key] || "";
     l.appendChild(t);
-    sp.appendChild(l);
+    (key === "command" ? $("#masterPart") : sp).appendChild(l);
   }
   updateHighLabel();
   $("#useGauge").checked = c.useGauge;
@@ -1134,32 +1191,67 @@ function saveSettings() {
   c.name = $("#name").value.trim() || c.name;
   c.promptParts = {};
   document.querySelectorAll("#settings textarea[data-part]").forEach((t) => { c.promptParts[t.dataset.part] = t.value.trim(); });
-  const a = Number($('#stateParts [data-th="high"]').value) || DEFAULT_TH.tired + 1;
-  const b = Number($('#stateParts [data-th="tired"]').value) || DEFAULT_TH.critical + 1;
-  const crit = Math.max(1, Math.min(98, Math.round(b) - 1));
-  c.thresholds = { critical: crit, tired: Math.max(crit + 1, Math.min(99, Math.round(a) - 1)) };
+  const v = checkSettings();
+  if (v) {
+    c.thresholds = { critical: v.b - 1, tired: v.a - 1 };
+    c.masterHold = v.n;
+  }
   c.indicators = JSON.parse(JSON.stringify(DEFAULT_IND));
   document.querySelectorAll("#stateParts select").forEach((x) => { c.indicators[x.dataset.ind][x.dataset.k] = x.value; });
   c.promptParts.states = {};
-  document.querySelectorAll("#stateParts textarea").forEach((t) => { c.promptParts.states[t.dataset.state] = t.value.trim(); });
+  document.querySelectorAll("#settings textarea[data-state]").forEach((t) => { c.promptParts.states[t.dataset.state] = t.value.trim(); });
   c.useGauge = $("#useGauge").checked;
   if (!c.useGauge && c.state.charging) setCharging(false);
   save();
   renderAll();
 }
+const intValue = (el) => (/^\d+$/.test(el.value.trim()) ? Number(el.value) : NaN);
 function updateHighLabel() {
-  const a = $('#stateParts [data-th="high"]'), b = $('#stateParts [data-th="tired"]');
-  if (!a || !b) return;
-  $("#tiredEnd").textContent = (Number(a.value) || DEFAULT_TH.tired + 1) - 1;
-  $("#criticalEnd").textContent = (Number(b.value) || DEFAULT_TH.critical + 1) - 1;
+  const ae = $('#stateParts [data-th="high"]'), be = $('#stateParts [data-th="tired"]');
+  if (!ae || !be) return;
+  const a = intValue(ae), b = intValue(be);
+  $("#tiredEnd").textContent = a >= 1 ? a - 1 : "—";
+  $("#criticalEnd").textContent = b >= 1 ? b - 1 : "—";
+  // 下限を0%にした段階より下は使わないのでグレーアウトする
+  const unused = { tired: a === 0, critical: a === 0 || b === 0 };
+  for (const key of ["tired", "critical"]) {
+    const l = $(`#stateParts label[data-stage="${key}"]`);
+    l.classList.toggle("unused", unused[key]);
+    l.querySelectorAll("textarea, select").forEach((x) => { x.disabled = unused[key]; });
+  }
+  be.disabled = unused.tired;
+  $("#holdHint").textContent = $("#masterHold").value;
+  checkSettings();
 }
+// 境目（瀕死 < 疲労 < 元気 ≦ 100。下限0%ならそれより下の段階は使わない）と、マスターモードの長押し秒数（2〜10）を確かめる
+function checkSettings() {
+  const a = intValue($('#stateParts [data-th="high"]')), b = intValue($('#stateParts [data-th="tired"]')), n = intValue($("#masterHold"));
+  const thOk = a <= 100 && (a === 0 || (b >= 0 && b < a));
+  const nOk = n >= 2 && n <= 10;
+  $("#thErr").hidden = thOk;
+  $("#holdErr").hidden = nOk;
+  return thOk && nOk ? { a, b: a === 0 ? 0 : b, n } : null;
+}
+function showSettingsError() {
+  const err = !$("#holdErr").hidden ? $("#holdErr") : $("#thErr");
+  showPage(err.closest("section").dataset.page);
+  err.scrollIntoView({ block: "center" });
+}
+$("#masterHold").addEventListener("input", updateHighLabel);
 $("#openSettings").addEventListener("click", openSettings);
-$("#closeSettings").addEventListener("click", () => dlg.close());
+$("#closeSettings").addEventListener("click", () => {
+  if (!checkSettings()) return showSettingsError();
+  dlg.close();
+});
+dlg.addEventListener("cancel", (e) => {
+  if (!checkSettings()) { e.preventDefault(); showSettingsError(); }
+});
 dlg.addEventListener("close", saveSettings);
 $("#resetPrompt").addEventListener("click", () => {
   if (!confirm("プロンプトを最初の内容に戻しますか？")) return;
   document.querySelectorAll("#settings textarea[data-part]").forEach((t) => { t.value = DEFAULT_PARTS[t.dataset.part] || ""; });
-  document.querySelectorAll("#stateParts textarea").forEach((t) => { t.value = DEFAULT_STATES[t.dataset.state] || ""; });
+  document.querySelectorAll("#settings textarea[data-state]").forEach((t) => { t.value = DEFAULT_STATES[t.dataset.state] || ""; });
+  $("#masterHold").value = DEFAULT_HOLD;
   $('#stateParts [data-th="high"]').value = DEFAULT_TH.tired + 1;
   $('#stateParts [data-th="tired"]').value = DEFAULT_TH.critical + 1;
   document.querySelectorAll("#stateParts select").forEach((x) => { x.value = DEFAULT_IND[x.dataset.ind][x.dataset.k]; });
