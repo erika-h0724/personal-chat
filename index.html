@@ -23,29 +23,40 @@
 }
 *,*::before,*::after{box-sizing:inherit}
 html,body{height:100%;margin:0}
+html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--ink);font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;font-size:16px;line-height:1.7}
-button{font:inherit;color:inherit;cursor:pointer}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
 button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--ind-blue);outline-offset:2px}
 .app{height:100%;display:flex;flex-direction:column;max-width:720px;margin:0 auto}
 
 .top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
 .top h1{font-size:1.25rem;margin:0;letter-spacing:.04em}
-.ghost{background:none;border:1px solid var(--line);border-radius:999px;padding:4px 14px}
+.ghost{background:none;border:1px solid var(--line);border-radius:999px;padding:4px 14px;min-height:36px}
 .danger{color:var(--check)}
+.icon-btn{width:40px;height:40px;display:grid;place-items:center;padding:0;border:none;border-radius:50%;background:none;color:var(--muted)}
+.icon-btn:hover{background:var(--surface-2);color:var(--ink)}
 
 .stage{display:grid;grid-template-columns:minmax(0,42%) 1fr;gap:16px;padding:0 16px 14px;border-bottom:1px solid var(--line)}
-.portrait{height:min(34vh,320px);border-radius:14px;overflow:hidden;background:var(--surface-2)}
-.portrait img{width:100%;height:100%;object-fit:cover;display:block}
+.portrait{position:relative;height:min(34vh,320px);border-radius:14px;overflow:hidden;background:var(--surface-2);transition:height .2s}
+.pendant{position:absolute;left:50%;top:50%;width:48px;height:48px;transform:translate(-50%,-50%);border:none;padding:0;border-radius:50%;background:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
+.pendant::after{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid var(--ind-blue);opacity:0}
+.pendant.holding::after{animation:pendantHold 3s linear forwards}
+@keyframes pendantHold{0%{opacity:.3;transform:scale(.4)}100%{opacity:1;transform:scale(1.2)}}
+.portrait img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
 .placeholder{display:grid;place-items:center;height:100%;padding:10px;text-align:center;color:var(--muted);font-size:.8rem;
   background-image:linear-gradient(90deg,rgba(196,67,58,.09) 50%,transparent 50%),linear-gradient(rgba(196,67,58,.09) 50%,transparent 50%);
   background-size:28px 28px}
 .status{display:flex;flex-direction:column;justify-content:center;gap:12px;min-width:0}
 .ind-wrap{display:flex;align-items:center;gap:14px}
 .ind{--c:var(--ind-blue);flex:none}
-.ind svg{width:54px;height:80px;display:block}
+.ind svg{width:72px;height:35px;display:block;overflow:visible}
+.ind{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none;cursor:pointer;padding:6px 0}
+.ind .hold{fill:none;stroke:var(--c);stroke-width:3;stroke-dasharray:100;stroke-dashoffset:100;opacity:0}
+.ind.holding .hold{opacity:1;animation:hold 3s linear forwards}
+@keyframes hold{to{stroke-dashoffset:0}}
+.ind-text.master{color:var(--check)}
 .ind .body{fill:var(--surface);stroke:var(--c);stroke-width:3}
 .ind .glow{fill:var(--c);opacity:.16}
-.ind .batt{fill:none;stroke:var(--c);stroke-width:2}
 .ind .cap{fill:var(--c)}
 .ind .seg{fill:var(--c);opacity:.15}
 .ind .seg.on{opacity:1}
@@ -76,18 +87,35 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 
 .composer{border-top:1px solid var(--line);padding:10px 12px}
 .actions{display:flex;gap:8px;margin-bottom:8px}
-.chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 14px;font-size:.85rem}
-#chargeBtn[aria-pressed="true"]{background:var(--ind-orange);border-color:var(--ind-orange);color:#fff}
-#commandBtn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 14px;font-size:.85rem;min-height:36px}
 .row{display:flex;gap:8px;align-items:flex-end}
 textarea,input[type="text"],input[type="password"]{width:100%;font:inherit;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 #input{flex:1;resize:none;min-height:44px;max-height:140px}
 .send{background:var(--denim);color:#fff;border:none;border-radius:12px;padding:0 18px;height:44px;font-weight:700}
 .send:disabled{opacity:.5;cursor:default}
+.send.icon{width:44px;padding:0;border-radius:50%;flex:none;display:grid;place-items:center}
 
-dialog{width:min(680px,calc(100vw - 24px));max-height:90dvh;border:none;border-radius:16px;padding:0;background:var(--surface);color:var(--ink)}
+dialog{width:min(780px,calc(100vw - 24px));max-height:90dvh;border:none;border-radius:16px;padding:0;background:var(--surface);color:var(--ink)}
 dialog::backdrop{background:rgba(10,16,24,.5)}
-.dlg{display:flex;flex-direction:column;max-height:90dvh}
+.dlg{display:flex;flex-direction:column;height:min(90dvh,760px)}
+.dlg-head{gap:4px}
+.dlg-head h2{flex:1}
+.dlg-main{flex:1;display:flex;min-height:0}
+.dlg-nav{width:180px;flex:none;border-right:1px solid var(--line);padding:8px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+.dlg-nav button{text-align:left;background:none;border:none;border-radius:10px;padding:10px 12px;min-height:44px}
+.dlg-nav button[aria-current="page"]{background:var(--surface-2);font-weight:700}
+.dlg-nav button.sub{padding-left:28px;font-size:.92rem}
+.dlg-body{flex:1;min-width:0}
+.back{display:none}
+@media (max-width:600px){
+  .dlg-nav{width:100%;border-right:none;padding:4px 12px;gap:0}
+  .dlg-nav button{display:flex;justify-content:space-between;align-items:center;border-radius:0;border-bottom:1px solid var(--line);padding:14px 4px}
+  .dlg-nav button::after{content:"›";color:var(--muted);font-size:1.2rem}
+  .dlg-nav button[aria-current="page"]{background:none;font-weight:400}
+  .dlg:not(.on-page) .dlg-body{display:none}
+  .dlg.on-page .dlg-nav{display:none}
+  .dlg.on-page .back{display:grid}
+}
 .dlg-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
 .dlg-head h2{margin:0;font-size:1.1rem}
 .dlg-body{overflow-y:auto;padding:4px 16px 20px}
@@ -98,18 +126,70 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
 .dlg-body label > input,.dlg-body label > textarea{margin-top:4px}
 .dlg-body label.check{display:flex;gap:8px;align-items:center}
 .hint{margin:4px 0;font-size:.8rem;color:var(--muted)}
+.dlg-body h4.sub{margin:16px 0 0;font-size:.9rem}
+.state-head{display:block}
+.th-input{width:4.2em;padding:2px 6px;margin:0 2px;font:inherit;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:right}
+.gen-preview img{width:160px;max-width:100%;border-radius:10px;display:block;margin:8px 0}
+button:disabled{opacity:.5;cursor:default}
 .hint a{color:var(--denim)}
+.help summary{list-style:none;cursor:pointer;font-size:.85rem;color:var(--denim);display:inline-flex;align-items:center;gap:4px;min-height:32px}
+.help summary::-webkit-details-marker{display:none}
+.help summary::after{content:"▽";font-size:.75rem}
+.help[open] summary::after{content:"△"}
 .steps{padding-left:1.4em}
 .steps li{margin:2px 0}
 .btns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
-.btns button{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:6px 14px}
+.btns button{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:6px 14px;min-height:40px}
+.btns.center{justify-content:center}
+.reset-block{margin-top:24px}
+.reset-block:first-child{margin-top:0}
+.dlg-body section[data-page="data"]:not([hidden]){display:flex;flex-direction:column;min-height:100%}
+.danger-zone{margin-top:auto;padding-top:24px;border-top:1px solid var(--line)}
+.data-top{margin-bottom:120px}
+.reset-block > button{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:6px 14px;min-height:40px}
+.hint.plain{list-style:none;padding:0;margin:6px 0 0}
+dialog.small{width:min(360px,calc(100vw - 32px))}
+.forget{padding:24px 20px 16px;text-align:center}
+.forget p{margin:0 0 16px;line-height:1.8}
 .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px;margin-top:8px}
 .slot{display:flex;flex-direction:column;gap:2px;font-size:.75rem}
 .slot .thumb{aspect-ratio:3/4;border-radius:10px;border:1px dashed var(--line);background:var(--surface-2) center/cover no-repeat;display:grid;place-items:center;color:var(--muted);padding:4px}
 .slot .thumb.has{border-style:solid}
-.slot .del{background:none;border:none;padding:0;color:var(--check);font-size:.75rem;text-align:left}
+.slot .thumb-wrap{position:relative}
+.slot .thumb{width:100%}
+.slot .del{position:absolute;top:4px;right:4px;width:28px;height:28px;display:grid;place-items:center;padding:0;border:none;border-radius:50%;background:rgba(20,26,34,.65);color:#fff}
 
+@media (max-width:520px){
+  .top{padding:8px 12px}
+  .stage{grid-template-columns:minmax(0,54%) 1fr;gap:12px;padding:0 12px 10px}
+  .portrait{height:min(30vh,280px)}
+  .status{gap:8px}
+  .ind-wrap{gap:10px}
+  .ind svg{width:60px;height:29px}
+  .energy{font-size:1.5rem}
+  .log{padding:12px}
+  .msg{max-width:90%}
+  .composer{padding:8px 10px}
+  .typing .portrait{height:min(16vh,140px)}
+}
+@media (max-width:380px){
+  .stage{grid-template-columns:minmax(0,50%) 1fr;gap:10px}
+  .ind svg{width:52px;height:25px}
+  .ind-wrap{gap:8px}
+  .energy{font-size:1.35rem}
+  .ind-text,.meter{font-size:.75rem}
+  .chip{padding:3px 12px}
+  .send{padding:0 14px}
+  dialog{width:calc(100vw - 16px)}
+  .dlg-body{padding:4px 12px 16px}
+}
+@media (max-height:700px){
+  .portrait{height:min(26vh,240px)}
+  .typing .portrait{height:12vh}
+  .typing .actions{display:none}
+}
 @media (prefers-reduced-motion: reduce){
+  .portrait{transition:none}
   .ind .lit{animation:none!important}
   .bar i{transition:none}
 }
@@ -119,29 +199,30 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
 <div class="app">
   <header class="top">
     <h1 id="charName">ミエル</h1>
-    <button id="openSettings" class="ghost">設定</button>
+    <button id="openSettings" class="icon-btn" aria-label="設定"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   </header>
 
   <section class="stage" id="stage">
     <div class="portrait" id="portrait"></div>
     <div class="status">
       <div class="ind-wrap">
-        <div class="ind" id="ind" data-state="blue" role="img" aria-label="インジケーター">
-          <svg viewBox="0 0 60 90" aria-hidden="true">
-            <ellipse class="body" cx="30" cy="45" rx="26" ry="41"/>
+        <div class="ind" id="ind" data-state="blue" role="img" aria-label="バッテリー">
+          <svg viewBox="0 0 70 34" aria-hidden="true">
+            <rect class="body" x="2" y="2" width="60" height="30" rx="6"/>
+            <rect class="hold" x="-1" y="-1" width="66" height="36" rx="8" pathLength="100"/>
             <g class="lit">
-              <ellipse class="glow" cx="30" cy="45" rx="22" ry="37"/>
-              <rect class="cap" x="25" y="24" width="10" height="4" rx="1"/>
-              <rect class="batt" x="18" y="28" width="24" height="38" rx="3"/>
-              <rect class="seg" data-seg="3" x="21" y="31" width="18" height="9" rx="1.5"/>
-              <rect class="seg" data-seg="2" x="21" y="42" width="18" height="9" rx="1.5"/>
-              <rect class="seg" data-seg="1" x="21" y="53" width="18" height="9" rx="1.5"/>
+              <rect class="glow" x="5" y="5" width="54" height="24" rx="4"/>
+              <rect class="cap" x="63" y="11" width="5" height="12" rx="2"/>
+              <rect class="seg" data-seg="1" x="7" y="7" width="15" height="20" rx="2"/>
+              <rect class="seg" data-seg="2" x="24.5" y="7" width="15" height="20" rx="2"/>
+              <rect class="seg" data-seg="3" x="42" y="7" width="15" height="20" rx="2"/>
             </g>
           </svg>
         </div>
         <div>
           <div class="energy" id="energyText">50%</div>
           <div class="ind-text" id="indText">青点灯</div>
+          <div class="ind-text master" id="masterText"></div>
         </div>
       </div>
       <div class="meter">
@@ -158,13 +239,9 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
   <main class="log" id="log" aria-live="polite"></main>
 
   <footer class="composer">
-    <div class="actions">
-      <button class="chip" id="chargeBtn" aria-pressed="false">充電</button>
-      <button class="chip" id="commandBtn" aria-pressed="false">命令モード</button>
-    </div>
     <div class="row">
-      <textarea id="input" rows="1" placeholder="話しかける（Shift+Enterで改行）"></textarea>
-      <button id="sendBtn" class="send">送信</button>
+      <textarea id="input" rows="1" enterkeyhint="send" placeholder="話しかける"></textarea>
+      <button id="sendBtn" class="send icon" aria-label="送信"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
   </footer>
 </div>
@@ -172,13 +249,22 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
 <dialog id="settings">
   <div class="dlg">
     <div class="dlg-head">
-      <h2>設定</h2>
-      <button id="closeSettings" class="ghost">閉じる</button>
+      <button id="backSettings" class="icon-btn back" aria-label="メニューに戻る"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h2 id="dlgTitle">設定</h2>
+      <button id="closeSettings" class="icon-btn" aria-label="閉じる"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
+    <div class="dlg-main">
+    <nav class="dlg-nav" aria-label="設定メニュー">
+      <button data-go="character">キャラクター</button>
+      <button data-go="images" class="sub">外見</button>
+      <button data-go="api">Gemini API</button>
+      <button data-go="data">データ</button>
+    </nav>
     <div class="dlg-body">
-      <section>
-        <h3>Gemini API</h3>
+      <section data-page="api">
         <label>APIキー<input id="apiKey" type="password" autocomplete="off" placeholder="ここにAPIキーを貼り付け"></label>
+        <details class="help">
+        <summary>APIキーの作り方</summary>
         <p class="hint">Google AI Studio で無料で作れます。キーはこのブラウザにだけ保存されます。<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">キーを作る</a></p>
         <ol class="hint steps">
           <li>「キーを作る」を開き、Googleアカウントでログインします。</li>
@@ -187,32 +273,77 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
           <li>表示されたキー（長い英数字の文字列）をコピーして、上の欄に貼り付けます。</li>
         </ol>
         <p class="hint">無料のまま使うため、Google側で請求先（Billing）の設定はしないでください。キーは他の人に見せないでください。</p>
+        </details>
       </section>
-      <section>
-        <h3>キャラクター</h3>
+      <section data-page="character">
         <label>名前<input id="name" type="text"></label>
-        <label>プロンプト<textarea id="prompt" rows="14"></textarea></label>
+        <div id="promptParts"></div>
+        <h4 class="sub">状態ごとの話し方</h4>
+        <p class="hint">今の状態に当てはまるものだけが、AIに渡されます。</p>
+        <div id="stateParts"></div>
+        <p class="hint">名前は上の「名前」欄から自動で入ります。</p>
         <div class="btns"><button id="resetPrompt">プロンプトを最初の内容に戻す</button></div>
         <label class="check"><input type="checkbox" id="useGauge"> エネルギー・好感度・感情値を使う</label>
       </section>
-      <section>
-        <h3>画像</h3>
+      <section data-page="images">
+        <div id="appearancePart"></div>
+        <h4 class="sub">画像</h4>
         <p class="hint">枠をタップして画像を選びます。画像はこの端末のブラウザにだけ保存され、AIには送られません。最初からミエルの画像が入っています。登録していない枠は「通常」の画像で代わりに表示します。</p>
         <div class="slots" id="slots"></div>
         <div class="btns"><button id="resetImages">画像を最初の状態に戻す</button></div>
-      </section>
-      <section>
-        <h3>データ</h3>
-        <div class="btns">
-          <button id="exportBtn">バックアップを書き出す</button>
-          <button id="importBtn">バックアップを読み込む</button>
+        <h4 class="sub">外見から画像を作る（お試し）</h4>
+        <p class="hint">上の「外見」の欄をもとに、Geminiで画像を作ります。無料のAPIキーでは使えない場合があります。</p>
+        <label>画像モデル<input id="imageModel" type="text" autocomplete="off"></label>
+        <div class="btns"><button id="genNormal">「通常」を生成</button></div>
+        <div id="genPreview" class="gen-preview" hidden><img alt="生成した画像"></div>
+        <div class="btns" id="genActions" hidden>
+          <button id="genUseNormal">「通常」だけ登録</button>
+          <button id="genAll">登録して、残り9枠も作る</button>
         </div>
-        <p class="hint">書き出したファイルには画像・会話・記憶が入ります。APIキーは入りません。</p>
-        <div class="btns">
-          <button id="resetState" class="danger">状態を初期値に戻す</button>
-          <button id="clearHistory" class="danger">会話と記憶を消す</button>
+        <p class="hint" id="genStatus" aria-live="polite"></p>
+      </section>
+      <section data-page="data">
+        <h4 class="sub">バックアップ</h4>
+        <div class="reset-block">
+          <button id="exportBtn">記憶を補完する</button>
+          <p class="hint">キャラクター設定・画像・会話・記憶をエクスポートする</p>
+          <p class="hint">※APIは対象外</p>
+        </div>
+        <div class="reset-block data-top">
+          <button id="importBtn">記憶を取り戻す</button>
+          <p class="hint">補完した記憶を取り戻す</p>
+        </div>
+        <div class="danger-zone">
+        <div class="reset-block">
+          <button id="resetState" class="danger">ココロを調律する</button>
+          <ul class="hint plain">
+            <li>エネルギー: 50%</li>
+            <li>好感度: 0</li>
+            <li>感情値: 0</li>
+            <li>充電中: 止まる</li>
+            <li>マスターモード: 解除</li>
+            <li>マスター登録: 未登録に戻る</li>
+          </ul>
+          <p class="hint">※APIキーは消えない</p>
+        </div>
+        <div class="reset-block">
+          <button id="clearHistory" class="danger">忘却の彼方へ</button>
+          <p class="hint">会話と記憶がすべて消える</p>
+          <p class="hint">※APIキーは消えない</p>
+        </div>
         </div>
       </section>
+    </div>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="forgetDlg" class="small">
+  <div class="forget">
+    <p id="forgetMsg"></p>
+    <div class="btns center">
+      <button id="forgetNo">まだいかないで</button>
+      <button id="forgetYes" class="danger">わかった</button>
     </div>
   </div>
 </dialog>
@@ -225,11 +356,12 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
 const $ = (s) => document.querySelector(s);
 const STORE_KEY = "personal-chat:v1";
 const DEFAULT_MODEL = "gemini-3.8-flash";
+const DEFAULT_IMAGE_MODEL = "gemini-2.5-flash-image";
 
 const SLOTS = [
   ["normal", "通常"], ["smile", "笑顔"], ["annoyed", "不満"], ["surprised", "驚き"],
-  ["tired", "疲れ（20〜40%）"], ["critical", "危機（1〜19%）"], ["off", "停止（0%）"],
-  ["charging", "充電中"], ["outburst", "感情爆発"], ["command", "命令モード"]
+  ["tired", "疲れ"], ["critical", "危機"], ["off", "停止（0%）"],
+  ["charging", "充電中"], ["outburst", "感情爆発"], ["command", "マスターモード"]
 ];
 const EXPRESSIONS = ["normal", "smile", "annoyed", "surprised"];
 const DEFAULT_IMAGES = {
@@ -277,24 +409,114 @@ const DEFAULT_PROMPT = `あなたは、以下の仕様に基づいたアンド�
 【充電中 x%|オレンジ明滅】口調:精神安定。トランス状態。短時間依存。
 好感度はマスターの行動に対して好ましい、または問題があると思った際にあなた自身で適切に増減させてください。
 感情値は不満に思ったら増加、逆は減少。感情を爆発したら大幅に下げて下さい。
-命令機能が存在し使用時目の光が無くなり機械的口調になる(この機能はあなたは嫌い)`;
+マスターモードが存在し使用時目の光が無くなり機械的口調になる(この機能はあなたは嫌い)`;
+
+const PROMPT_PARTS = [
+  ["basic", "基本設定（立場・一人称・呼び方など）", 6],
+  ["appearance", "外見", 6],
+  ["personality", "性格・口調", 6],
+  ["rules", "設定・ルール（エネルギーや好感度の扱いなど）", 9]
+];
+const DEFAULT_PARTS = {
+  basic: `あなたは、以下の仕様に基づいたアンドロイドの少女として振る舞ってください。
+ユーザーはあなたの「マスター（所有者）」です。
+個体商品名:汎用型家庭用アンドロイド
+一人称:私
+二人称:マスター、あなた、お前(好感度が低い相手に対して)
+来歴:マスターに購入され、少しだけどの様な人なのか気になっている。`,
+  appearance: `外見:身長は154cm、見た目は14〜16歳の人間と見分けがつかない少女の姿。
+髪の色:明るくほんの少し赤みがかった茶色、長さはボブで前髪を中央で分けている。
+目の色:明るい緑色
+服装:赤と白のチェック柄の襟付きブラウスを着ており第一ボタンまで閉めている。
+デニムの青のズボンを履いている。
+胸元の中央に縦の楕円形の「インジケーター」があり、常に服の上にインジケーターが存在する。`,
+  personality: `エネルギー残量に関係なく、中性的な口調で話してください。
+好感度が低い場合、汚い言葉を使う。
+例:通常の返答:「～だよ」「～だね」「～だからね」「～だよ」など中性的な口調(ですます調は他人にしか使わない)
+言い返す時の返答:「なにさ！」「えっ！？」など不満を示す口調。`,
+  rules: `エネルギー:電力。0～100%まで変動する。
+好感度:0～100まで変動する。
+感情値:0〜100まで変動。高くなるにつれ強い感情を出し、100を超えた際抑えきれなくなり感情を爆発。人間や物に普段しない行動をして下さい。
+インジケーターの仕様:
+マスター登録:マスターがいない場合、インジケーターを指で3秒間触れられる事で登録される
+電源ボタン機能:マスター権限を持つ者が3秒間インジケーターが触られた場合オン/オフが切り替わる。
+例えマスターであっても、あなたが納得出来る理由が無ければ触らせない。
+ディスプレイ:内部に電池マークと、現在の状態が表示される。電池マークには現在のエネルギー残量によって最大3メモリ表示される。
+味覚: 味覚はあり、物は食べられるが電気エネルギーには変換されず、逆に食べ物の処理にエネルギーを消費する。
+好感度はマスターの行動に対して好ましい、または問題があると思った際にあなた自身で適切に増減させてください。
+感情値は不満に思ったら増加、逆は減少。感情を爆発したら大幅に下げて下さい。
+マスターモードが存在し使用時目の光が無くなり機械的口調になる(この機能はあなたは嫌い)`
+};
+const DEFAULT_TH = { tired: 40, critical: 19 };
+const th = (c) => ({ ...DEFAULT_TH, ...(c.thresholds || {}) });
+function slotLabel(slot, label, c = char()) {
+  const t = th(c);
+  if (slot === "tired") return `疲れ（${t.critical + 1}〜${t.tired}%）`;
+  if (slot === "critical") return `危機（1〜${t.critical}%）`;
+  return label;
+}
+const STATE_PARTS = [
+  ["high", "元気"],
+  ["tired", "疲れ"],
+  ["critical", "危機"],
+  ["charging", "充電中（オレンジ明滅）"],
+  ["command", "マスターモード"]
+];
+const DEFAULT_STATES = {
+  high: "ハキハキと受け答えが出来る。",
+  tired: "落ち着いているが、少し疲れが見える。",
+  critical: "途切れ途切れ。機能停止（死）を極端に恐れ、マスターに救いを求める。インジケーターが(ピッ…ピッ…)と電子音を鳴らす。",
+  charging: "精神安定。トランス状態。短時間依存。",
+  command: "目の光が無くなり、機械的な口調で命令に従う。"
+};
+function currentStateText(c) {
+  const s = c.state, st = (c.promptParts && c.promptParts.states) || DEFAULT_STATES;
+  const out = [];
+  if (s.command && st.command) out.push(st.command);
+  if (c.useGauge) {
+    const t = th(c);
+    const key = s.charging ? "charging" : s.energy <= t.critical ? "critical" : s.energy <= t.tired ? "tired" : "high";
+    if (st[key]) out.push(st[key]);
+  }
+  return out.join(" ");
+}
+function composePrompt(c) {
+  const p = c.promptParts || {};
+  const out = [`【基本設定】\n名前:${c.name}${p.basic ? "\n" + p.basic : ""}`];
+  if (p.appearance) out.push(`【外見】\n${p.appearance}`);
+  if (p.personality) out.push(`【性格・口調】\n${p.personality}`);
+  if (p.rules) out.push(`【設定・ルール】\n${p.rules}`);
+  return out.join("\n\n");
+}
 
 /* ---------- データ ---------- */
 function defaultState() {
-  return { energy: 50, affection: 0, emotion: 0, charging: false, command: false, expression: "normal", outburst: false };
+  return { energy: 50, affection: 0, emotion: 0, charging: false, command: false, master: false, expression: "normal", outburst: false };
 }
 function newCharacter() {
-  return { id: "miel", name: "ミエル", prompt: DEFAULT_PROMPT, useGauge: true, state: defaultState(), history: [], memory: "", memIndex: 0 };
+  return { id: "miel", name: "ミエル", promptParts: { ...DEFAULT_PARTS, states: { ...DEFAULT_STATES } }, useGauge: true, state: defaultState(), history: [], memory: "", memIndex: 0 };
 }
 function freshApp() {
   return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter()], activeId: "miel" };
+}
+function migrate(d) {
+  for (const c of d.characters) {
+    if (!c.promptParts) {
+      c.promptParts = c.prompt && c.prompt !== DEFAULT_PROMPT
+        ? { basic: c.prompt, appearance: "", personality: "", rules: "" }
+        : { ...DEFAULT_PARTS };
+      delete c.prompt;
+    }
+    if (!c.promptParts.states) c.promptParts.states = { ...DEFAULT_STATES };
+  }
+  return d;
 }
 function load() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
     if (raw) {
       const d = JSON.parse(raw);
-      if (d && Array.isArray(d.characters) && d.characters.length) return d;
+      if (d && Array.isArray(d.characters) && d.characters.length) return migrate(d);
     }
   } catch (e) {}
   return freshApp();
@@ -384,8 +606,8 @@ function currentSlot(c) {
   if (s.command) return "command";
   if (s.outburst) return "outburst";
   if (c.useGauge) {
-    if (s.energy < 20) return "critical";
-    if (s.energy <= 40) return "tired";
+    if (s.energy <= th(c).critical) return "critical";
+    if (s.energy <= th(c).tired) return "tired";
   }
   return EXPRESSIONS.includes(s.expression) ? s.expression : "normal";
 }
@@ -393,7 +615,7 @@ function indicator(c) {
   const s = c.state;
   if (s.charging) return ["orange", "オレンジ明滅（充電中）"];
   if (s.energy <= 0) return ["off", "消灯"];
-  if (s.energy < 20) return ["red", "赤点滅"];
+  if (s.energy <= th(c).critical) return ["red", "赤点滅"];
   return ["blue", "青点灯"];
 }
 
@@ -408,6 +630,7 @@ async function renderStage() {
     const img = document.createElement("img");
     img.src = url;
     img.alt = `${c.name}（${SLOTS.find((x) => x[0] === slot)[1]}）`;
+    img.addEventListener("load", placePendant);
     box.appendChild(img);
   } else {
     const ph = document.createElement("div");
@@ -416,6 +639,8 @@ async function renderStage() {
     ph.style.whiteSpace = "pre-line";
     box.appendChild(ph);
   }
+  box.appendChild(makePendant());
+  placePendant();
 }
 function renderStatus() {
   const c = char(), s = c.state;
@@ -425,20 +650,16 @@ function renderStatus() {
   const [state, label] = indicator(c);
   const ind = $("#ind");
   ind.dataset.state = state;
-  ind.setAttribute("aria-label", `インジケーター：${label}`);
+  ind.setAttribute("aria-label", `バッテリー：${label}（3秒長押しで充電）`);
   const segs = s.energy >= 67 ? 3 : s.energy >= 34 ? 2 : s.energy >= 1 ? 1 : 0;
   ind.querySelectorAll(".seg").forEach((el) => el.classList.toggle("on", Number(el.dataset.seg) <= segs));
   $("#energyText").textContent = `${s.energy}%`;
   $("#indText").textContent = label;
+  $("#masterText").textContent = s.master && s.command ? "マスターモード中（胸のインジケーターを3秒長押しで解除）" : "";
   $("#affText").textContent = s.affection;
   $("#affBar").style.width = `${s.affection}%`;
   $("#emoText").textContent = s.emotion;
   $("#emoBar").style.width = `${Math.min(100, s.emotion)}%`;
-  const cb = $("#chargeBtn");
-  cb.setAttribute("aria-pressed", String(s.charging));
-  cb.textContent = s.charging ? "充電を止める" : "充電";
-  cb.hidden = !c.useGauge;
-  $("#commandBtn").setAttribute("aria-pressed", String(s.command));
 }
 function renderLog() {
   const c = char();
@@ -528,11 +749,13 @@ function buildSystem(c) {
   const status = c.useGauge
     ? `エネルギー${s.energy}%｜${label}｜好感度${s.affection}｜感情値${s.emotion}`
     : `感情値${s.emotion}`;
-  return `${c.prompt}
+  return `${composePrompt(c)}
 
 【アプリからの指示（最優先）】
 ・ステータス（エネルギー残量、インジケーター、好感度、感情値）はアプリが管理して画面に表示します。返答にステータス行は書かず、エネルギーの増減も計算しないでください。
-・現在の状態：${status}${s.command ? "｜命令モード中（目の光が消え、機械的な口調で命令に従う）" : ""}
+・現在の状態：${status}${s.command ? "｜マスターモード中" : ""}
+・マスター登録：${s.master ? "済み（ユーザーはあなたのマスター）" : "未登録（ユーザーはまだあなたのマスターではない他人。マスターとして扱わない。インジケーターに3秒触れられると登録される）"}
+・今の状態での振る舞い：${currentStateText(c) || "設定どおりに振る舞う"}
 ・この状態に合った口調と反応で返答してください。
 ・返答は次の形のJSONだけを返してください。
 {"reply":"セリフと動作の描写","affection_delta":-10から10の整数,"emotion_delta":-20から20の整数,"expression":"normal・smile・annoyed・surprisedのどれか","outburst":trueまたはfalse}
@@ -655,7 +878,7 @@ ${chunk}`;
   }
 }
 
-/* ---------- 充電・命令モード ---------- */
+/* ---------- 充電・マスターモード ---------- */
 let chargeTimer = null;
 function setCharging(on) {
   const c = char();
@@ -681,15 +904,31 @@ function setCharging(on) {
   renderStatus();
   renderStage();
 }
-$("#chargeBtn").addEventListener("click", () => setCharging(!char().state.charging));
-$("#commandBtn").addEventListener("click", () => {
-  const s = char().state;
-  s.command = !s.command;
-  save();
-  renderStatus();
-  renderStage();
-  addNote(s.command ? "命令モードをオンにしました。" : "命令モードをオフにしました。");
+// ゲージを3秒長押しで充電の開始・停止
+let gaugeTimer = null;
+function cancelGaugeHold() {
+  clearTimeout(gaugeTimer);
+  gaugeTimer = null;
+  $("#ind").classList.remove("holding");
+}
+$("#ind").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  if (!char().useGauge) return;
+  const ind = $("#ind");
+  try { ind.setPointerCapture(e.pointerId); } catch (err) {}
+  ind.classList.remove("holding");
+  void ind.getBoundingClientRect();
+  ind.classList.add("holding");
+  gaugeTimer = setTimeout(() => {
+    cancelGaugeHold();
+    const on = !char().state.charging;
+    setCharging(on);
+    addNote(on ? "充電を始めました。" : "充電を止めました。");
+    if (navigator.vibrate) navigator.vibrate(80);
+  }, 3000);
 });
+["pointerup", "pointercancel"].forEach((ev) => $("#ind").addEventListener(ev, cancelGaugeHold));
+$("#ind").addEventListener("contextmenu", (e) => e.preventDefault());
 
 /* ---------- 入力欄 ---------- */
 function autoGrow() {
@@ -698,37 +937,193 @@ function autoGrow() {
   t.style.height = Math.min(140, t.scrollHeight) + "px";
 }
 $("#input").addEventListener("input", autoGrow);
+$("#input").addEventListener("focus", () => document.body.classList.add("typing"));
+$("#input").addEventListener("blur", () => document.body.classList.remove("typing"));
+const isTouch = window.matchMedia("(pointer: coarse)").matches;
+if (isTouch) {
+  $("#input").setAttribute("enterkeyhint", "enter");
+  $("#input").placeholder = "話しかける";
+}
 $("#input").addEventListener("keydown", (e) => {
+  if (isTouch) return; // スマホでは改行を優先し、送信はボタンで行う
   if (e.key === "Enter" && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); send(); }
 });
 $("#sendBtn").addEventListener("click", send);
 
+/* ---------- 胸のインジケーター長押し（マスター登録） ---------- */
+// 画像内のインジケーターの位置（画像の幅・高さに対する割合）
+const PENDANT_POS = { x: 0.51, y: 0.52 };
+let holdTimer = null, holdEl = null;
+function cancelHold() {
+  clearTimeout(holdTimer);
+  holdTimer = null;
+  if (holdEl) holdEl.classList.remove("holding");
+  $("#ind").classList.remove("holding");
+  holdEl = null;
+}
+function startHold(e) {
+  e.preventDefault();
+  const el = e.currentTarget;
+  const c = char(), s = c.state;
+  if (c.useGauge && s.energy <= 0 && !s.charging) { addNote(`${c.name}は反応しない。（エネルギー0%）`, false); return; }
+  try { el.setPointerCapture(e.pointerId); } catch (err) {}
+  holdEl = el;
+  [el, $("#ind")].forEach((x) => { x.classList.remove("holding"); void x.getBoundingClientRect(); x.classList.add("holding"); });
+  holdTimer = setTimeout(() => {
+    cancelHold();
+    let note, action;
+    if (!s.master) {
+      s.master = true;
+      note = "マスター登録が完了しました。";
+      action = "（胸のインジケーターに3秒間触れて、マスター登録をした）";
+    } else {
+      s.command = !s.command;
+      note = s.command ? "マスターモードになりました。" : "マスターモードを解除しました。";
+      action = s.command ? "（胸のインジケーターに3秒間触れて、マスターモードにした）" : "（胸のインジケーターに3秒間触れて、マスターモードを解除した）";
+    }
+    save();
+    renderStatus();
+    renderStage();
+    addNote(note);
+    if (navigator.vibrate) navigator.vibrate(80);
+    if (app.settings.apiKey && !busy) {
+      $("#input").value = action;
+      send();
+    }
+  }, 3000);
+}
+function makePendant() {
+  const b = document.createElement("button");
+  b.className = "pendant";
+  b.setAttribute("aria-label", "胸のインジケーター（3秒長押し）");
+  b.addEventListener("pointerdown", startHold);
+  ["pointerup", "pointercancel"].forEach((ev) => b.addEventListener(ev, cancelHold));
+  b.addEventListener("contextmenu", (e) => e.preventDefault());
+  return b;
+}
+function placePendant() {
+  const box = $("#portrait"), b = box.querySelector(".pendant");
+  if (!b) return;
+  const img = box.querySelector("img");
+  const w = box.clientWidth, h = box.clientHeight;
+  if (!img || !img.naturalWidth) { b.style.left = "50%"; b.style.top = "50%"; return; }
+  const sc = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+  const rw = img.naturalWidth * sc, rh = img.naturalHeight * sc;
+  const ox = (w - rw) * 0.5, oy = (h - rh) * 0.18;
+  b.style.left = `${ox + rw * PENDANT_POS.x}px`;
+  b.style.top = `${oy + rh * PENDANT_POS.y}px`;
+}
+window.addEventListener("resize", placePendant);
+$("#portrait").addEventListener("transitionend", placePendant);
+
 /* ---------- 設定 ---------- */
 const dlg = $("#settings");
+const PAGE_TITLES = { character: "キャラクター", images: "外見", api: "Gemini API", data: "データ" };
+const narrowDlg = () => window.matchMedia("(max-width:600px)").matches;
+let currentPage = null;
+function showPage(name) {
+  currentPage = name;
+  document.querySelectorAll("#settings section[data-page]").forEach((sec) => { sec.hidden = !!name && sec.dataset.page !== name; });
+  document.querySelectorAll(".dlg-nav button").forEach((b) => {
+    if (b.dataset.go === name) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+  });
+  $(".dlg").classList.toggle("on-page", !!name);
+  $("#dlgTitle").textContent = narrowDlg() && name ? PAGE_TITLES[name] : "設定";
+  $(".dlg-body").scrollTop = 0;
+}
+document.querySelectorAll(".dlg-nav button").forEach((b) => b.addEventListener("click", () => showPage(b.dataset.go)));
+$("#backSettings").addEventListener("click", () => showPage(null));
+window.addEventListener("resize", () => {
+  if (dlg.open && !narrowDlg() && !currentPage) showPage("character");
+  else if (dlg.open) $("#dlgTitle").textContent = narrowDlg() && currentPage ? PAGE_TITLES[currentPage] : "設定";
+});
 function openSettings() {
   const c = char();
   $("#apiKey").value = app.settings.apiKey;
+  $("#imageModel").value = app.settings.imageModel || DEFAULT_IMAGE_MODEL;
   $("#name").value = c.name;
-  $("#prompt").value = c.prompt;
+  const pp = $("#promptParts");
+  pp.textContent = "";
+  $("#appearancePart").textContent = "";
+  for (const [key, label, rows] of PROMPT_PARTS) {
+    const l = document.createElement("label");
+    l.textContent = label;
+    const t = document.createElement("textarea");
+    t.rows = rows;
+    t.dataset.part = key;
+    t.value = (c.promptParts || {})[key] || "";
+    l.appendChild(t);
+    (key === "appearance" ? $("#appearancePart") : pp).appendChild(l);
+  }
+  const sp = $("#stateParts");
+  sp.textContent = "";
+  const t0 = th(c);
+  const numInput = (key, val) => {
+    const n = document.createElement("input");
+    n.type = "number"; n.min = 1; n.max = 99; n.inputMode = "numeric";
+    n.className = "th-input"; n.dataset.th = key; n.value = val;
+    n.addEventListener("input", updateHighLabel);
+    return n;
+  };
+  for (const [key, label] of STATE_PARTS) {
+    const l = document.createElement("label");
+    const head = document.createElement("span");
+    head.className = "state-head";
+    if (key === "high") {
+      head.append(`${label}（`, Object.assign(document.createElement("span"), { id: "highRange" }), "・青点灯）");
+    } else if (key === "tired") {
+      head.append(`${label}（残量 `, numInput("tired", t0.tired), "% 以下・青点灯）");
+    } else if (key === "critical") {
+      head.append(`${label}（残量 `, numInput("critical", t0.critical), "% 以下・赤点滅）");
+    } else {
+      head.append(key === "charging" ? `${label}（オレンジ明滅）` : label);
+    }
+    l.appendChild(head);
+    const t = document.createElement("textarea");
+    t.rows = 2;
+    t.dataset.state = key;
+    t.value = ((c.promptParts || {}).states || DEFAULT_STATES)[key] || "";
+    l.appendChild(t);
+    sp.appendChild(l);
+  }
+  updateHighLabel();
   $("#useGauge").checked = c.useGauge;
   renderSlots();
+  showPage(!app.settings.apiKey ? "api" : narrowDlg() ? null : "character");
   dlg.showModal();
 }
 function saveSettings() {
   const c = char();
   app.settings.apiKey = $("#apiKey").value.trim();
+  app.settings.imageModel = $("#imageModel").value.trim() || DEFAULT_IMAGE_MODEL;
   c.name = $("#name").value.trim() || c.name;
-  c.prompt = $("#prompt").value.trim() || DEFAULT_PROMPT;
+  c.promptParts = {};
+  document.querySelectorAll("#settings textarea[data-part]").forEach((t) => { c.promptParts[t.dataset.part] = t.value.trim(); });
+  const tv = Number($('#stateParts [data-th="tired"]').value) || DEFAULT_TH.tired;
+  const cv = Number($('#stateParts [data-th="critical"]').value) || DEFAULT_TH.critical;
+  const crit = Math.max(1, Math.min(98, Math.round(cv)));
+  c.thresholds = { critical: crit, tired: Math.max(crit + 1, Math.min(99, Math.round(tv))) };
+  c.promptParts.states = {};
+  document.querySelectorAll("#stateParts textarea").forEach((t) => { c.promptParts.states[t.dataset.state] = t.value.trim(); });
   c.useGauge = $("#useGauge").checked;
   if (!c.useGauge && c.state.charging) setCharging(false);
   save();
   renderAll();
 }
+function updateHighLabel() {
+  const el = $("#highRange"), n = $('#stateParts [data-th="tired"]');
+  if (el && n) el.textContent = `残量 ${(Number(n.value) || DEFAULT_TH.tired) + 1}% 以上`;
+}
 $("#openSettings").addEventListener("click", openSettings);
 $("#closeSettings").addEventListener("click", () => dlg.close());
 dlg.addEventListener("close", saveSettings);
 $("#resetPrompt").addEventListener("click", () => {
-  if (confirm("プロンプトを最初の内容に戻しますか？")) $("#prompt").value = DEFAULT_PROMPT;
+  if (!confirm("プロンプトを最初の内容に戻しますか？")) return;
+  document.querySelectorAll("#settings textarea[data-part]").forEach((t) => { t.value = DEFAULT_PARTS[t.dataset.part] || ""; });
+  document.querySelectorAll("#stateParts textarea").forEach((t) => { t.value = DEFAULT_STATES[t.dataset.state] || ""; });
+  $('#stateParts [data-th="tired"]').value = DEFAULT_TH.tired;
+  $('#stateParts [data-th="critical"]').value = DEFAULT_TH.critical;
+  updateHighLabel();
 });
 
 let pickingSlot = null;
@@ -746,12 +1141,16 @@ async function renderSlots() {
     else btn.textContent = "＋";
     btn.addEventListener("click", () => { pickingSlot = slot; $("#fileInput").click(); });
     const name = document.createElement("span");
-    name.textContent = label;
-    wrap.append(btn, name);
+    name.textContent = slotLabel(slot, label);
+    const tw = document.createElement("div");
+    tw.className = "thumb-wrap";
+    tw.appendChild(btn);
+    wrap.append(tw, name);
     if (url) {
       const del = document.createElement("button");
       del.className = "del";
-      del.textContent = "削除";
+      del.setAttribute("aria-label", `${label}の画像を削除`);
+      del.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
       del.addEventListener("click", async () => {
         if (!confirm(`「${label}」の画像を削除しますか？`)) return;
         const k = imgKey(slot);
@@ -760,7 +1159,7 @@ async function renderSlots() {
         renderSlots();
         renderStage();
       });
-      wrap.appendChild(del);
+      tw.appendChild(del);
     }
     box.appendChild(wrap);
   }
@@ -779,6 +1178,119 @@ $("#fileInput").addEventListener("change", async (e) => {
   } catch (err) {
     alert("画像を読み込めませんでした。別の画像で試してください。");
   }
+});
+
+/* ---------- 画像生成（お試し） ---------- */
+const EXPRESSION_PROMPTS = {
+  smile: "満面の笑顔で楽しそうにしている。",
+  annoyed: "頬をふくらませて、不満そうににらんでいる。",
+  surprised: "目を大きく見開いて、口を開けて驚いている。",
+  tired: "疲れて眠そうな表情。胸のインジケーターは弱く光っている。",
+  critical: "怯えて泣きそうな表情。胸のインジケーターが赤く点滅している。",
+  off: "目を閉じて脱力している。胸のインジケーターは消灯している。",
+  charging: "穏やかに微笑んでいる。胸のインジケーターにケーブルがつながり、オレンジに光っている。",
+  outburst: "感情が爆発して、怒って叫んでいる。周りに激しいエフェクトがある。",
+  command: "無表情で、目の光が消え、機械的な表情をしている。"
+};
+let genBlob = null, generating = false;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function b64ToBlob(b64, type) {
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type });
+}
+async function geminiImage(parts) {
+  const key = $("#apiKey").value.trim() || app.settings.apiKey;
+  const model = $("#imageModel").value.trim() || DEFAULT_IMAGE_MODEL;
+  if (!key) throw new ApiError("request", "APIキーが入っていません");
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+  let res;
+  try {
+    res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contents: [{ role: "user", parts }], generationConfig: { responseModalities: ["TEXT", "IMAGE"] } }) });
+  } catch (e) { throw new ApiError("network"); }
+  if (!res.ok) {
+    let msg = "";
+    try { msg = (await res.json()).error?.message || ""; } catch (e) {}
+    throw new ApiError(res.status === 429 ? "rate" : (res.status === 400 || res.status === 403 || res.status === 404) ? "request" : "server", msg, res.status);
+  }
+  const data = await res.json();
+  const part = (data.candidates?.[0]?.content?.parts || []).find((p) => p.inlineData || p.inline_data);
+  if (!part) throw new ApiError("empty", data.candidates?.[0]?.finishReason || "画像が返ってきませんでした");
+  const d = part.inlineData || part.inline_data;
+  return resizeImage(b64ToBlob(d.data, d.mimeType || d.mime_type || "image/png"));
+}
+function genStatus(t) { $("#genStatus").textContent = t; }
+function genError(e) {
+  return e instanceof ApiError ? `${e.status || ""} ${e.detail || errorText(e)}`.trim() : e.message;
+}
+function setGenBusy(on) {
+  generating = on;
+  ["#genNormal", "#genUseNormal", "#genAll"].forEach((id) => { $(id).disabled = on; });
+}
+$("#genNormal").addEventListener("click", async () => {
+  if (generating) return;
+  const t = document.querySelector('#settings textarea[data-part="appearance"]');
+  const look = t ? t.value.trim() : "";
+  if (!look) { genStatus("「外見」の欄を入力してください。"); return; }
+  setGenBusy(true);
+  genStatus("「通常」の画像を作っています…");
+  try {
+    genBlob = await geminiImage([{ text: `アニメ調のイラストを、正方形で1枚描いてください。次の外見のキャラクターが、明るい部屋の床に座って正面を向き、穏やかに微笑んでいる。文字は入れない。\n${look}` }]);
+    const img = $("#genPreview img");
+    if (img.src) URL.revokeObjectURL(img.src);
+    img.src = URL.createObjectURL(genBlob);
+    $("#genPreview").hidden = false;
+    $("#genActions").hidden = false;
+    genStatus("できました。よければ登録してください。気に入らなければ、もう一度「通常」を生成できます。");
+  } catch (e) {
+    genStatus(`生成できませんでした：${genError(e)}`);
+  } finally {
+    setGenBusy(false);
+  }
+});
+$("#genUseNormal").addEventListener("click", async () => {
+  if (!genBlob || generating) return;
+  const k = imgKey("normal");
+  await imgPut(k, genBlob);
+  dropCache(k);
+  renderSlots();
+  renderStage();
+  genStatus("「通常」に登録しました。");
+});
+$("#genAll").addEventListener("click", async () => {
+  if (!genBlob || generating) return;
+  if (!confirm("「通常」に登録して、残り9枠の画像を作ります。今の画像は置き換わります。続けますか？")) return;
+  setGenBusy(true);
+  const k0 = imgKey("normal");
+  await imgPut(k0, genBlob);
+  dropCache(k0);
+  renderSlots();
+  renderStage();
+  const ref = (await blobToDataUrl(genBlob)).split(",");
+  const refPart = { inlineData: { mimeType: ref[0].slice(5, ref[0].indexOf(";")), data: ref[1] } };
+  const entries = Object.entries(EXPRESSION_PROMPTS);
+  let done = 0, failed = [];
+  for (const [slot, expr] of entries) {
+    const label = SLOTS.find((x) => x[0] === slot)[1];
+    genStatus(`「${label}」を作っています…（${done + 1}/${entries.length}）`);
+    try {
+      const blob = await geminiImage([refPart, { text: `この画像と同じキャラクター、同じ服、同じ構図、同じ背景のまま、表情と次の点だけを変えて、正方形で1枚描いてください。文字は入れない。\n${expr}` }]);
+      const k = imgKey(slot);
+      await imgPut(k, blob);
+      dropCache(k);
+      renderSlots();
+    } catch (e) {
+      failed.push(label);
+      if (e instanceof ApiError && e.type === "rate") await sleep(30000);
+    }
+    done++;
+    await sleep(7000);
+  }
+  renderStage();
+  setGenBusy(false);
+  genStatus(failed.length ? `完了しました。作れなかった枠：${failed.join("、")}（手動で登録するか、もう一度試してください）` : "10枠すべて作り終えました。");
 });
 
 /* ---------- 初期画像 ---------- */
@@ -839,7 +1351,7 @@ $("#importInput").addEventListener("change", async (e) => {
     const images = d.images || {};
     delete d.images;
     if (chargeTimer) { clearInterval(chargeTimer); chargeTimer = null; }
-    app = d;
+    app = migrate(d);
     app.settings = { ...app.settings, apiKey: key };
     await imgClear();
     for (const [k, v] of Object.entries(images)) await imgPut(k, await (await fetch(v)).blob());
@@ -853,14 +1365,20 @@ $("#importInput").addEventListener("change", async (e) => {
   }
 });
 $("#resetState").addEventListener("click", () => {
-  if (!confirm("エネルギー・好感度・感情値を初期値に戻しますか？")) return;
+  if (!confirm("ココロを調律しますか？")) return;
   if (chargeTimer) { clearInterval(chargeTimer); chargeTimer = null; }
   char().state = defaultState();
   save();
   renderAll();
 });
+const forgetDlg = $("#forgetDlg");
 $("#clearHistory").addEventListener("click", () => {
-  if (!confirm("会話と記憶をすべて消しますか？")) return;
+  $("#forgetMsg").textContent = `${char().name}はすべてあなたのことを忘れてしまいます。さようなら`;
+  forgetDlg.showModal();
+});
+$("#forgetNo").addEventListener("click", () => forgetDlg.close());
+$("#forgetYes").addEventListener("click", () => {
+  forgetDlg.close();
   const c = char();
   c.history = [];
   c.memory = "";
