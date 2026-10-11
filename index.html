@@ -99,6 +99,8 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
 .dlg-body label.check{display:flex;gap:8px;align-items:center}
 .hint{margin:4px 0;font-size:.8rem;color:var(--muted)}
 .hint a{color:var(--denim)}
+.steps{padding-left:1.4em}
+.steps li{margin:2px 0}
 .btns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
 .btns button{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:6px 14px}
 .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px;margin-top:8px}
@@ -178,8 +180,13 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
         <h3>Gemini API</h3>
         <label>APIキー<input id="apiKey" type="password" autocomplete="off" placeholder="AIza..."></label>
         <p class="hint">Google AI Studio で無料で作れます。キーはこのブラウザにだけ保存されます。<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">キーを作る</a></p>
-        <label>モデル<input id="model" type="text" autocomplete="off"></label>
-        <p class="hint">回数制限に何度もかかる場合は、gemini-2.5-flash-lite などに変えてください。</p>
+        <ol class="hint steps">
+          <li>「キーを作る」を開き、Googleアカウントでログインします。</li>
+          <li>「Create API key」を押します。</li>
+          <li>プロジェクトを聞かれたら、新しく作成を選び、名前を「personal-ai-chat」にします。</li>
+          <li>表示されたキー（AIza で始まる文字列）をコピーして、上の欄に貼り付けます。</li>
+        </ol>
+        <p class="hint">無料のまま使うため、Google側で請求先（Billing）の設定はしないでください。キーは他の人に見せないでください。</p>
       </section>
       <section>
         <h3>キャラクター</h3>
@@ -216,7 +223,7 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
 "use strict";
 const $ = (s) => document.querySelector(s);
 const STORE_KEY = "personal-chat:v1";
-const DEFAULT_MODEL = "gemini-2.5-flash";
+const DEFAULT_MODEL = "gemini-3.8-flash";
 
 const SLOTS = [
   ["normal", "通常"], ["smile", "笑顔"], ["annoyed", "不満"], ["surprised", "驚き"],
@@ -475,8 +482,8 @@ class ApiError extends Error {
   constructor(type, detail = "", status = 0) { super(type); this.type = type; this.detail = detail; this.status = status; }
 }
 async function gemini(systemText, contents, json) {
-  const { apiKey, model } = app.settings;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent((model || DEFAULT_MODEL).trim())}:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
+  const { apiKey } = app.settings;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(DEFAULT_MODEL)}:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
   const body = { contents, generationConfig: { temperature: json ? 0.9 : 0.3 } };
   if (systemText) body.systemInstruction = { parts: [{ text: systemText }] };
   if (json) body.generationConfig.responseMimeType = "application/json";
@@ -499,7 +506,7 @@ async function gemini(systemText, contents, json) {
 function errorText(e) {
   switch (e.type) {
     case "rate": return "回数制限に達しました。1分ほど待ってから、もう一度送ってください。";
-    case "request": return `APIキーかモデル名を確認してください。（${e.status} ${e.detail}）`;
+    case "request": return `接続できませんでした。APIキーを確認してください。（${e.status} ${e.detail}）`;
     case "network": return "通信できませんでした。接続を確認してください。";
     case "empty": return `返答が空でした（${e.detail}）。言い方を変えて送ってみてください。`;
     default: return `Gemini側でエラーが起きました（${e.status || e.message}）。少し待ってから試してください。`;
@@ -692,7 +699,6 @@ const dlg = $("#settings");
 function openSettings() {
   const c = char();
   $("#apiKey").value = app.settings.apiKey;
-  $("#model").value = app.settings.model || DEFAULT_MODEL;
   $("#name").value = c.name;
   $("#prompt").value = c.prompt;
   $("#useGauge").checked = c.useGauge;
@@ -702,7 +708,6 @@ function openSettings() {
 function saveSettings() {
   const c = char();
   app.settings.apiKey = $("#apiKey").value.trim();
-  app.settings.model = $("#model").value.trim() || DEFAULT_MODEL;
   c.name = $("#name").value.trim() || c.name;
   c.prompt = $("#prompt").value.trim() || DEFAULT_PROMPT;
   c.useGauge = $("#useGauge").checked;
