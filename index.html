@@ -197,8 +197,9 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
       </section>
       <section>
         <h3>画像</h3>
-        <p class="hint">枠をタップして画像を選びます。画像はこの端末のブラウザにだけ保存され、AIには送られません。未登録の枠は「通常」の画像で代わりに表示します。</p>
+        <p class="hint">枠をタップして画像を選びます。画像はこの端末のブラウザにだけ保存され、AIには送られません。最初からミエルの画像が入っています。登録していない枠は「通常」の画像で代わりに表示します。</p>
         <div class="slots" id="slots"></div>
+        <div class="btns"><button id="resetImages">画像を最初の状態に戻す</button></div>
       </section>
       <section>
         <h3>データ</h3>
@@ -231,6 +232,12 @@ const SLOTS = [
   ["charging", "充電中"], ["outburst", "感情爆発"], ["command", "命令モード"]
 ];
 const EXPRESSIONS = ["normal", "smile", "annoyed", "surprised"];
+const DEFAULT_IMAGES = {
+  normal: "sample_pic/mieru_normal.png", smile: "sample_pic/mieru_smile.png", annoyed: "sample_pic/mieru_angry.png",
+  surprised: "sample_pic/mieru_surprise.png", tired: "sample_pic/mieru_20_40.png", critical: "sample_pic/mieru_1_19.png",
+  off: "sample_pic/mieru_shutdown.png", charging: "sample_pic/mieru_charging.png", outburst: "sample_pic/mieru_outburst.png",
+  command: "sample_pic/mieru_commandmode.png"
+};
 
 const DEFAULT_PROMPT = `あなたは、以下の仕様に基づいたアンドロイドの少女として振る舞ってください。
 ユーザーはあなたの「マスター（所有者）」です。
@@ -772,6 +779,33 @@ $("#fileInput").addEventListener("change", async (e) => {
   }
 });
 
+/* ---------- 初期画像 ---------- */
+async function seedImages(force = false) {
+  const c = char();
+  if (c.id !== "miel" || (!force && c.imagesSeeded)) return;
+  let ok = true;
+  for (const [slot, path] of Object.entries(DEFAULT_IMAGES)) {
+    const k = imgKey(slot);
+    if (!force) {
+      let has = null;
+      try { has = await imgGet(k); } catch (e) {}
+      if (has) continue;
+    }
+    try {
+      const r = await fetch(path);
+      if (!r.ok) throw new Error(String(r.status));
+      await imgPut(k, await r.blob());
+      dropCache(k);
+    } catch (e) { ok = false; }
+  }
+  if (ok) { c.imagesSeeded = true; save(); }
+  renderStage();
+  if (dlg.open) renderSlots();
+}
+$("#resetImages").addEventListener("click", () => {
+  if (confirm("10枠すべてを最初の画像に戻しますか？（登録した画像は消えます）")) seedImages(true);
+});
+
 /* ---------- バックアップ ---------- */
 const blobToDataUrl = (b) => new Promise((res, rej) => {
   const r = new FileReader();
@@ -835,6 +869,7 @@ $("#clearHistory").addEventListener("click", () => {
 
 /* ---------- 起動 ---------- */
 renderAll();
+seedImages();
 if (char().state.charging) { char().state.charging = false; setCharging(true); }
 </script>
 </body>
