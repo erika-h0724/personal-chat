@@ -163,7 +163,7 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
       <button class="chip" id="commandBtn" aria-pressed="false">命令モード</button>
     </div>
     <div class="row">
-      <textarea id="input" rows="1" placeholder="話しかける（Ctrl+Enterでも送信）"></textarea>
+      <textarea id="input" rows="1" placeholder="話しかける（Shift+Enterで改行）"></textarea>
       <button id="sendBtn" class="send">送信</button>
     </div>
   </footer>
@@ -516,7 +516,9 @@ function errorText(e) {
     case "request": return `接続できませんでした。APIキーを確認してください。（${e.status} ${e.detail}）`;
     case "network": return "通信できませんでした。接続を確認してください。";
     case "empty": return `返答が空でした（${e.detail}）。言い方を変えて送ってみてください。`;
-    default: return `Gemini側でエラーが起きました（${e.status || e.message}）。少し待ってから試してください。`;
+    default:
+      if (e.status === 503) return `（${char().name}は少し首をかしげている。電波が届きにくいみたい……少し待ってから、もう一度話しかけてみて）`;
+      return `Gemini側でエラーが起きました（${e.status || e.message}）。少し待ってから試してください。`;
   }
 }
 
@@ -697,7 +699,7 @@ function autoGrow() {
 }
 $("#input").addEventListener("input", autoGrow);
 $("#input").addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && !e.isComposing) { e.preventDefault(); send(); }
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); send(); }
 });
 $("#sendBtn").addEventListener("click", send);
 
