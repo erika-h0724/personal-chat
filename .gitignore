@@ -1,0 +1,5 @@
+# バックアップ（会話履歴・記憶を含む）
+personal-chat-backup-*.json
+
+# macOS
+.DS_Store
