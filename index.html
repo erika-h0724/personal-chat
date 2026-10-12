@@ -408,12 +408,12 @@ const SLOTS = [
   ["charging", "充電中"], ["outburst", "感情爆発"], ["command", "マスターモード"]
 ];
 const EXPRESSIONS = ["normal", "smile", "annoyed", "surprised"];
-const DEFAULT_IMAGES = {
+const DEFAULT_IMAGES = { miel: {
   normal: "sample_pic/mieru_normal.png", smile: "sample_pic/mieru_smile.png", annoyed: "sample_pic/mieru_angry.png",
   surprised: "sample_pic/mieru_surprise.png", tired: "sample_pic/mieru_20_40.png", critical: "sample_pic/mieru_1_19.png",
   off: "sample_pic/mieru_shutdown.png", charging: "sample_pic/mieru_charging.png", outburst: "sample_pic/mieru_outburst.png",
   command: "sample_pic/mieru_commandmode.png"
-};
+}, noel: Object.fromEntries(SLOTS.map(([k]) => [k, `sample_pic/noel_${k}.webp`])) };
 
 const DEFAULT_PROMPT = `あなたは、以下の仕様に基づいたアンドロイドの少女として振る舞ってください。
 ユーザーはあなたの「マスター（所有者）」です。
@@ -557,6 +557,23 @@ function defaultState() {
 function newCharacter() {
   return { id: "miel", name: "ミエル", promptParts: { ...DEFAULT_PARTS, states: { ...DEFAULT_STATES } }, indicators: JSON.parse(JSON.stringify(DEFAULT_IND)), masterHold: DEFAULT_HOLD, useGauge: true, state: defaultState(), history: [], memory: "", memIndex: 0 };
 }
+// 最初から入っている2人目のキャラクター
+function noelCharacter() {
+  return {
+    id: "noel", name: "ノエル",
+    promptParts: {
+      basic: "一人称は僕\nマスターに飼われてるペットのヤモリ\n日本語は話せる\n時々脱走するが、すぐ捕まえられるので良い脱走方法を研究中。\n本当は人間になりたいと考えている。",
+      appearance: "ニホンヤモリ。",
+      personality: "大人しく真面目だが人間への憧れが強く、人間と関わると少し攻撃的になる。\n口調は、僕は〜なんだ。こう思うんだ。と言った感じ。",
+      rules: "",
+      affection: "しっぽをタップさられると好感度が下がる。",
+      emotion: "尻尾に関する話題を出されると、びくっとする（減少）。\n虫の話題を出されるとワクワクする（増加）。",
+      states: { high: "", tired: "", critical: "", charging: "", command: "抗おうとするが、抗えない。" }
+    },
+    indicators: JSON.parse(JSON.stringify(DEFAULT_IND)), masterHold: DEFAULT_HOLD, useGauge: true, usePendant: true,
+    state: defaultState(), history: [], memory: "", memIndex: 0
+  };
+}
 // 空のキャラクター（名前だけ入った状態。エネルギーと胸のペンダントは使わない）
 function blankCharacter() {
   const parts = Object.fromEntries(PROMPT_PARTS.map(([k]) => [k, ""]));
@@ -565,9 +582,14 @@ function blankCharacter() {
 }
 const pendantOn = (c) => c.usePendant !== false;
 function freshApp() {
-  return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter()], activeId: "miel" };
+  return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter(), noelCharacter()], activeId: "miel", noelAdded: true };
 }
 function migrate(d) {
+  // ノエルは1回だけ追加する（削除したら戻さない）
+  if (!d.noelAdded) {
+    if (!d.characters.some((c) => c.id === "noel")) d.characters.push(noelCharacter());
+    d.noelAdded = true;
+  }
   for (const c of d.characters) {
     if (!c.promptParts) {
       c.promptParts = c.prompt && c.prompt !== DEFAULT_PROMPT
@@ -1248,7 +1270,8 @@ function openSettings() {
   $("#usePendant").checked = pendantOn(c);
   $('.dlg-nav [data-go="master"]').hidden = !pendantOn(c);
   $("#deleteChar").disabled = app.characters.length <= 1;
-  $("#mielImgHint").hidden = $("#resetImages").hidden = c.id !== "miel";
+  $("#mielImgHint").hidden = $("#resetImages").hidden = !DEFAULT_IMAGES[c.id];
+  $("#mielImgHint").textContent = `最初から${c.name}の画像が入っています。`;
   renderSlots();
   showPage(!app.settings.apiKey ? "api" : narrowDlg() ? null : "character");
   dlg.showModal();
@@ -1510,9 +1533,9 @@ $("#genAll").addEventListener("click", async () => {
 /* ---------- 初期画像 ---------- */
 async function seedImages(force = false) {
   const c = char();
-  if (c.id !== "miel" || (!force && c.imagesSeeded)) return;
+  if (!DEFAULT_IMAGES[c.id] || (!force && c.imagesSeeded)) return;
   let ok = true;
-  for (const [slot, path] of Object.entries(DEFAULT_IMAGES)) {
+  for (const [slot, path] of Object.entries(DEFAULT_IMAGES[c.id])) {
     const k = imgKey(slot);
     if (!force) {
       let has = null;
