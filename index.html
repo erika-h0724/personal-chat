@@ -29,8 +29,8 @@ button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
 button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--ind-blue);outline-offset:2px}
 .app{height:100%;display:flex;flex-direction:column;max-width:720px;margin:0 auto}
 
-.top{display:flex;align-items:center;gap:10px;padding:8px 12px}
-.top h1{font-size:1.15rem;margin:0;letter-spacing:.04em;min-width:0;flex:1 1 auto}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px;padding:6px 12px 8px}
+.top h1{font-size:1.15rem;margin:0;letter-spacing:.04em;min-width:0;flex:1 1 0}
 .char-switch{font:inherit;letter-spacing:inherit;background:none;border:none;padding:4px 6px 4px 0;display:flex;align-items:center;gap:4px;max-width:100%}
 #charName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .char-switch svg{width:16px;height:16px;color:var(--muted);flex:none}
@@ -68,9 +68,9 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .placeholder{display:grid;place-items:center;height:100%;padding:10px;text-align:center;color:var(--muted);font-size:.8rem;
   background-image:linear-gradient(90deg,rgba(196,67,58,.09) 50%,transparent 50%),linear-gradient(rgba(196,67,58,.09) 50%,transparent 50%);
   background-size:28px 28px}
-.status{flex:none;display:flex;align-items:center;gap:10px}
-.ind{--c:var(--ind-blue);flex:none;display:flex;align-items:center;gap:4px}
-.ind svg{width:30px;height:15px;display:block;overflow:visible}
+.status{order:3;flex:1 0 100%;display:flex;align-items:center;gap:16px}
+.ind{--c:var(--ind-blue);flex:none;display:flex;align-items:center;gap:6px}
+.ind svg{width:44px;height:22px;display:block;overflow:visible}
 .ind{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none;cursor:pointer;padding:8px 0}
 .ind .hold{fill:none;stroke:var(--c);stroke-width:3;stroke-dasharray:100;stroke-dashoffset:100;opacity:0}
 .ind.holding .hold{opacity:1;animation:hold var(--hold,3s) linear forwards}
@@ -84,11 +84,11 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .ind[data-state="off"] .glow{opacity:0}
 @keyframes blink{0%{opacity:1}100%{opacity:.25}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
-.energy{font-size:.8rem;font-weight:700;line-height:1}
-.meter{font-size:.75rem;line-height:1.2;flex:none;width:44px}
+.energy{font-size:1rem;font-weight:700;line-height:1}
+.meter{font-size:.8rem;line-height:1.2;flex:1;min-width:0}
 .meter-head{display:flex;align-items:center;gap:2px;color:var(--muted);white-space:nowrap}
 .meter-head svg{width:1.05em;height:1.05em;flex:none}
-.bar{height:3px;margin-top:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.bar{height:5px;margin-top:4px;background:var(--line);border-radius:2px;overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:var(--denim);transition:width .4s}
 .meter.emo .bar i{background:var(--check)}
 .gauge-off .status > *{display:none}
@@ -183,8 +183,8 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 .slot .del{position:absolute;top:4px;right:4px;width:28px;height:28px;display:grid;place-items:center;padding:0;border:none;border-radius:50%;background:rgba(20,26,34,.65);color:#fff}
 
 @media (max-width:520px){
-  .top{gap:8px;padding:6px 8px 6px 12px}
-  .status{gap:8px}
+  .top{padding:4px 8px 8px 12px}
+  .status{gap:12px}
   .log{padding:12px}
   .msg{max-width:90%}
   .composer{padding:8px 10px}
@@ -192,16 +192,15 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 }
 @media (max-width:380px){
   .top h1{font-size:1rem}
-  .status{gap:6px}
-  .ind svg{width:26px;height:13px}
-  .meter{width:40px;font-size:.7rem}
+  .status{gap:10px}
+  .ind svg{width:38px;height:19px}
   .chip{padding:3px 12px}
   .send{padding:0 14px}
   dialog{width:calc(100vw - 16px)}
   .dlg-body{padding:4px 12px 16px}
 }
 @media (max-height:700px){
-  .portrait{height:46vh}
+  .portrait{height:42vh}
   .typing .portrait{height:16vh}
   .typing .actions{display:none}
 }
