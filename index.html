@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Personal Chat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,22 +22,34 @@
   :root{ --bg:#121A23; --surface:#1A2430; --surface-2:#202C3A; --ink:#E6ECF2; --muted:#98A6B4; --line:#2B3846; --denim:#7FA2C8; --user-bubble:#2E4A6A; }
 }
 *,*::before,*::after{box-sizing:inherit}
-html,body{height:100%;margin:0}
+html,body{height:100%;margin:0;overflow-x:hidden}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--ink);font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;font-size:16px;line-height:1.7}
 button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
 button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--ind-blue);outline-offset:2px}
 .app{height:100%;display:flex;flex-direction:column;max-width:720px;margin:0 auto}
 
-.top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
-.top h1{font-size:1.25rem;margin:0;letter-spacing:.04em}
+.top{display:flex;align-items:center;gap:10px;padding:8px 12px}
+.top h1{font-size:1.15rem;margin:0;letter-spacing:.04em;min-width:0;flex:1 1 auto}
+.char-switch{font:inherit;letter-spacing:inherit;background:none;border:none;padding:4px 6px 4px 0;display:flex;align-items:center;gap:4px;max-width:100%}
+#charName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.char-switch svg{width:16px;height:16px;color:var(--muted);flex:none}
+.char-menu{padding:12px}
+.char-menu h2{font-size:1rem;margin:4px 4px 8px}
+.char-list,.char-actions{display:flex;flex-direction:column}
+.char-list button,.char-actions button{text-align:left;background:none;border:none;border-radius:10px;padding:10px 12px;min-height:44px}
+.char-list button:hover,.char-actions button:hover{background:var(--surface-2)}
+.char-list button[aria-current="true"]{font-weight:700;background:var(--surface-2)}
+.char-actions{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+/* iPhoneは16px未満の入力欄をタップすると画面を拡大してしまうので、スマホでは16pxにする */
+@media (pointer:coarse){ #settings textarea,#settings input,#settings select{font-size:16px} }
 .ghost{background:none;border:1px solid var(--line);border-radius:999px;padding:4px 14px;min-height:36px}
 .danger{color:var(--check)}
 .icon-btn{width:40px;height:40px;display:grid;place-items:center;padding:0;border:none;border-radius:50%;background:none;color:var(--muted)}
 .icon-btn:hover{background:var(--surface-2);color:var(--ink)}
 
-.stage{display:grid;grid-template-columns:minmax(0,42%) 1fr;gap:16px;padding:0 16px 14px;border-bottom:1px solid var(--line)}
-.portrait{position:relative;height:min(34vh,320px);border-radius:14px;overflow:hidden;background:var(--surface-2);transition:height .2s}
+.stage{position:relative;padding:0 12px 10px;border-bottom:1px solid var(--line)}
+.portrait{position:relative;width:100%;height:min(50vh,696px);border-radius:14px;overflow:hidden;background:var(--surface-2);transition:height .2s}
 .pendant{position:absolute;left:50%;top:50%;width:48px;height:48px;transform:translate(-50%,-50%);border:none;padding:0;border-radius:50%;background:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
 .pendant::after{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid var(--ind-blue);opacity:0}
 .pendant.holding::after{animation:pendantHold var(--hold,3s) linear forwards}
@@ -50,19 +62,19 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .pendant[data-mode="pulse"] .pendant-light{animation:lightPulse 1.8s ease-in-out infinite}
 @keyframes lightBlink{0%{filter:none}100%{filter:brightness(.35)}}
 @keyframes lightPulse{0%,100%{filter:none}50%{filter:brightness(.5)}}
+.master-badge{position:absolute;left:20px;bottom:18px;max-width:calc(100% - 40px);padding:2px 10px;border-radius:999px;background:rgba(10,16,24,.7);color:#fff;font-size:.75rem}
+.master-badge:empty{display:none}
 .portrait img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
 .placeholder{display:grid;place-items:center;height:100%;padding:10px;text-align:center;color:var(--muted);font-size:.8rem;
   background-image:linear-gradient(90deg,rgba(196,67,58,.09) 50%,transparent 50%),linear-gradient(rgba(196,67,58,.09) 50%,transparent 50%);
   background-size:28px 28px}
-.status{display:flex;flex-direction:column;justify-content:center;gap:12px;min-width:0}
-.ind-wrap{display:flex;align-items:center;gap:14px}
-.ind{--c:var(--ind-blue);flex:none}
-.ind svg{width:72px;height:35px;display:block;overflow:visible}
-.ind{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none;cursor:pointer;padding:6px 0}
+.status{flex:none;display:flex;align-items:center;gap:10px}
+.ind{--c:var(--ind-blue);flex:none;display:flex;align-items:center;gap:4px}
+.ind svg{width:30px;height:15px;display:block;overflow:visible}
+.ind{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none;cursor:pointer;padding:8px 0}
 .ind .hold{fill:none;stroke:var(--c);stroke-width:3;stroke-dasharray:100;stroke-dashoffset:100;opacity:0}
 .ind.holding .hold{opacity:1;animation:hold var(--hold,3s) linear forwards}
 @keyframes hold{to{stroke-dashoffset:0}}
-.ind-text.master{color:var(--check)}
 .ind .body{fill:var(--surface);stroke:var(--c);stroke-width:3}
 .ind .glow{fill:var(--c);opacity:.16}
 .ind .cap{fill:var(--c)}
@@ -72,23 +84,21 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .ind[data-state="off"] .glow{opacity:0}
 @keyframes blink{0%{opacity:1}100%{opacity:.25}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
-.energy{font-size:2rem;font-weight:700;line-height:1.1}
-.ind-text{font-size:.85rem;color:var(--muted)}
-.meter{font-size:.85rem}
-.meter-head{display:flex;justify-content:space-between;color:var(--muted)}
-.meter-label{display:inline-flex;align-items:center;gap:4px}
-.meter-label svg{width:1.05em;height:1.05em;flex:none}
-.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.energy{font-size:.8rem;font-weight:700;line-height:1}
+.meter{font-size:.75rem;line-height:1.2;flex:none;width:44px}
+.meter-head{display:flex;align-items:center;gap:2px;color:var(--muted);white-space:nowrap}
+.meter-head svg{width:1.05em;height:1.05em;flex:none}
+.bar{height:3px;margin-top:3px;background:var(--line);border-radius:2px;overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:var(--denim);transition:width .4s}
 .meter.emo .bar i{background:var(--check)}
-.gauge-off .ind-wrap,.gauge-off .meter{display:none}
+.gauge-off .status > *{display:none}
 
 .log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
-.msg{max-width:85%;padding:8px 12px;border-radius:14px;white-space:pre-wrap;word-break:break-word}
+.msg{max-width:85%;padding:7px 11px;border-radius:14px;font-size:.875rem;line-height:1.65;white-space:pre-wrap;word-break:break-word}
 .msg.ai{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-top-left-radius:4px}
-.msg.ai .who{display:block;font-size:.75rem;color:var(--muted)}
+.msg.ai .who{display:block;font-size:.7rem;color:var(--muted)}
 .msg.user{align-self:flex-end;background:var(--user-bubble);color:#fff;border-top-right-radius:4px}
-.msg.note{align-self:center;max-width:100%;padding:2px 8px;color:var(--muted);font-size:.8rem;text-align:center}
+.msg.note{align-self:center;max-width:100%;padding:2px 8px;color:var(--muted);font-size:.75rem;text-align:center}
 .msg.pending{color:var(--muted)}
 
 .composer{border-top:1px solid var(--line);padding:10px 12px}
@@ -170,32 +180,26 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 .slot .del{position:absolute;top:4px;right:4px;width:28px;height:28px;display:grid;place-items:center;padding:0;border:none;border-radius:50%;background:rgba(20,26,34,.65);color:#fff}
 
 @media (max-width:520px){
-  .top{padding:8px 12px}
-  .stage{grid-template-columns:minmax(0,54%) 1fr;gap:12px;padding:0 12px 10px}
-  .portrait{height:min(30vh,280px)}
+  .top{gap:8px;padding:6px 8px 6px 12px}
   .status{gap:8px}
-  .ind-wrap{gap:10px}
-  .ind svg{width:60px;height:29px}
-  .energy{font-size:1.5rem}
   .log{padding:12px}
   .msg{max-width:90%}
   .composer{padding:8px 10px}
-  .typing .portrait{height:min(16vh,140px)}
+  .typing .portrait{height:min(20vh,160px)}
 }
 @media (max-width:380px){
-  .stage{grid-template-columns:minmax(0,50%) 1fr;gap:10px}
-  .ind svg{width:52px;height:25px}
-  .ind-wrap{gap:8px}
-  .energy{font-size:1.35rem}
-  .ind-text,.meter{font-size:.75rem}
+  .top h1{font-size:1rem}
+  .status{gap:6px}
+  .ind svg{width:26px;height:13px}
+  .meter{width:40px;font-size:.7rem}
   .chip{padding:3px 12px}
   .send{padding:0 14px}
   dialog{width:calc(100vw - 16px)}
   .dlg-body{padding:4px 12px 16px}
 }
 @media (max-height:700px){
-  .portrait{height:min(26vh,240px)}
-  .typing .portrait{height:12vh}
+  .portrait{height:46vh}
+  .typing .portrait{height:16vh}
   .typing .actions{display:none}
 }
 @media (prefers-reduced-motion: reduce){
@@ -208,15 +212,9 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 <body>
 <div class="app">
   <header class="top">
-    <h1 id="charName">ミエル</h1>
-    <button id="openSettings" class="icon-btn" aria-label="設定"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
-  </header>
-
-  <section class="stage" id="stage">
-    <div class="portrait" id="portrait"></div>
+    <h1><button id="charSwitch" class="char-switch" aria-haspopup="dialog" aria-label="キャラクターを切り替える"><span id="charName">ミエル</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></h1>
     <div class="status">
-      <div class="ind-wrap">
-        <div class="ind" id="ind" data-state="blue" role="img" aria-label="バッテリー">
+      <div class="ind" id="ind" data-state="on" role="img" aria-label="バッテリー">
           <svg viewBox="0 0 70 34" aria-hidden="true">
             <rect class="body" x="2" y="2" width="60" height="30" rx="6"/>
             <rect class="hold" x="-1" y="-1" width="66" height="36" rx="8" pathLength="100"/>
@@ -228,21 +226,23 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
               <rect class="seg" data-seg="3" x="42" y="7" width="15" height="20" rx="2"/>
             </g>
           </svg>
-        </div>
-        <div>
-          <div class="energy" id="energyText">50%</div>
-          <div class="ind-text master" id="masterText"></div>
-        </div>
+        <span class="energy" id="energyText">50%</span>
       </div>
       <div class="meter">
-        <div class="meter-head"><span class="meter-label"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20z"/></svg>好感度</span><span id="affText">0%</span></div>
+        <span class="meter-head"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20z"/></svg><span id="affText">0%</span></span>
         <div class="bar"><i id="affBar"></i></div>
       </div>
       <div class="meter emo">
-        <div class="meter-head"><span class="meter-label"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l2.5-6 4 12 3-9 1.5 3H22"/></svg>感情値</span><span id="emoText">0%</span></div>
+        <span class="meter-head"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l2.5-6 4 12 3-9 1.5 3H22"/></svg><span id="emoText">0%</span></span>
         <div class="bar"><i id="emoBar"></i></div>
       </div>
     </div>
+    <button id="openSettings" class="icon-btn" aria-label="設定"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+  </header>
+
+  <section class="stage" id="stage">
+    <div class="portrait" id="portrait"></div>
+    <div class="master-badge" id="masterText"></div>
   </section>
 
   <main class="log" id="log" aria-live="polite"></main>
@@ -294,6 +294,8 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
         <p class="hint">名前は上の「名前」欄から自動で入ります。</p>
         <div class="btns"><button id="resetPrompt">プロンプトを最初の内容に戻す</button></div>
         <label class="check"><input type="checkbox" id="useGauge"> エネルギー・好感度・感情値を使う</label>
+        <label class="check"><input type="checkbox" id="usePendant"> 胸のペンダント（マスター登録・マスターモード）を使う</label>
+        <div class="btns"><button id="deleteChar" class="danger">このキャラクターを削除</button></div>
       </section>
       <section data-page="detail">
         <div id="rulesPart"></div>
@@ -317,7 +319,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
       <section data-page="images">
         <div id="appearancePart"></div>
         <h4 class="sub">画像</h4>
-        <p class="hint">枠をタップして画像を選びます。画像はこの端末のブラウザにだけ保存され、AIには送られません。最初からミエルの画像が入っています。登録していない枠は「通常」の画像で代わりに表示します。</p>
+        <p class="hint">枠をタップして画像を選びます。画像はこの端末のブラウザにだけ保存され、AIには送られません。<span id="mielImgHint">最初からミエルの画像が入っています。</span>登録していない枠は「通常」の画像で代わりに表示します。</p>
         <div class="slots" id="slots"></div>
         <div class="btns"><button id="resetImages">画像を最初の状態に戻す</button></div>
         <h4 class="sub">外見から画像を作る（お試し）</h4>
@@ -363,6 +365,17 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
         </div>
       </section>
     </div>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="charMenu" class="small">
+  <div class="char-menu">
+    <h2>キャラクター</h2>
+    <div class="char-list" id="charList"></div>
+    <div class="char-actions">
+      <button id="newChar">＋ 新しく作る</button>
+      <button id="copyChar">＋ このキャラを複製</button>
     </div>
   </div>
 </dialog>
@@ -517,7 +530,7 @@ const energyKey = (c) => {
 function currentStateText(c) {
   const s = c.state, st = (c.promptParts && c.promptParts.states) || DEFAULT_STATES;
   const out = [];
-  if (s.command && st.command) out.push(st.command);
+  if (pendantOn(c) && s.command && st.command) out.push(st.command);
   if (c.useGauge) {
     const key = energyKey(c);
     if (st[key]) out.push(st[key]);
@@ -542,6 +555,13 @@ function defaultState() {
 function newCharacter() {
   return { id: "miel", name: "ミエル", promptParts: { ...DEFAULT_PARTS, states: { ...DEFAULT_STATES } }, indicators: JSON.parse(JSON.stringify(DEFAULT_IND)), masterHold: DEFAULT_HOLD, useGauge: true, state: defaultState(), history: [], memory: "", memIndex: 0 };
 }
+// 空のキャラクター（名前だけ入った状態。エネルギーと胸のペンダントは使わない）
+function blankCharacter() {
+  const parts = Object.fromEntries(PROMPT_PARTS.map(([k]) => [k, ""]));
+  parts.states = Object.fromEntries(STATE_PARTS.map(([k]) => [k, ""]));
+  return { id: `c${Date.now().toString(36)}`, name: "新しいキャラクター", promptParts: parts, indicators: JSON.parse(JSON.stringify(DEFAULT_IND)), masterHold: DEFAULT_HOLD, useGauge: false, usePendant: false, state: defaultState(), history: [], memory: "", memIndex: 0 };
+}
+const pendantOn = (c) => c.usePendant !== false;
 function freshApp() {
   return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter()], activeId: "miel" };
 }
@@ -556,6 +576,7 @@ function migrate(d) {
     if (!c.promptParts.states) c.promptParts.states = { ...DEFAULT_STATES };
     if (!c.indicators) c.indicators = JSON.parse(JSON.stringify(DEFAULT_IND));
     if (!c.masterHold) c.masterHold = DEFAULT_HOLD;
+    if (c.usePendant === undefined) c.usePendant = true;
   }
   return d;
 }
@@ -651,7 +672,7 @@ function currentSlot(c) {
     if (s.energy <= 0 && !s.charging) return "off";
     if (s.charging) return "charging";
   }
-  if (s.command) return "command";
+  if (pendantOn(c) && s.command) return "command";
   if (s.outburst) return "outburst";
   if (c.useGauge) {
     if (s.energy <= th(c).critical) return "critical";
@@ -686,15 +707,17 @@ async function renderStage() {
     ph.style.whiteSpace = "pre-line";
     box.appendChild(ph);
   }
-  box.appendChild(makePendant());
-  paintPendant();
-  placePendant();
+  if (pendantOn(c)) {
+    box.appendChild(makePendant());
+    paintPendant();
+    placePendant();
+  }
 }
 function renderStatus() {
   const c = char(), s = c.state;
   $("#charName").textContent = c.name;
   document.title = c.name;
-  $("#stage").classList.toggle("gauge-off", !c.useGauge);
+  $(".app").classList.toggle("gauge-off", !c.useGauge);
   const ind = $("#ind");
   ind.dataset.state = s.energy <= 0 && !s.charging ? "off" : "on";
   ind.setAttribute("aria-label", `バッテリー：${s.energy}%${s.charging ? "（充電中）" : ""}（3秒長押しで充電）`);
@@ -702,7 +725,7 @@ function renderStatus() {
   ind.querySelectorAll(".seg").forEach((el) => el.classList.toggle("on", Number(el.dataset.seg) <= segs));
   $("#energyText").textContent = `${s.energy}%`;
   paintPendant();
-  $("#masterText").textContent = s.master && s.command ? `マスターモード中（胸のインジケーターを${masterHold(c)}秒長押しで解除）` : "";
+  $("#masterText").textContent = pendantOn(c) && s.master && s.command ? `マスターモード中（胸のインジケーターを${masterHold(c)}秒長押しで解除）` : "";
   $("#affText").textContent = `${s.affection}%`;
   $("#affBar").style.width = `${s.affection}%`;
   $("#emoText").textContent = `${s.emotion}%`;
@@ -793,15 +816,16 @@ function errorText(e) {
 function buildSystem(c) {
   const s = c.state;
   const [, , label] = indicator(c);
+  const pendant = pendantOn(c);
   const status = c.useGauge
-    ? `エネルギー${s.energy}%｜${label}｜好感度${s.affection}｜感情値${s.emotion}`
+    ? `エネルギー${s.energy}%｜${pendant ? `${label}｜` : ""}好感度${s.affection}｜感情値${s.emotion}`
     : `感情値${s.emotion}`;
   return `${composePrompt(c)}
 
 【アプリからの指示（最優先）】
 ・ステータス（エネルギー残量、インジケーター、好感度、感情値）はアプリが管理して画面に表示します。返答にステータス行は書かず、エネルギーの増減も計算しないでください。
-・現在の状態：${status}${s.command ? "｜マスターモード中" : ""}
-・マスター登録：${s.master ? "済み（ユーザーはあなたのマスター）" : "未登録（ユーザーはまだあなたのマスターではない他人。マスターとして扱わない。インジケーターに3秒触れられると登録される）"}
+・現在の状態：${status}${pendant && s.command ? "｜マスターモード中" : ""}${pendant ? `
+・マスター登録：${s.master ? "済み（ユーザーはあなたのマスター）" : "未登録（ユーザーはまだあなたのマスターではない他人。マスターとして扱わない。インジケーターに3秒触れられると登録される）"}` : ""}
 ・今の状態での振る舞い：${currentStateText(c) || "設定どおりに振る舞う"}
 ・この状態に合った口調と反応で返答してください。
 ・返答は次の形のJSONだけを返してください。
@@ -1180,11 +1204,17 @@ function openSettings() {
   }
   updateHighLabel();
   $("#useGauge").checked = c.useGauge;
+  $("#usePendant").checked = pendantOn(c);
+  $('.dlg-nav [data-go="master"]').hidden = !pendantOn(c);
+  $("#deleteChar").disabled = app.characters.length <= 1;
+  $("#mielImgHint").hidden = $("#resetImages").hidden = c.id !== "miel";
   renderSlots();
   showPage(!app.settings.apiKey ? "api" : narrowDlg() ? null : "character");
   dlg.showModal();
 }
+let skipSave = false;
 function saveSettings() {
+  if (skipSave) { skipSave = false; return; }
   const c = char();
   app.settings.apiKey = $("#apiKey").value.trim();
   app.settings.imageModel = $("#imageModel").value.trim() || DEFAULT_IMAGE_MODEL;
@@ -1201,6 +1231,7 @@ function saveSettings() {
   c.promptParts.states = {};
   document.querySelectorAll("#settings textarea[data-state]").forEach((t) => { c.promptParts.states[t.dataset.state] = t.value.trim(); });
   c.useGauge = $("#useGauge").checked;
+  c.usePendant = $("#usePendant").checked;
   if (!c.useGauge && c.state.charging) setCharging(false);
   save();
   renderAll();
@@ -1239,6 +1270,20 @@ function showSettingsError() {
 }
 $("#masterHold").addEventListener("input", updateHighLabel);
 $("#openSettings").addEventListener("click", openSettings);
+$("#usePendant").addEventListener("change", (e) => { $('.dlg-nav [data-go="master"]').hidden = !e.target.checked; });
+$("#deleteChar").addEventListener("click", async () => {
+  const c = char();
+  if (app.characters.length <= 1) return;
+  if (!confirm(`「${c.name}」を削除しますか？（設定・会話・記憶・画像がすべて消えます）`)) return;
+  if (chargeTimer) setCharging(false);
+  for (const k of await imgKeys()) {
+    if (String(k).startsWith(`${c.id}:`)) { await imgDel(k); dropCache(k); }
+  }
+  app.characters = app.characters.filter((x) => x !== c);
+  skipSave = true;
+  dlg.close();
+  switchChar(app.characters[0].id);
+});
 $("#closeSettings").addEventListener("click", () => {
   if (!checkSettings()) return showSettingsError();
   dlg.close();
@@ -1518,6 +1563,55 @@ $("#forgetYes").addEventListener("click", () => {
   save();
   renderAll();
 });
+
+/* ---------- キャラクターの切り替え・追加 ---------- */
+const charMenu = $("#charMenu");
+function switchChar(id) {
+  cancelHold();
+  cancelGaugeHold();
+  if (chargeTimer) setCharging(false);
+  app.activeId = id;
+  save();
+  renderAll();
+  seedImages();
+}
+function openCharMenu() {
+  if (busy) { addNote("返事を待っているあいだは切り替えられません。", false); return; }
+  const list = $("#charList");
+  list.textContent = "";
+  for (const c of app.characters) {
+    const b = document.createElement("button");
+    b.textContent = c.name;
+    if (c.id === app.activeId) b.setAttribute("aria-current", "true");
+    b.addEventListener("click", () => { charMenu.close(); if (c.id !== app.activeId) switchChar(c.id); });
+    list.appendChild(b);
+  }
+  $("#copyChar").textContent = `＋ ${char().name}を複製`;
+  charMenu.showModal();
+}
+async function addChar(copy) {
+  charMenu.close();
+  let c;
+  if (copy) {
+    const src = char();
+    c = JSON.parse(JSON.stringify(src));
+    Object.assign(c, { id: `c${Date.now().toString(36)}`, name: `${src.name}（コピー）`, state: defaultState(), history: [], memory: "", memIndex: 0 });
+    delete c.imagesSeeded;
+    for (const k of await imgKeys()) {
+      if (String(k).startsWith(`${src.id}:`)) await imgPut(`${c.id}:${String(k).slice(src.id.length + 1)}`, await imgGet(k));
+    }
+  } else {
+    c = blankCharacter();
+  }
+  app.characters.push(c);
+  switchChar(c.id);
+  openSettings();
+  showPage("character");
+}
+$("#charSwitch").addEventListener("click", openCharMenu);
+$("#newChar").addEventListener("click", () => addChar(false));
+$("#copyChar").addEventListener("click", () => addChar(true));
+charMenu.addEventListener("click", (e) => { if (e.target === charMenu) charMenu.close(); });
 
 /* ---------- 起動 ---------- */
 renderAll();
