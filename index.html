@@ -100,6 +100,9 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .msg.user{align-self:flex-end;background:var(--user-bubble);color:#fff;border-top-right-radius:4px}
 .msg.note{align-self:center;max-width:100%;padding:2px 8px;color:var(--muted);font-size:.75rem;text-align:center}
 .msg.pending{color:var(--muted)}
+.note-detail summary{display:inline-block;cursor:pointer;font-size:.7rem;color:var(--muted);text-decoration:underline dotted;list-style:none}
+.note-detail summary::-webkit-details-marker{display:none}
+.note-detail pre{margin:4px 0 0;padding:6px 8px;text-align:left;font:inherit;font-size:.7rem;white-space:pre-wrap;word-break:break-all;background:var(--surface);border:1px solid var(--line);border-radius:8px}
 
 .composer{border-top:1px solid var(--line);padding:10px 12px}
 .actions{display:flex;gap:8px;margin-bottom:8px}
@@ -758,6 +761,16 @@ function msgEl(m, c) {
   } else {
     el.textContent = m.text;
   }
+  if (m.detail) {
+    const d = document.createElement("details");
+    d.className = "note-detail";
+    const sm = document.createElement("summary");
+    sm.textContent = "詳細";
+    const pre = document.createElement("pre");
+    pre.textContent = m.detail;
+    d.append(sm, pre);
+    el.appendChild(d);
+  }
   return el;
 }
 function renderAll() {
@@ -765,12 +778,13 @@ function renderAll() {
   renderLog();
   renderStage();
 }
-function addNote(text, persist = true) {
+function addNote(text, persist = true, detail = "") {
   const c = char();
-  if (persist) { c.history.push({ role: "note", text }); save(); renderLog(); }
+  const m = detail ? { role: "note", text, detail } : { role: "note", text };
+  if (persist) { c.history.push(m); save(); renderLog(); }
   else {
     const log = $("#log");
-    log.appendChild(msgEl({ role: "note", text }, c));
+    log.appendChild(msgEl(m, c));
     log.scrollTop = log.scrollHeight;
   }
 }
@@ -778,6 +792,33 @@ function addNote(text, persist = true) {
 /* ---------- Gemini API ---------- */
 class ApiError extends Error {
   constructor(type, detail = "", status = 0) { super(type); this.type = type; this.detail = detail; this.status = status; }
+}
+// Geminiのエラー応答から、どの上限に当たったか・何秒後に再開できるかを読み取る
+async function apiErrorFrom(res) {
+  let err = {};
+  try { err = (await res.json()).error || {}; } catch (e) {}
+  const type = res.status === 429 ? "rate" : (res.status === 400 || res.status === 403 || res.status === 404) ? "request" : "server";
+  const e = new ApiError(type, err.message || "", res.status);
+  const details = Array.isArray(err.details) ? err.details : [];
+  const quota = details.find((d) => String(d["@type"]).endsWith("QuotaFailure"))?.violations?.[0];
+  const retry = details.find((d) => String(d["@type"]).endsWith("RetryInfo"))?.retryDelay || (e.detail.match(/retry in ([\d.]+)s/i) || [])[1];
+  e.quotaId = quota?.quotaId || "";
+  e.retrySec = retry ? Math.ceil(parseFloat(retry)) : 0;
+  e.info = [
+    `HTTP ${res.status}${err.status ? ` ${err.status}` : ""}`,
+    e.quotaId && `上限の種類：${e.quotaId}${quota.quotaValue ? `（上限 ${quota.quotaValue}）` : ""}`,
+    e.retrySec && `再開まで：約${e.retrySec}秒`,
+    e.detail
+  ].filter(Boolean).join("\n");
+  return e;
+}
+const rateKind = (e) => (/PerDay/i.test(e.quotaId) ? "day" : /PerMinute/i.test(e.quotaId) ? "minute" : "");
+// 1日の上限は太平洋時間の0時に戻る。その時刻をこの端末の時刻で返す
+function quotaResetText() {
+  const now = new Date();
+  const la = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
+  const t = new Date(now.getTime() + (86400 - (la.getHours() * 3600 + la.getMinutes() * 60 + la.getSeconds())) * 1000);
+  return `${t.getDate() !== now.getDate() ? "明日の" : ""}${t.getHours()}時${t.getMinutes() ? `${t.getMinutes()}分` : ""}`;
 }
 async function gemini(systemText, contents, json) {
   const { apiKey } = app.settings;
@@ -789,12 +830,7 @@ async function gemini(systemText, contents, json) {
   try {
     res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   } catch (e) { throw new ApiError("network"); }
-  if (!res.ok) {
-    let msg = "";
-    try { msg = (await res.json()).error?.message || ""; } catch (e) {}
-    const type = res.status === 429 ? "rate" : (res.status === 400 || res.status === 403 || res.status === 404) ? "request" : "server";
-    throw new ApiError(type, msg, res.status);
-  }
+  if (!res.ok) throw await apiErrorFrom(res);
   const data = await res.json();
   const cand = data.candidates?.[0];
   const text = (cand?.content?.parts || []).map((p) => (p.thought ? "" : p.text || "")).join("").trim();
@@ -803,7 +839,12 @@ async function gemini(systemText, contents, json) {
 }
 function errorText(e) {
   switch (e.type) {
-    case "rate": return "回数制限に達しました。1分ほど待ってから、もう一度送ってください。";
+    case "rate": {
+      const name = char().name, kind = rateKind(e);
+      if (kind === "day") return `（${name}は今日はもう話し疲れてしまったみたい……${quotaResetText()}ごろには元気を取り戻すよ）`;
+      if (kind === "minute" || e.retrySec) return `（${name}は少し考えすぎてしまったみたい……${e.retrySec ? `${e.retrySec}秒` : "1分"}ほど待ってから、もう一度話しかけてみて）`;
+      return `（${name}は少し休憩が必要みたい……少し待ってから、もう一度話しかけてみて）`;
+    }
     case "request": return `接続できませんでした。APIキーを確認してください。（${e.status} ${e.detail}）`;
     case "network": return "通信できませんでした。接続を確認してください。";
     case "empty": return `返答が空でした（${e.detail}）。言い方を変えて送ってみてください。`;
@@ -916,7 +957,7 @@ async function send() {
     autoGrow();
     save();
     renderLog();
-    addNote(e instanceof ApiError ? errorText(e) : `エラー：${e.message}`, false);
+    addNote(e instanceof ApiError ? errorText(e) : `エラー：${e.message}`, false, e.info || "");
   } finally {
     busy = false;
     $("#sendBtn").disabled = false;
@@ -924,9 +965,9 @@ async function send() {
 }
 
 /* ---------- 記憶（要約） ---------- */
-let summarizing = false;
+let summarizing = false, summarizeAfter = 0;
 async function maybeSummarize(c) {
-  if (summarizing || c.history.length - c.memIndex <= 40) return;
+  if (summarizing || Date.now() < summarizeAfter || c.history.length - c.memIndex <= 40) return;
   summarizing = true;
   const chunk = c.history.slice(c.memIndex, c.memIndex + 20)
     .filter((m) => m.role !== "note")
@@ -943,7 +984,8 @@ ${chunk}`;
     c.memIndex += 20;
     save();
   } catch (e) {
-    // 失敗したら次の返答のあとに再挑戦する
+    // 失敗したら5分（回数制限で再開までがもっと長いならその時間）あけてから再挑戦する。続けて呼んで上限に当たらないように
+    summarizeAfter = Date.now() + Math.max(300, e.retrySec || 0) * 1000;
   } finally {
     summarizing = false;
   }
@@ -1387,11 +1429,7 @@ async function geminiImage(parts) {
     res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ contents: [{ role: "user", parts }], generationConfig: { responseModalities: ["TEXT", "IMAGE"] } }) });
   } catch (e) { throw new ApiError("network"); }
-  if (!res.ok) {
-    let msg = "";
-    try { msg = (await res.json()).error?.message || ""; } catch (e) {}
-    throw new ApiError(res.status === 429 ? "rate" : (res.status === 400 || res.status === 403 || res.status === 404) ? "request" : "server", msg, res.status);
-  }
+  if (!res.ok) throw await apiErrorFrom(res);
   const data = await res.json();
   const part = (data.candidates?.[0]?.content?.parts || []).find((p) => p.inlineData || p.inline_data);
   if (!part) throw new ApiError("empty", data.candidates?.[0]?.finishReason || "画像が返ってきませんでした");
