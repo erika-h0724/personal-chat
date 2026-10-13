@@ -25,10 +25,11 @@
 
 ## AI（Gemini API）
 
-- 会話モデルの初期値は `gemini-3.8-flash`（`DEFAULT_MODEL`）。設定の「Gemini API」の「会話のAIモデル」で選べる（`settings.chatModel`。前からある `settings.model` は古い値が残っている人がいるので使わない）。選択肢は設定を開いたときに ListModels を1回呼び、名前が gemini で始まり generateContent が使えるもの（image・tts・audio・live・embedding・vision を除く）。
+- 会話モデルの初期値は `gemini-3.8-flash`（`DEFAULT_MODEL`）。設定の「Gemini API」の「会話のAIモデル」で選べる（`settings.chatModel`。前からある `settings.model` は古い値が残っている人がいるので使わない）。選択肢は設定を開いたときに ListModels を1回呼び、`gemini-{版}-flash` と `gemini-{版}-flash-lite` の正式版だけ（preview・exp・日付つき・専用版は出さない）で、新しい版から2世代まで。おすすめは普段 flash（標準）、混雑時 flash-lite。
 - 混雑（503）なら3秒待って1回送り直し、それでも503なら名前に flash-lite を含むモデル（preview・exp 以外を優先）で返事させる。
 - APIキーは使う人が自分で作り、ブラウザに保存する（無料枠前提。請求先は設定しない）。
-- 返事を速くするため `thinkingConfig: { thinkingLevel: "low" }` を付ける。モデルが受け付けず400（文に think を含む）なら外して送り直し、以後は付けない（`useThinkLow`）。
+- `thinkingConfig` は付けない（考える量を少なめにすると話のつながりが弱くなったため、モデルの標準のまま）。
+- 1対1の会話は `streamGenerateContent?alt=sse` で少しずつ受け取り、届いた JSON の途中から "reply" の文だけを取り出して（`partialReply()`）表示していく。みんなで話す・記憶のまとめは一括（`generateContent`）のまま。
 - `generateContent` を JSON モードで呼び、AIは次の形で返す。
   `{"reply", "affection_delta"(-10〜10), "emotion_delta"(-20〜20), "expression"(normal/smile/annoyed/surprised), "outburst"(bool)}`
 - 数値（エネルギー・好感度・感情値）はアプリが管理し、AIには現在値だけを渡す。
