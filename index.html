@@ -547,6 +547,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 
 <!-- 更新のお知らせに出す変更内容。変更を公開するたびに先頭へ1行足す（新しい順） -->
 <script type="application/json" id="changelog">[
+  {"date": "2026-10-13", "text": "最初のノエル（ミエル・リカ）を消して同じ名前で作り直していても、「初期データに戻す」で最初のキャラの設定と画像に戻せるようにしました"},
   {"date": "2026-10-13", "text": "みんなで話すとき、リカの返事が表示されないことがあったのを直しました"},
   {"date": "2026-10-13", "text": "返事を待っているあいだ、送信ボタンが停止ボタン（■）になり、押すと返事待ちをやめられるようにしました"},
   {"date": "2026-10-13", "text": "リカの設定の文章を読みやすく整えました（すでにリカがいる人は、リカの設定の「初期データに戻す」で新しい文章になります）"},
@@ -2023,10 +2024,30 @@ dlg.addEventListener("cancel", (e) => {
   if (!checkSettings()) { e.preventDefault(); showSettingsError(); }
 });
 dlg.addEventListener("close", saveSettings);
+// 最初から入っているキャラを消して、同じ名前で作り直した人のために、名前で最初のキャラとみなす
+const BUILTIN_NAMES = { miel: "ミエル", noel: "ノエル", rika: "リカ" };
+function builtinIdOf(c) {
+  if (DEFAULT_IMAGES[c.id]) return c.id;
+  return Object.keys(BUILTIN_NAMES).find((k) => BUILTIN_NAMES[k] === c.name.trim() && !app.characters.some((x) => x.id === k)) || null;
+}
 $("#resetPrompt").addEventListener("click", async () => {
-  const hasImg = !!DEFAULT_IMAGES[editChar().id];
+  const bid = builtinIdOf(editChar());
+  const hasImg = !!bid;
   if (!confirm(`初期データに戻しますか？（設定の文章や数値${hasImg ? "・画像" : ""}が最初の内容に戻ります）`)) return;
-  // そのキャラの最初の内容（ミエル・ノエルは初期の設定、ほかは空）
+  // 作り直した「ノエル」などは、最初から入っているキャラのidに付け替える（会話・記憶・状態はそのまま。前の画像は消す）
+  if (bid && bid !== editChar().id) {
+    const c = editChar(), old = c.id;
+    try { for (const k of await imgKeys()) if (String(k).startsWith(old + ":")) { await imgDel(k); dropCache(k); } } catch (e) {}
+    c.id = bid;
+    if (app.activeId === old) app.activeId = bid;
+    app.group.members = app.group.members.map((x) => (x === old ? bid : x));
+    editId = bid;
+    const base = (bid === "miel" ? newCharacter() : bid === "noel" ? noelCharacter() : rikaCharacter());
+    $("#useGauge").checked = base.useGauge;
+    $("#usePendant").checked = base.usePendant !== false;
+    save();
+  }
+  // そのキャラの最初の内容（ミエル・ノエル・リカは初期の設定、ほかは空）
   const id = editChar().id;
   const d = (id === "miel" ? newCharacter() : id === "noel" ? noelCharacter() : id === "rika" ? rikaCharacter() : blankCharacter()).promptParts;
   document.querySelectorAll("#settings textarea[data-part]").forEach((t) => { t.value = d[t.dataset.part] || ""; });
