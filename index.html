@@ -547,6 +547,8 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 
 <!-- 更新のお知らせに出す変更内容。変更を公開するたびに先頭へ1行足す（新しい順） -->
 <script type="application/json" id="changelog">[
+  {"date": "2026-10-13", "text": "みんなで話すとき、リカの返事が表示されないことがあったのを直しました"},
+  {"date": "2026-10-13", "text": "返事を待っているあいだ、送信ボタンが停止ボタン（■）になり、押すと返事待ちをやめられるようにしました"},
   {"date": "2026-10-13", "text": "リカの設定の文章を読みやすく整えました（すでにリカがいる人は、リカの設定の「初期データに戻す」で新しい文章になります）"},
   {"date": "2026-10-13", "text": "3人目のキャラクター「リカ」が仲間入りしました"},
   {"date": "2026-10-13", "text": "「AI指示文作成」の指示文を、1回に1枚ずつ絵を出してもらう形にしました（何枚もの絵が1枚にまとまって出てくるのを防ぎます）"},
@@ -1268,7 +1270,7 @@ function quotaResetText() {
   const t = new Date(now.getTime() + (86400 - (la.getHours() * 3600 + la.getMinutes() * 60 + la.getSeconds())) * 1000);
   return `${t.getDate() !== now.getDate() ? "明日の" : ""}${t.getHours()}時${t.getMinutes() ? `${t.getMinutes()}分` : ""}`;
 }
-async function gemini(systemText, contents, json) {
+async function gemini(systemText, contents, json, signal) {
   const { apiKey } = app.settings;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(DEFAULT_MODEL)}:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
   const body = { contents, generationConfig: { temperature: json ? 0.9 : 0.3 } };
@@ -1276,8 +1278,8 @@ async function gemini(systemText, contents, json) {
   if (json) body.generationConfig.responseMimeType = "application/json";
   let res;
   try {
-    res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  } catch (e) { throw new ApiError("network"); }
+    res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal });
+  } catch (e) { if (e.name === "AbortError") throw e; throw new ApiError("network"); }
   if (!res.ok) throw await apiErrorFrom(res);
   const data = await res.json();
   const cand = data.candidates?.[0];
@@ -1399,7 +1401,7 @@ ${statusLines(c)}`).join("\n\n")}
 ・各キャラクターは自分の設定と今の状態どおりの口調で話し、他のキャラクターのセリフや動作を代わりに書かないでください。${silent.length ? `
 ・${silent.map((c) => c.name).join("、")}もその場にいますが、エネルギー0%で反応しません。話させないでください。` : ""}
 ・返答は次の形のJSONだけを返してください。replies は話す順に並べます。
-{"replies":[{"name":"キャラクター名","reply":"そのキャラクターのセリフと動作の描写","affection_delta":-10から10の整数,"emotion_delta":-20から20の整数,"expression":"normal・smile・annoyed・surprisedのどれか","outburst":trueまたはfalse}]}
+{"replies":[{"name":"キャラクター名（===== の行の名前をそのまま書く）","reply":"そのキャラクターのセリフと動作の描写","affection_delta":-10から10の整数,"emotion_delta":-20から20の整数,"expression":"normal・smile・annoyed・surprisedのどれか","outburst":trueまたはfalse}]}
 ・affection_delta・emotion_delta は、そのキャラクターの好感度・感情値の増減です。感情値が100を超えるほどの反応をした場合は outburst を true にしてください。${g.memory ? `
 
 【これまでの記憶】
@@ -1427,7 +1429,9 @@ function parseGroupReply(text, talkers) {
   const o = parseJson(text) || {};
   let arr = Array.isArray(o.replies) ? o.replies : [];
   if (!arr.length && typeof o.reply === "string") arr = [{ ...o, name: o.name || talkers[0].name }];
-  const find = (n) => talkers.find((c) => c.name === n) || talkers.find((c) => n.includes(c.name));
+  // 名前は「りか」「梨花ちゃま」のように少し違って返ることがあるので、ひらがな・カタカナをそろえて、含まれていれば同じ人とみなす
+  const kana = (v) => v.replace(/[ぁ-ゖ]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) + 0x60));
+  const find = (n) => talkers.find((c) => c.name === n) || talkers.find((c) => kana(n).includes(kana(c.name)) || (n && kana(c.name).includes(kana(n))));
   return arr.filter((r) => r && typeof r.reply === "string" && r.reply.trim())
     .map((r) => ({ c: find(String(r.name || "").trim()), ...normReply(r) }))
     .filter((r) => r.c);
@@ -1447,14 +1451,13 @@ async function groupTurn(text) {
     addNote("みんな反応しない。（エネルギー0%。充電すると再起動します）", !!text);
     return false;
   }
-  busy = true;
-  $("#sendBtn").disabled = true;
+  setBusy(true);
   const pending = msgEl({ role: "ai", text: "…", name: "" }, char());
   pending.classList.add("pending");
   $("#log").appendChild(pending);
   $("#log").scrollTop = $("#log").scrollHeight;
   try {
-    const rs = parseGroupReply(await gemini(buildGroupSystem(talkers, silent), buildGroupContents(!text), true), talkers);
+    const rs = parseGroupReply(await gemini(buildGroupSystem(talkers, silent), buildGroupContents(!text), true, chatAbort.signal), talkers);
     if (!rs.length) throw new ApiError("empty", "返事を読み取れませんでした");
     const drained = new Set();
     for (const r of rs) {
@@ -1477,11 +1480,10 @@ async function groupTurn(text) {
     }
     save();
     renderLog();
-    addNote(e instanceof ApiError ? errorText(e) : `エラー：${e.message}`, false, e.info || "");
+    if (e.name !== "AbortError") addNote(e instanceof ApiError ? errorText(e) : `エラー：${e.message}`, false, e.info || "");
     return false;
   } finally {
-    busy = false;
-    $("#sendBtn").disabled = false;
+    setBusy(false);
   }
 }
 // 自動会話: ユーザーが黙っていても、少し間をあけてキャラ同士が話す。無料枠を使いすぎないよう、続けて5回で止める
@@ -1518,7 +1520,18 @@ $("#autoBtn").addEventListener("click", () => {
 });
 
 /* ---------- 送信 ---------- */
-let busy = false;
+let busy = false, chatAbort = null;
+// 返事待ちのあいだは送信ボタンを停止ボタン（■）にする。押すと返事待ちをやめて、送った文を入力欄に戻す
+const SEND_ICON = $("#sendBtn").innerHTML;
+const STOP_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2.5" fill="currentColor"/></svg>';
+function setBusy(on) {
+  busy = on;
+  chatAbort = on ? new AbortController() : null;
+  const b = $("#sendBtn");
+  b.innerHTML = on ? STOP_ICON : SEND_ICON;
+  b.setAttribute("aria-label", on ? "停止" : "送信");
+  b.title = on ? "返事待ちをやめる" : "";
+}
 async function send() {
   if (busy) return;
   const input = $("#input");
@@ -1546,15 +1559,14 @@ async function send() {
     return;
   }
 
-  busy = true;
-  $("#sendBtn").disabled = true;
+  setBusy(true);
   const pending = msgEl({ role: "ai", text: "…" }, c);
   pending.classList.add("pending");
   $("#log").appendChild(pending);
   $("#log").scrollTop = $("#log").scrollHeight;
 
   try {
-    const raw = await gemini(buildSystem(c), buildContents(c), true);
+    const raw = await gemini(buildSystem(c), buildContents(c), true, chatAbort.signal);
     const r = parseReply(raw);
     c.history.push({ role: "ai", text: r.reply });
     if (applyReply(c, r)) c.history.push({ role: "note", text: "エネルギーが0%になりました。充電すると再起動します。" });
@@ -1569,10 +1581,9 @@ async function send() {
     autoGrow();
     save();
     renderLog();
-    addNote(e instanceof ApiError ? errorText(e) : `エラー：${e.message}`, false, e.info || "");
+    if (e.name !== "AbortError") addNote(e instanceof ApiError ? errorText(e) : `エラー：${e.message}`, false, e.info || "");
   } finally {
-    busy = false;
-    $("#sendBtn").disabled = false;
+    setBusy(false);
   }
 }
 
@@ -1677,7 +1688,7 @@ $("#input").addEventListener("keydown", (e) => {
   if (isTouch) return; // スマホでは改行を優先し、送信はボタンで行う
   if (e.key === "Enter" && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); send(); }
 });
-$("#sendBtn").addEventListener("click", send);
+$("#sendBtn").addEventListener("click", () => { if (busy) { if (chatAbort) chatAbort.abort(); return; } send(); });
 
 /* ---------- 胸のインジケーター長押し（マスター登録・マスターモード） ---------- */
 // 画像内のインジケーターの位置（画像の幅・高さに対する割合）
