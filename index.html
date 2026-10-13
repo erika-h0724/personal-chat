@@ -62,6 +62,8 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .danger{color:var(--check)}
 .icon-btn{width:40px;height:40px;display:grid;place-items:center;padding:0;border:none;border-radius:50%;background:none;color:var(--muted)}
 .icon-btn:hover{background:var(--surface-2);color:var(--ink)}
+.icon-btn[hidden]{display:none}
+#updateBtn{color:var(--denim)}
 
 .stage{position:relative;padding:0 12px 10px;border-bottom:1px solid var(--line)}
 .portrait{position:relative;width:100%;height:min(50vh,696px);border-radius:14px;overflow:hidden;background:var(--surface-2);transition:height .2s}
@@ -215,6 +217,11 @@ button:disabled{opacity:.5;cursor:default}
 dialog.small{width:min(360px,calc(100vw - 32px))}
 .forget{padding:24px 20px 16px;text-align:center}
 .forget p{margin:0 0 16px;line-height:1.8}
+.update-dlg{padding:20px 20px 16px}
+.update-dlg h2{font-size:1rem;margin:0 0 8px}
+.update-dlg h3{font-size:.85rem;margin:12px 0 4px}
+.update-dlg ul{margin:0;padding-left:1.3em;font-size:.85rem;max-height:40dvh;overflow-y:auto}
+.update-dlg li{margin:2px 0}
 .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px;margin-top:8px}
 .slot{display:flex;flex-direction:column;gap:2px;font-size:.75rem}
 .slot .thumb{aspect-ratio:3/4;border-radius:10px;border:1px dashed var(--line);background:var(--surface-2) center/cover no-repeat;display:grid;place-items:center;color:var(--muted);padding:4px}
@@ -289,6 +296,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
       </div>
     </div>
     <div class="gs" id="groupStatus" hidden></div>
+    <button id="updateBtn" class="icon-btn" aria-label="新しい版があります（押すと更新）" title="新しい版があります（押すと更新）" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg></button>
     <button id="toggleArt" class="icon-btn" aria-label="イラストを隠す" title="顔をみたくない" aria-pressed="false"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16" hidden/></svg></button>
     <button id="openSettings" class="icon-btn" aria-label="設定"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   </header>
@@ -471,6 +479,31 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
     </div>
   </div>
 </dialog>
+
+<dialog id="updateDlg" class="small">
+  <div class="update-dlg">
+    <h2>新しい版があります</h2>
+    <h3>変更内容</h3>
+    <ul id="updateList"></ul>
+    <p class="hint">※キャラクター・会話・記憶・画像・APIキーなどのデータは、そのまま残ります。</p>
+    <div class="btns center">
+      <button id="updateLater">あとで</button>
+      <button id="updateOk">OK（更新する）</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 更新のお知らせに出す変更内容。変更を公開するたびに先頭へ1行足す（新しい順） -->
+<script type="application/json" id="changelog">[
+  {"date": "2026-10-13", "text": "新しい版が公開されたら、右上に更新アイコンが出るようになりました"},
+  {"date": "2026-10-13", "text": "目のアイコンに「顔をみたくない」のツールチップを付けました"},
+  {"date": "2026-10-13", "text": "みんなで話すとき、全員分のゲージが並ぶようになりました"},
+  {"date": "2026-10-13", "text": "「みんな」ボタンを名前の右に分け、新しく作るときに「仲間から複製」ができるようになりました"},
+  {"date": "2026-10-13", "text": "ノエルが2人になってしまう不具合を直しました"},
+  {"date": "2026-10-13", "text": "画像ごとに胸のペンダントの位置を決められるようになりました"},
+  {"date": "2026-10-13", "text": "キャラクターの設定は一覧の歯車から、APIとデータは右上の歯車から開くようになりました"},
+  {"date": "2026-10-13", "text": "みんなで話すモード（4人まで）と、イラストを隠す切り替えを追加しました"}
+]</script>
 
 <dialog id="forgetDlg" class="small">
   <div class="forget">
@@ -2291,6 +2324,48 @@ $("#newChar").addEventListener("click", () => addChar());
 charMenu.addEventListener("click", (e) => { if (e.target === charMenu) charMenu.close(); });
 groupMenu.addEventListener("click", (e) => { if (e.target === groupMenu) groupMenu.close(); });
 
+/* ---------- 更新のお知らせ ---------- */
+// 公開ページ（index.html）が新しくなったら、右上に更新アイコンを出す。押すと読み込み直す
+const UPDATE_CHECK_MS = 10 * 60 * 1000;
+let pageHash = null, newPage = "";
+async function pageVersion() {
+  const r = await fetch(location.pathname, { cache: "no-store" });
+  if (!r.ok) throw new Error(String(r.status));
+  const t = await r.text();
+  let h = 0;
+  for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0;
+  return Object.assign(new String(`${t.length}:${h}`), { text: t });
+}
+async function checkUpdate() {
+  try {
+    const v = await pageVersion();
+    if (pageHash === null) pageHash = String(v);
+    else if (String(v) !== pageHash) { newPage = v.text; $("#updateBtn").hidden = false; }
+  } catch (e) {}
+}
+setInterval(() => { if (!document.hidden) checkUpdate(); }, UPDATE_CHECK_MS);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) checkUpdate(); });
+// 新しい版の変更内容のうち、今の版にないものを出す
+function readChangelog(text) {
+  const m = text.match(/<script type="application\/json" id="changelog">([\s\S]*?)<\/script>/);
+  try { return m ? JSON.parse(m[1]) : []; } catch (e) { return []; }
+}
+const updateDlg = $("#updateDlg");
+$("#updateBtn").addEventListener("click", () => {
+  const now = new Set(readChangelog(document.documentElement.outerHTML).map((x) => `${x.date}|${x.text}`));
+  const diff = readChangelog(newPage).filter((x) => !now.has(`${x.date}|${x.text}`));
+  const ul = $("#updateList");
+  ul.textContent = "";
+  for (const x of diff.length ? diff : [{ text: "細かい修正" }]) ul.appendChild(Object.assign(document.createElement("li"), { textContent: x.text }));
+  updateDlg.showModal();
+});
+$("#updateLater").addEventListener("click", () => updateDlg.close());
+$("#updateOk").addEventListener("click", () => {
+  if (busy) { addNote("返事を待っているあいだは更新できません。", false); return; }
+  updateDlg.close();
+  location.reload();
+});
+
 /* ---------- 起動 ---------- */
 if (inGroup() && members().length < 2) app.mode = "single";
 // 外した初期のノエルの画像を片付ける
@@ -2300,6 +2375,7 @@ if (noelRemoved) {
 }
 renderAll();
 seedAll();
+checkUpdate();
 if (char().state.charging) { char().state.charging = false; setCharging(true); }
 </script>
 </body>
