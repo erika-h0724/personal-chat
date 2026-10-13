@@ -217,6 +217,10 @@ button:disabled{opacity:.5;cursor:default}
 .help[open] summary::after{content:"△"}
 .steps{padding-left:1.4em}
 .steps li{margin:2px 0}
+.pex{margin:8px 0;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:.75rem}
+.pex-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:700}
+.pex-head button{flex:none;font-size:.7rem;padding:2px 10px;min-height:28px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--denim)}
+.pex p{margin:4px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--muted)}
 .btns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
 .btns[hidden]{display:none}
 .btns button{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:6px 14px;min-height:40px}
@@ -418,6 +422,11 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
         <label>画像生成AIモデル<select id="imageModel"></select></label>
         <p class="hint" id="imageModelHint"></p>
         <p class="hint" id="genStatus" aria-live="polite"></p>
+        <div class="btns"><button id="makePrompts">AI指示文作成</button></div>
+        <div id="promptHelp" hidden>
+        <p class="hint">ChatGPT や Gemini のサイトに貼り付けて使う指示文です（背景の透明化・画像サイズ・構図を入れてあります）。一番上の「10枚まとめて」で一度に頼めます。うまくいかないときは、まず「通常」を作り、ほかの枠はできた「通常」の画像を添付して頼むと、同じキャラのまま作れます。できた画像は枠をタップして入れてください。</p>
+        <div id="promptExamples"></div>
+        </div>
       </section>
       <section data-page="data">
         <h4 class="sub">バックアップ</h4>
@@ -524,6 +533,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 <!-- 更新のお知らせに出す変更内容。変更を公開するたびに先頭へ1行足す（新しい順） -->
 <script type="application/json" id="changelog">[
   {"date": "2026-10-13", "text": "画像を作るモデルを、使えるものから選ぶ形にしました"},
+  {"date": "2026-10-13", "text": "外見のページに「AI指示文作成」ボタンを付けました（ChatGPTなどで画像を作るための指示文を、10枚まとめて・枠ごとにコピーできます）"},
   {"date": "2026-10-13", "text": "外見の画像の枠ごとに「AI生成」ボタンを付けました（「通常」が入ると、ほかの枠も作れます）"},
   {"date": "2026-10-13", "text": "1人の会話に戻ったとき、ほかのキャラのゲージが残らないようにしました"},
   {"date": "2026-10-13", "text": "「部屋をえらぶ」で背景の部屋を選べるようになりました（9部屋＋自分で追加）。1人と話すときも部屋が後ろに出ます"},
@@ -2142,6 +2152,44 @@ async function genSlot(slot, label, has) {
     setGenBusy(false);
   }
 }
+
+// サイト（ChatGPT・Gemini）で作るときの指示文の例。外見の欄の今の文章を入れる
+function renderPromptExamples() {
+  const t = document.querySelector('#settings textarea[data-part="appearance"]');
+  const look = (t && t.value.trim()) || "（外見の欄の文章）";
+  const box = $("#promptExamples");
+  box.textContent = "";
+  // 10枚まとめて頼む指示文（1枚ずつ別の画像で出してもらう）
+  const spec10 = "【すべての画像に共通の条件】\n・1枚ずつ別の画像として出す（1枚にまとめない）\n・サイズ：正方形、1024×1024ピクセル\n・背景：透明（PNG形式。キャラクター以外はすべて透過させる）\n・構図：10枚とも同じ。キャラクターを左右の中央に置き、頭の上に少し余白をあけ、画像の下端まで入れる\n・同じキャラクター・同じ服・同じ大きさで、表情などだけを変える\n・画風：アニメ調のイラスト\n・文字やロゴは入れない";
+  const list10 = SLOTS.map(([slot, label], i) => `${i + 1}. ${label}：${slot === "normal" ? "正面を向いて座り、穏やかに微笑んでいる。" : EXPRESSION_PROMPTS[slot]}`).join("\n");
+  const all = [["all", "10枚まとめて", `次の外見のキャラクターのイラストを、下の10パターン作ってください。1回で全部出せないときは、出せるところまで出して、「続けて」と言われたら続きを出してください。\n\n【外見】\n${look}\n\n【10パターン】\n${list10}\n\n${spec10}`]];
+  for (const [slot, label] of SLOTS) all.push([slot, label]);
+  for (const [slot, label, fixed] of all) {
+    const spec = "【条件】\n・サイズ：正方形、1024×1024ピクセル\n・背景：透明（PNG形式。キャラクター以外はすべて透過させる）\n・構図：キャラクターを左右の中央に置き、頭の上に少し余白をあけ、画像の下端まで入れる\n・画風：アニメ調のイラスト\n・文字やロゴは入れない";
+    const text = fixed || (slot === "normal"
+      ? `次の外見のキャラクターのイラストを1枚描いてください。正面を向いて座り、穏やかに微笑んでいる。\n\n【外見】\n${look}\n\n${spec}`
+      : `添付した画像と同じキャラクター・同じ服・同じ構図・同じ大きさのまま、表情と次の点だけを変えたイラストを1枚描いてください。\n\n【変えるところ】\n${EXPRESSION_PROMPTS[slot]}\n\n${spec}`);
+    const d = document.createElement("div");
+    d.className = "pex";
+    const h = document.createElement("div");
+    h.className = "pex-head";
+    const n = document.createElement("span");
+    n.textContent = label;
+    const b = document.createElement("button");
+    b.textContent = "コピー";
+    b.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(text); b.textContent = "コピーしました"; }
+      catch (e) { b.textContent = "コピーできませんでした"; }
+      setTimeout(() => { b.textContent = "コピー"; }, 1500);
+    });
+    h.append(n, b);
+    const p = document.createElement("p");
+    p.textContent = text;
+    d.append(h, p);
+    box.appendChild(d);
+  }
+}
+$("#makePrompts").addEventListener("click", () => { renderPromptExamples(); $("#promptHelp").hidden = false; });
 
 /* ---------- 初期画像 ---------- */
 async function seedImages(force = false, c = char()) {
