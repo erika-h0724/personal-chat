@@ -533,6 +533,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 
 <!-- 更新のお知らせに出す変更内容。変更を公開するたびに先頭へ1行足す（新しい順） -->
 <script type="application/json" id="changelog">[
+  {"date": "2026-10-13", "text": "「初期データに戻す」「ココロを調律する」「忘却の彼方へ」を押したら、終わったことがわかるようにしました（初期データはノエルならノエルの最初の設定に戻ります）"},
   {"date": "2026-10-13", "text": "「プロンプトを最初の内容に戻す」を「初期データに戻す」にして、キャラクターの設定の左メニューの「さようなら」の上に移しました"},
   {"date": "2026-10-13", "text": "「AI指示文作成」の文章を、画像AIに断られにくい言い方に少し直しました"},
   {"date": "2026-10-13", "text": "まだ話していない初期のキャラクター（ノエルなど）でも、外見に最初の画像が入っているようにしました"},
@@ -1953,13 +1954,18 @@ dlg.addEventListener("cancel", (e) => {
 dlg.addEventListener("close", saveSettings);
 $("#resetPrompt").addEventListener("click", () => {
   if (!confirm("初期データに戻しますか？（設定の文章や数値が最初の内容に戻ります）")) return;
-  document.querySelectorAll("#settings textarea[data-part]").forEach((t) => { t.value = DEFAULT_PARTS[t.dataset.part] || ""; });
-  document.querySelectorAll("#settings textarea[data-state]").forEach((t) => { t.value = DEFAULT_STATES[t.dataset.state] || ""; });
+  // そのキャラの最初の内容（ミエル・ノエルは初期の設定、ほかは空）
+  const id = editChar().id;
+  const d = (id === "miel" ? newCharacter() : id === "noel" ? noelCharacter() : blankCharacter()).promptParts;
+  document.querySelectorAll("#settings textarea[data-part]").forEach((t) => { t.value = d[t.dataset.part] || ""; });
+  document.querySelectorAll("#settings textarea[data-state]").forEach((t) => { t.value = d.states[t.dataset.state] || ""; });
   $("#masterHold").value = DEFAULT_HOLD;
   $('#stateParts [data-th="high"]').value = DEFAULT_TH.tired + 1;
   $('#stateParts [data-th="tired"]').value = DEFAULT_TH.critical + 1;
   document.querySelectorAll("#stateParts select").forEach((x) => { x.value = DEFAULT_IND[x.dataset.ind][x.dataset.k]; });
   updateHighLabel();
+  saveSettings();
+  alert("初期データに戻しました");
 });
 
 let pickingSlot = null;
@@ -2312,6 +2318,7 @@ $("#resetState").addEventListener("click", () => {
   char().state = defaultState();
   save();
   renderAll();
+  alert("ココロを調律しました");
 });
 const forgetDlg = $("#forgetDlg");
 $("#clearHistory").addEventListener("click", () => {
@@ -2329,6 +2336,7 @@ $("#forgetYes").addEventListener("click", () => {
   }
   save();
   renderAll();
+  alert("会話と記憶を消しました");
 });
 
 /* ---------- キャラクターの切り替え・追加 ---------- */
