@@ -46,15 +46,25 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .char-actions{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
 .top h1{display:flex;align-items:center;gap:6px}
 #charSwitch{min-width:0}
-.group-switch{flex:none;font-size:.8rem;letter-spacing:0;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 6px 2px 10px;min-height:32px}
-.group-switch[aria-pressed="true"]{background:var(--denim);border-color:var(--denim);color:#fff}
-.group-switch[aria-pressed="true"] svg{color:#fff}
+/* 「みんなで話す」も名前と同じ見た目（枠なし）。グループ中は文字を青くする */
+.group-switch{flex:none;white-space:nowrap}
+.group-switch[aria-pressed="true"]{color:var(--denim)}
 .copy-from-list{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 8px}
 .copy-from-list button{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 14px;min-height:36px;max-width:100%;overflow-wrap:anywhere}
 .group-pick{padding:0 4px}
 .group-pick label{display:flex;align-items:center;gap:8px;padding:6px 8px;min-height:40px}
 .group-pick .btns{margin:8px}
 .group-pick .hint,.group-pick .err{margin:4px 8px}
+/* 部屋をえらぶ */
+.room-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0 4px;max-height:60dvh;overflow-y:auto}
+.room-grid:focus{outline:none}
+.room{position:relative;min-width:0}
+.room > button{display:block;width:100%;padding:0;border:2px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-2);color:var(--ink)}
+.room.on > button{border-color:var(--denim)}
+.room .thumb{display:grid;place-items:center;aspect-ratio:4/3;background:center/cover no-repeat;font-size:.8rem;color:var(--muted)}
+.room .rname{display:block;padding:4px 6px;font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.room.on .rname{color:var(--denim);font-weight:700}
+.room .rdel{position:absolute;top:4px;right:4px;width:26px;height:26px;padding:0;border:none;border-radius:50%;background:rgba(10,16,24,.6);color:#fff;font-size:.9rem;line-height:1}
 .chip[aria-pressed="true"]{background:var(--denim);border-color:var(--denim);color:#fff}
 /* iPhoneは16px未満の入力欄をタップすると画面を拡大してしまうので、スマホでは16pxにする */
 @media (pointer:coarse){ #settings textarea,#settings input,#settings select{font-size:16px} }
@@ -66,7 +76,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 #updateBtn{color:var(--denim)}
 
 .stage{position:relative;padding:0 12px 10px;border-bottom:1px solid var(--line)}
-.portrait{position:relative;width:100%;height:min(50vh,696px);border-radius:14px;overflow:hidden;background:var(--surface-2);transition:height .2s}
+.portrait{position:relative;width:100%;height:min(50vh,696px);border-radius:14px;overflow:hidden;background:var(--surface-2) center/cover no-repeat;transition:height .2s}
 .pendant{position:absolute;left:50%;top:50%;width:48px;height:48px;transform:translate(-50%,-50%);border:none;padding:0;border-radius:50%;background:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
 .pendant::after{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid var(--ind-blue);opacity:0}
 .pendant.holding::after{animation:pendantHold var(--hold,3s) linear forwards}
@@ -82,6 +92,8 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .master-badge{position:absolute;left:20px;bottom:18px;max-width:calc(100% - 40px);padding:2px 10px;border-radius:999px;background:rgba(10,16,24,.7);color:#fff;font-size:.75rem}
 .master-badge:empty{display:none}
 .portrait img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
+/* 1対1では登録した画像を切らずに全体を見せる */
+.portrait:not(.group) > img{object-fit:contain;object-position:50% 50%}
 /* みんなで話す: 共通の背景の上に最大4人を横に並べる */
 .portrait.group{display:flex;background:var(--surface-2) center/cover no-repeat}
 .fig{position:relative;flex:1 1 0;min-width:0;height:100%;cursor:pointer}
@@ -123,6 +135,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 /* みんなで話す: 2行目を全員分のゲージ（1人1行）にする */
 .group-on .top > .status{display:none}
 .gs{order:3;flex:1 0 100%;display:flex;flex-direction:column;gap:2px}
+.gs[hidden]{display:none}
 .gs .status{gap:10px;flex:none}
 .gs-name{flex:0 0 4.5em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.75rem;color:var(--muted)}
 .gs .focus .gs-name{color:var(--ink);font-weight:700}
@@ -135,9 +148,9 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .gs .status.no-gauge > :not(.gs-name){visibility:hidden}
 
 .log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
-.msg{max-width:85%;padding:7px 11px;border-radius:14px;font-size:.875rem;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.msg{max-width:85%;padding:7px 11px;border-radius:14px;font-size:.75rem;line-height:1.65;white-space:pre-wrap;word-break:break-word}
 .msg.ai{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-top-left-radius:4px}
-.msg.ai .who{display:block;font-size:.7rem;color:var(--muted)}
+.msg.ai .who{display:block;font-size:.65rem;color:var(--muted)}
 .msg.user{align-self:flex-end;background:var(--user-bubble);color:#fff;border-top-right-radius:4px}
 .msg.note{align-self:center;max-width:100%;padding:2px 8px;color:var(--muted);font-size:.75rem;text-align:center}
 .msg.pending{color:var(--muted)}
@@ -186,6 +199,7 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
 .dlg-body h3{margin:0 0 8px;font-size:1rem}
 .dlg-body label{display:block;margin:8px 0;font-size:.9rem}
 .dlg-body label > input,.dlg-body label > textarea{margin-top:4px}
+#imageModel{display:block;width:100%;margin-top:4px;font:inherit;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 .dlg-body label.check{display:flex;gap:8px;align-items:center}
 .dlg-body label.unused{opacity:.4}
 .hint{margin:4px 0;font-size:.8rem;color:var(--muted)}
@@ -195,7 +209,6 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
 .ind-sel select{font:inherit;padding:2px 6px;margin-left:4px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 .err{color:var(--check);font-weight:700;font-size:.9rem;margin:6px 0}
 .th-input{width:4.2em;padding:2px 6px;margin:0 2px;font:inherit;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:right}
-.gen-preview img{width:160px;max-width:100%;border-radius:10px;display:block;margin:8px 0}
 button:disabled{opacity:.5;cursor:default}
 .hint a{color:var(--denim)}
 .help summary{list-style:none;cursor:pointer;font-size:.85rem;color:var(--denim);display:inline-flex;align-items:center;gap:4px;min-height:32px}
@@ -204,14 +217,21 @@ button:disabled{opacity:.5;cursor:default}
 .help[open] summary::after{content:"△"}
 .steps{padding-left:1.4em}
 .steps li{margin:2px 0}
+.pex{margin:8px 0;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:.75rem}
+.pex-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:700}
+.pex-head button{flex:none;font-size:.7rem;padding:2px 10px;min-height:28px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--denim)}
+.pex p{margin:4px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--muted)}
 .btns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.btns[hidden]{display:none}
 .btns button{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:6px 14px;min-height:40px}
 .btns.center{justify-content:center}
 .reset-block{margin-top:24px}
 .reset-block:first-child{margin-top:0}
 .dlg-body section[data-page="data"]:not([hidden]){display:flex;flex-direction:column;min-height:100%}
-.danger-zone{margin-top:auto;padding-top:24px;border-top:1px solid var(--line)}
-.data-top{margin-bottom:120px}
+/* 「ココロを調律する」「忘却の彼方へ」は左右に並べ、太めの罫線で区切る */
+.danger-zone{margin-top:32px;padding-top:20px;border-top:3px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.danger-zone .reset-block{margin-top:0;min-width:0}
+.danger-zone .reset-block > button{width:100%;padding:6px 6px;font-size:.85rem;white-space:nowrap}
 .reset-block > button{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:6px 14px;min-height:40px}
 .hint.plain{list-style:none;padding:0;margin:6px 0 0}
 dialog.small{width:min(360px,calc(100vw - 32px))}
@@ -227,6 +247,10 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 .slot .thumb{aspect-ratio:3/4;border-radius:10px;border:1px dashed var(--line);background:var(--surface-2) center/cover no-repeat;display:grid;place-items:center;color:var(--muted);padding:4px}
 .slot .thumb.has{border-style:solid}
 .slot .thumb-wrap{position:relative}
+.slot-name{display:flex;align-items:center;gap:4px;min-width:0}
+.slot-name span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slot .ai-gen{flex:none;font-size:.65rem;padding:1px 6px;min-height:24px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--denim)}
+.slot .ai-gen:disabled{color:var(--muted);opacity:.5}
 .slot .thumb{width:100%}
 .slot .pd-open{font-size:.7rem;padding:2px 4px;min-height:28px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
 .pd{padding:16px}
@@ -248,6 +272,8 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 }
 @media (max-width:380px){
   .top h1{font-size:1rem}
+  .group-switch{font-size:.85rem}
+  .top .icon-btn{width:34px}
   .status{gap:10px}
   .ind svg{width:38px;height:19px}
   .chip{padding:3px 12px}
@@ -270,7 +296,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 <body>
 <div class="app">
   <header class="top">
-    <h1><button id="charSwitch" class="char-switch" aria-haspopup="dialog" aria-label="キャラクターを切り替える"><span id="charName">ミエル</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><button id="groupSwitch" class="char-switch group-switch" aria-haspopup="dialog" aria-pressed="false">みんな<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></h1>
+    <h1><button id="charSwitch" class="char-switch" aria-haspopup="dialog" aria-label="キャラクターを切り替える"><span id="charName">ミエル</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><button id="groupSwitch" class="char-switch group-switch" aria-haspopup="dialog" aria-pressed="false">みんなで話す<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></h1>
     <div class="status">
       <div class="ind" id="ind" data-state="on" role="img" aria-label="バッテリー">
           <svg viewBox="0 0 70 34" aria-hidden="true">
@@ -328,7 +354,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
     </div>
     <div class="dlg-main">
     <nav class="dlg-nav" aria-label="設定メニュー">
-      <button data-go="character" data-scope="char">キャラクター</button>
+      <button data-go="character" data-scope="char">基本設定</button>
       <button data-go="images" data-scope="char" class="sub">外見</button>
       <button data-go="affection" data-scope="char" class="sub">好感度</button>
       <button data-go="emotion" data-scope="char" class="sub">感情値</button>
@@ -390,16 +416,17 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
         <p class="hint">枠をタップして画像を選びます。画像はこの端末のブラウザにだけ保存され、AIには送られません。<span id="mielImgHint">最初からミエルの画像が入っています。</span>登録していない枠は「通常」の画像で代わりに表示します。</p>
         <div class="slots" id="slots"></div>
         <div class="btns"><button id="resetImages">画像を最初の状態に戻す</button></div>
-        <h4 class="sub">外見から画像を作る（お試し）</h4>
-        <p class="hint">上の「外見」の欄をもとに、Geminiで画像を作ります。無料のAPIキーでは使えない場合があります。</p>
-        <label>画像モデル<input id="imageModel" type="text" autocomplete="off"></label>
-        <div class="btns"><button id="genNormal">「通常」を生成</button></div>
-        <div id="genPreview" class="gen-preview" hidden><img alt="生成した画像"></div>
-        <div class="btns" id="genActions" hidden>
-          <button id="genUseNormal">「通常」だけ登録</button>
-          <button id="genAll">登録して、残り9枠も作る</button>
-        </div>
+        <h4 class="sub">AI生成（お試し）</h4>
+        <p class="hint">各枠の名前の右の「AI生成」で、Geminiで画像を作ります。「通常」は上の「外見」の欄から、ほかの枠は「通常」の画像をもとに作ります（「通常」が入るまでは押せません）。</p>
+        <p class="hint">※AI生成は、GeminiのAPIの有料プランが必要です。無料のAPIキーでは画像を作れる回数が0回のため、「429」のエラーになります。使うには Google AI Studio でAPIキーに請求先（支払い方法）を設定してください。Gemini アプリの有料プランとは別の支払いです。無料で作りたいときは、ChatGPT や Gemini のサイトで画像を作って、枠に入れてください。</p>
+        <label>画像生成AIモデル<select id="imageModel"></select></label>
+        <p class="hint" id="imageModelHint"></p>
         <p class="hint" id="genStatus" aria-live="polite"></p>
+        <div class="btns"><button id="makePrompts">AI指示文作成</button></div>
+        <div id="promptHelp" hidden>
+        <p class="hint">ChatGPT や Gemini のサイトに貼り付けて使う指示文です（背景の透明化・画像サイズ・構図を入れてあります）。一番上の「10枚まとめて」で一度に頼めます。うまくいかないときは、まず「通常」を作り、ほかの枠はできた「通常」の画像を添付して頼むと、同じキャラのまま作れます。できた画像は枠をタップして入れてください。</p>
+        <div id="promptExamples"></div>
+        </div>
       </section>
       <section data-page="data">
         <h4 class="sub">バックアップ</h4>
@@ -443,6 +470,17 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
     <div class="char-list" id="charList"></div>
     <div class="char-actions">
       <button id="newChar">＋ 新しく作る</button>
+      <button class="pick-room">部屋をえらぶ</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="roomMenu" class="small">
+  <div class="char-menu">
+    <h2>部屋をえらぶ</h2>
+    <div class="room-grid" id="roomList"></div>
+    <div class="char-actions">
+      <button id="addRoom">＋ 部屋を追加</button>
     </div>
   </div>
 </dialog>
@@ -455,10 +493,9 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
       <p class="err" id="groupErr" hidden></p>
       <div class="btns">
         <button id="startGroup">この顔ぶれで話す</button>
-        <button id="pickBg">共通の背景を選ぶ</button>
-        <button id="clearBg">背景を外す</button>
+        <button class="pick-room">部屋をえらぶ</button>
       </div>
-      <p class="hint">背景を透過したPNGの立ち絵は、共通の背景の上に並びます。背景つきの絵はそのまま枠に収まります。</p>
+      <p class="hint">背景を透過したPNGの立ち絵は、部屋の上に並びます。背景つきの絵はそのまま枠に収まります。</p>
     </div>
   </div>
 </dialog>
@@ -495,6 +532,17 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 
 <!-- 更新のお知らせに出す変更内容。変更を公開するたびに先頭へ1行足す（新しい順） -->
 <script type="application/json" id="changelog">[
+  {"date": "2026-10-13", "text": "画像を作るモデルを、使えるものから選ぶ形にしました"},
+  {"date": "2026-10-13", "text": "外見のページに「AI指示文作成」ボタンを付けました（ChatGPTなどで画像を作るための指示文を、10枚まとめて・枠ごとにコピーできます）"},
+  {"date": "2026-10-13", "text": "外見の画像の枠ごとに「AI生成」ボタンを付けました（「通常」が入ると、ほかの枠も作れます）"},
+  {"date": "2026-10-13", "text": "1人の会話に戻ったとき、ほかのキャラのゲージが残らないようにしました"},
+  {"date": "2026-10-13", "text": "「部屋をえらぶ」で背景の部屋を選べるようになりました（9部屋＋自分で追加）。1人と話すときも部屋が後ろに出ます"},
+  {"date": "2026-10-13", "text": "ミエルとノエルの初期の絵を、背景を抜いた立ち絵にしました（外見の「画像を最初の状態に戻す」で反映）"},
+  {"date": "2026-10-13", "text": "キャラクターの設定の見出しと、メニューの「基本設定」の名前を変えました"},
+  {"date": "2026-10-13", "text": "名前の右の「みんな」を「みんなで話す」にして、枠をなくしました"},
+  {"date": "2026-10-13", "text": "データのページで、下の2つのボタンを横に並べました"},
+  {"date": "2026-10-13", "text": "会話の文字を少し小さくしました"},
+  {"date": "2026-10-13", "text": "1人と話すとき、イラストを切らずに全体が見えるようにしました"},
   {"date": "2026-10-13", "text": "新しい版が公開されたら、右上に更新アイコンが出るようになりました"},
   {"date": "2026-10-13", "text": "目のアイコンに「顔をみたくない」のツールチップを付けました"},
   {"date": "2026-10-13", "text": "みんなで話すとき、全員分のゲージが並ぶようになりました"},
@@ -710,12 +758,21 @@ const GROUP_MAX = 4;
 function emptyGroup() {
   return { members: [], history: [], memory: "", memIndex: 0 };
 }
+// 部屋（背景）。最初から入っている部屋と、自分で追加した部屋（画像は IndexedDB の group:{id}）
+const ROOMS = [
+  ["living", "リビング"], ["beach", "海辺"], ["hill", "山の展望台"], ["school", "学校"],
+  ["meadow", "草原"], ["bedroom", "だれかの部屋"], ["neon", "サイバールーム"],
+  ["lab", "未来ガジェット研究所"], ["plainroom", "ふつうの部屋"]
+];
+const DEFAULT_ROOM = "living";
 function freshApp() {
-  return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter(), noelCharacter()], activeId: "miel", noelAdded: true, mode: "single", group: emptyGroup() };
+  return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter(), noelCharacter()], activeId: "miel", noelAdded: true, mode: "single", group: emptyGroup(), rooms: [], room: DEFAULT_ROOM };
 }
 let noelRemoved = false;
 function migrate(d) {
   if (!d.group) d.group = emptyGroup();
+  // 部屋ができる前の人：前に選んだ共通の背景（group:bg）があれば、追加した部屋として引き継ぐ（adoptOldBg）
+  if (!Array.isArray(d.rooms)) { d.rooms = []; d.room = DEFAULT_ROOM; d.bgAdopt = true; }
   if (d.mode !== "group") d.mode = "single";
   // ノエルは1回だけ追加する（削除したら戻さない）。自分で作った「ノエル」がいる人には足さない
   if (!d.noelAdded) {
@@ -806,8 +863,9 @@ const imgClear = () => idbReq("readwrite", (s) => s.clear());
 const urlCache = {};
 const imgKey = (slot, c = char()) => `${c.id}:${slot}`;
 const BG_KEY = "group:bg";
+const roomKey = (id) => `group:${id}`;
 async function slotUrl(slot, c = char()) {
-  const k = slot === BG_KEY ? BG_KEY : imgKey(slot, c);
+  const k = slot.startsWith("group:") ? slot : imgKey(slot, c);
   if (k in urlCache) return urlCache[k];
   let b = null;
   try { b = await imgGet(k); } catch (e) {}
@@ -837,6 +895,26 @@ async function resizeImage(file, max = 900) {
   } finally {
     URL.revokeObjectURL(src);
   }
+}
+
+// 今の部屋の画像（部屋なしなら null）
+async function roomUrl(id = app.room) {
+  if (!id) return null;
+  if (ROOMS.some(([k]) => k === id)) return `sample_pic/rooms/${id}.webp`;
+  return app.rooms.some((r) => r.id === id) ? slotUrl(roomKey(id)) : null;
+}
+// 部屋ができる前に選んでいた共通の背景を、追加した部屋「前の背景」にする
+async function adoptOldBg() {
+  if (!app.bgAdopt) return;
+  delete app.bgAdopt;
+  let b = null;
+  try { b = await imgGet(BG_KEY); } catch (e) {}
+  if (b && !app.rooms.some((r) => r.id === "bg")) {
+    app.rooms.push({ id: "bg", name: "前の背景" });
+    app.room = "bg";
+  }
+  save();
+  renderStage();
 }
 
 /* ---------- 状態の判定 ---------- */
@@ -870,6 +948,7 @@ async function renderStage() {
   const slot = currentSlot(c);
   const own = await slotUrl(slot);
   const url = own || (await slotUrl("normal"));
+  const room = await roomUrl();
   if (seq !== stageSeq) return;
   const box = $("#portrait");
   box.classList.remove("group");
@@ -881,6 +960,8 @@ async function renderStage() {
     img.alt = `${c.name}（${SLOTS.find((x) => x[0] === slot)[1]}）`;
     img.dataset.slot = own ? slot : "normal";
     img.addEventListener("load", placePendant);
+    // 背景を抜いた立ち絵なら、後ろに部屋を出す
+    img.addEventListener("load", () => { if (seq === stageSeq && room && isCutout(img)) box.style.backgroundImage = `url("${room}")`; });
     box.appendChild(img);
   } else {
     const ph = document.createElement("div");
@@ -913,7 +994,7 @@ function isCutout(img) {
 // みんなで話す: 共通の背景の上に、メンバーを横に並べる
 async function renderGroupStage() {
   const seq = ++stageSeq;
-  const bg = await slotUrl(BG_KEY);
+  const bg = await roomUrl();
   const figs = [];
   for (const c of members()) {
     const slot = currentSlot(c);
@@ -1352,7 +1433,7 @@ function scheduleAuto(ms = AUTO_WAIT) {
   autoTimer = setTimeout(async () => {
     if (!autoOn) return;
     // 返事待ち・設定中・画面を見ていないときは呼ばずに待つ
-    if (busy || document.hidden || dlg.open || charMenu.open || groupMenu.open) return scheduleAuto();
+    if (busy || document.hidden || dlg.open || charMenu.open || groupMenu.open || roomMenu.open) return scheduleAuto();
     if (!app.settings.apiKey) return setAuto(false);
     if (!(await groupTurn(""))) return setAuto(false);
     if (--autoLeft <= 0) {
@@ -1615,11 +1696,12 @@ function placePendant() {
     const img = box.querySelector("img");
     const w = box.clientWidth, h = box.clientHeight;
     if (!img || !img.naturalWidth) { b.style.left = "50%"; b.style.top = "50%"; b.style.setProperty("--lw", "0px"); return; }
-    // 背景なしの立ち絵は高さいっぱい・下揃え、それ以外は枠いっぱい（object-position 50% 18%）
-    const cut = box.classList.contains("cutout");
-    const sc = cut ? h / img.naturalHeight : Math.max(w / img.naturalWidth, h / img.naturalHeight);
+    // 背景なしの立ち絵は高さいっぱい・下揃え、グループの背景つきの絵は枠いっぱい（object-position 50% 18%）
+    // 1対1は全体を収める（object-fit: contain、中央）
+    const cut = box.classList.contains("cutout"), whole = box.id === "portrait";
+    const sc = cut ? h / img.naturalHeight : whole ? Math.min(w / img.naturalWidth, h / img.naturalHeight) : Math.max(w / img.naturalWidth, h / img.naturalHeight);
     const rw = img.naturalWidth * sc, rh = img.naturalHeight * sc;
-    const ox = (w - rw) * 0.5, oy = cut ? h - rh : (h - rh) * 0.18;
+    const ox = (w - rw) * 0.5, oy = cut ? h - rh : whole ? (h - rh) * 0.5 : (h - rh) * 0.18;
     const pos = pendantAt(app.characters.find((x) => x.id === b.dataset.id) || char(), img.dataset.slot);
     b.style.left = `${ox + rw * pos.x}px`;
     b.style.top = `${oy + rh * pos.y}px`;
@@ -1632,14 +1714,14 @@ $("#portrait").addEventListener("transitionend", placePendant);
 
 /* ---------- 設定 ---------- */
 const dlg = $("#settings");
-const PAGE_TITLES = { character: "キャラクター", images: "外見", affection: "好感度", emotion: "感情値", master: "マスターモード", detail: "詳細設定", api: "Gemini API", data: "データ" };
+const PAGE_TITLES = { character: "基本設定", images: "外見", affection: "好感度", emotion: "感情値", master: "マスターモード", detail: "詳細設定", api: "Gemini API", data: "データ" };
 const narrowDlg = () => window.matchMedia("(max-width:600px)").matches;
 let currentPage = null;
 // 設定は2種類: キャラ一覧の歯車から開く「そのキャラの設定」と、右上の歯車から開く「Gemini API・データ」
 let editId = null;
 const editChar = () => app.characters.find((c) => c.id === editId) || char();
 const firstPage = () => (editId ? "character" : "api");
-const dlgName = () => (editId ? `${editChar().name}の設定` : "設定");
+const dlgName = () => (editId ? "キャラクターの設定" : "設定");
 function showPage(name) {
   currentPage = name;
   document.querySelectorAll("#settings section[data-page]").forEach((sec) => { sec.hidden = !!name && sec.dataset.page !== name; });
@@ -1650,7 +1732,33 @@ function showPage(name) {
   $("#dlgTitle").textContent = narrowDlg() && name ? PAGE_TITLES[name] : dlgName();
   $(".dlg-body").scrollTop = 0;
 }
-document.querySelectorAll(".dlg-nav button").forEach((b) => b.addEventListener("click", () => showPage(b.dataset.go)));
+document.querySelectorAll(".dlg-nav button").forEach((b) => b.addEventListener("click", () => { showPage(b.dataset.go); if (b.dataset.go === "images") loadImageModels(); }));
+// 画像モデルは選択式。APIキーで使える画像生成AIモデルを Gemini に1回だけ問い合わせて選択肢にする
+let imageModelList = null;
+function setImageModels(list, hint = "", found = false) {
+  let cur = $("#imageModel").value || app.settings.imageModel || DEFAULT_IMAGE_MODEL;
+  // 問い合わせた一覧にない名前（存在しないモデル）は選ばない
+  if (found && list.length && !list.includes(cur)) cur = list.includes(DEFAULT_IMAGE_MODEL) ? DEFAULT_IMAGE_MODEL : list[0];
+  const sel = $("#imageModel");
+  sel.textContent = "";
+  for (const id of [...new Set([...list, cur])]) sel.add(new Option(id, id));
+  sel.value = cur;
+  $("#imageModelHint").textContent = hint;
+}
+async function loadImageModels() {
+  if (imageModelList) return setImageModels(imageModelList, "", true);
+  const key = $("#apiKey").value.trim() || app.settings.apiKey;
+  if (!key) return setImageModels([DEFAULT_IMAGE_MODEL], "APIキーを入れると、使える画像生成AIモデルを選べます。");
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=${encodeURIComponent(key)}`);
+    if (!res.ok) throw new Error(res.status);
+    const ms = (await res.json()).models || [];
+    imageModelList = ms.filter((m) => /image/i.test(m.name) && (m.supportedGenerationMethods || []).includes("generateContent")).map((m) => m.name.replace(/^models\//, ""));
+    setImageModels(imageModelList, imageModelList.length ? "" : "このAPIキーで使える画像生成AIモデルが見つかりませんでした。", true);
+  } catch (e) {
+    setImageModels([DEFAULT_IMAGE_MODEL], "使える画像生成AIモデルを調べられませんでした。");
+  }
+}
 $("#backSettings").addEventListener("click", () => showPage(null));
 window.addEventListener("resize", () => {
   if (dlg.open && !narrowDlg() && !currentPage) showPage(firstPage());
@@ -1660,7 +1768,7 @@ function openSettings(id = null) {
   editId = typeof id === "string" ? id : null;
   const c = editChar();
   $("#apiKey").value = app.settings.apiKey;
-  $("#imageModel").value = app.settings.imageModel || DEFAULT_IMAGE_MODEL;
+  setImageModels([app.settings.imageModel || DEFAULT_IMAGE_MODEL]);
   $("#name").value = c.name;
   const pp = $("#promptParts");
   pp.textContent = "";
@@ -1847,6 +1955,7 @@ let pickingSlot = null;
 async function renderSlots() {
   const box = $("#slots");
   box.textContent = "";
+  const hasNormal = !!(await slotUrl("normal", editChar()));
   for (const [slot, label] of SLOTS) {
     const url = await slotUrl(slot, editChar());
     const wrap = document.createElement("div");
@@ -1857,8 +1966,18 @@ async function renderSlots() {
     if (url) btn.style.backgroundImage = `url("${url}")`;
     else btn.textContent = "＋";
     btn.addEventListener("click", () => { pickingSlot = slot; $("#fileInput").click(); });
-    const name = document.createElement("span");
-    name.textContent = slotLabel(slot, label, editChar());
+    const name = document.createElement("div");
+    name.className = "slot-name";
+    const nt = document.createElement("span");
+    nt.textContent = slotLabel(slot, label, editChar());
+    // AI生成：最初は「通常」だけ。「通常」が入ったら、ほかの枠も「通常」をもとに作れる
+    const ai = document.createElement("button");
+    ai.className = "ai-gen";
+    ai.textContent = "AI生成";
+    ai.setAttribute("aria-label", `${label}の画像をAIで作る`);
+    ai.disabled = generating || (slot !== "normal" && !hasNormal);
+    ai.addEventListener("click", () => genSlot(slot, label, !!url));
+    name.append(nt, ai);
     const tw = document.createElement("div");
     tw.className = "thumb-wrap";
     tw.appendChild(btn);
@@ -1966,7 +2085,7 @@ const EXPRESSION_PROMPTS = {
   outburst: "感情が爆発して、怒って叫んでいる。周りに激しいエフェクトがある。",
   command: "無表情で、目の光が消え、機械的な表情をしている。"
 };
-let genBlob = null, generating = false;
+let generating = false;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function b64ToBlob(b64, type) {
   const bin = atob(b64);
@@ -1997,71 +2116,80 @@ function genError(e) {
 }
 function setGenBusy(on) {
   generating = on;
-  ["#genNormal", "#genUseNormal", "#genAll"].forEach((id) => { $(id).disabled = on; });
+  document.querySelectorAll("#slots .ai-gen").forEach((b) => { b.disabled = on || b.disabled; });
+  if (!on) renderSlots();
 }
-$("#genNormal").addEventListener("click", async () => {
+// 1枠ずつAIで作る。「通常」は外見の欄から、ほかは「通常」の画像をもとに表情などを変える
+async function genSlot(slot, label, has) {
   if (generating) return;
-  const t = document.querySelector('#settings textarea[data-part="appearance"]');
-  const look = t ? t.value.trim() : "";
-  if (!look) { genStatus("「外見」の欄を入力してください。"); return; }
+  const c = editChar();
+  let parts;
+  if (slot === "normal") {
+    const t = document.querySelector('#settings textarea[data-part="appearance"]');
+    const look = t ? t.value.trim() : "";
+    if (!look) { genStatus("「外見」の欄を入力してください。"); return; }
+    parts = [{ text: `アニメ調のイラストを、正方形で1枚描いてください。次の外見のキャラクターが、明るい部屋の床に座って正面を向き、穏やかに微笑んでいる。文字は入れない。\n${look}` }];
+  } else {
+    const b = await imgGet(imgKey("normal", c)).catch(() => null);
+    if (!b) { genStatus("先に「通常」の画像を入れてください。"); return; }
+    const ref = (await blobToDataUrl(b)).split(",");
+    parts = [{ inlineData: { mimeType: ref[0].slice(5, ref[0].indexOf(";")), data: ref[1] } },
+      { text: `この画像と同じキャラクター、同じ服、同じ構図、同じ背景のまま、表情と次の点だけを変えて、正方形で1枚描いてください。文字は入れない。\n${EXPRESSION_PROMPTS[slot]}` }];
+  }
+  if (has && !confirm(`「${label}」の今の画像を、AIで作った画像に置き換えますか？`)) return;
   setGenBusy(true);
-  genStatus("「通常」の画像を作っています…");
+  genStatus(`「${label}」の画像を作っています…`);
   try {
-    genBlob = await geminiImage([{ text: `アニメ調のイラストを、正方形で1枚描いてください。次の外見のキャラクターが、明るい部屋の床に座って正面を向き、穏やかに微笑んでいる。文字は入れない。\n${look}` }]);
-    const img = $("#genPreview img");
-    if (img.src) URL.revokeObjectURL(img.src);
-    img.src = URL.createObjectURL(genBlob);
-    $("#genPreview").hidden = false;
-    $("#genActions").hidden = false;
-    genStatus("できました。よければ登録してください。気に入らなければ、もう一度「通常」を生成できます。");
+    const blob = await geminiImage(parts);
+    const k = imgKey(slot, c);
+    await imgPut(k, blob);
+    dropCache(k);
+    renderStage();
+    genStatus(`「${label}」に登録しました。`);
   } catch (e) {
     genStatus(`生成できませんでした：${genError(e)}`);
   } finally {
     setGenBusy(false);
   }
-});
-$("#genUseNormal").addEventListener("click", async () => {
-  if (!genBlob || generating) return;
-  const k = imgKey("normal", editChar());
-  await imgPut(k, genBlob);
-  dropCache(k);
-  renderSlots();
-  renderStage();
-  genStatus("「通常」に登録しました。");
-});
-$("#genAll").addEventListener("click", async () => {
-  if (!genBlob || generating) return;
-  if (!confirm("「通常」に登録して、残り9枠の画像を作ります。今の画像は置き換わります。続けますか？")) return;
-  setGenBusy(true);
-  const k0 = imgKey("normal", editChar());
-  await imgPut(k0, genBlob);
-  dropCache(k0);
-  renderSlots();
-  renderStage();
-  const ref = (await blobToDataUrl(genBlob)).split(",");
-  const refPart = { inlineData: { mimeType: ref[0].slice(5, ref[0].indexOf(";")), data: ref[1] } };
-  const entries = Object.entries(EXPRESSION_PROMPTS);
-  let done = 0, failed = [];
-  for (const [slot, expr] of entries) {
-    const label = SLOTS.find((x) => x[0] === slot)[1];
-    genStatus(`「${label}」を作っています…（${done + 1}/${entries.length}）`);
-    try {
-      const blob = await geminiImage([refPart, { text: `この画像と同じキャラクター、同じ服、同じ構図、同じ背景のまま、表情と次の点だけを変えて、正方形で1枚描いてください。文字は入れない。\n${expr}` }]);
-      const k = imgKey(slot, editChar());
-      await imgPut(k, blob);
-      dropCache(k);
-      renderSlots();
-    } catch (e) {
-      failed.push(label);
-      if (e instanceof ApiError && e.type === "rate") await sleep(30000);
-    }
-    done++;
-    await sleep(7000);
+}
+
+// サイト（ChatGPT・Gemini）で作るときの指示文の例。外見の欄の今の文章を入れる
+function renderPromptExamples() {
+  const t = document.querySelector('#settings textarea[data-part="appearance"]');
+  const look = (t && t.value.trim()) || "（外見の欄の文章）";
+  const box = $("#promptExamples");
+  box.textContent = "";
+  // 10枚まとめて頼む指示文（1枚ずつ別の画像で出してもらう）
+  const spec10 = "【すべての画像に共通の条件】\n・1枚ずつ別の画像として出す（1枚にまとめない）\n・サイズ：正方形、1024×1024ピクセル\n・背景：透明（PNG形式。キャラクター以外はすべて透過させる）\n・構図：10枚とも同じ。キャラクターを左右の中央に置き、頭の上に少し余白をあけ、画像の下端まで入れる\n・同じキャラクター・同じ服・同じ大きさで、表情などだけを変える\n・画風：アニメ調のイラスト\n・文字やロゴは入れない";
+  const list10 = SLOTS.map(([slot, label], i) => `${i + 1}. ${label}：${slot === "normal" ? "正面を向いて座り、穏やかに微笑んでいる。" : EXPRESSION_PROMPTS[slot]}`).join("\n");
+  const all = [["all", "10枚まとめて", `次の外見のキャラクターのイラストを、下の10パターン作ってください。1回で全部出せないときは、出せるところまで出して、「続けて」と言われたら続きを出してください。\n\n【外見】\n${look}\n\n【10パターン】\n${list10}\n\n${spec10}`]];
+  for (const [slot, label] of SLOTS) all.push([slot, label]);
+  for (const [slot, label, fixed] of all) {
+    const spec = "【条件】\n・サイズ：正方形、1024×1024ピクセル\n・背景：透明（PNG形式。キャラクター以外はすべて透過させる）\n・構図：キャラクターを左右の中央に置き、頭の上に少し余白をあけ、画像の下端まで入れる\n・画風：アニメ調のイラスト\n・文字やロゴは入れない";
+    const text = fixed || (slot === "normal"
+      ? `次の外見のキャラクターのイラストを1枚描いてください。正面を向いて座り、穏やかに微笑んでいる。\n\n【外見】\n${look}\n\n${spec}`
+      : `添付した画像と同じキャラクター・同じ服・同じ構図・同じ大きさのまま、表情と次の点だけを変えたイラストを1枚描いてください。\n\n【変えるところ】\n${EXPRESSION_PROMPTS[slot]}\n\n${spec}`);
+    const d = document.createElement("div");
+    d.className = "pex";
+    const h = document.createElement("div");
+    h.className = "pex-head";
+    const n = document.createElement("span");
+    n.textContent = label;
+    const b = document.createElement("button");
+    b.textContent = "コピー";
+    b.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(text); b.textContent = "コピーしました"; }
+      catch (e) { b.textContent = "コピーできませんでした"; }
+      setTimeout(() => { b.textContent = "コピー"; }, 1500);
+    });
+    h.append(n, b);
+    const p = document.createElement("p");
+    p.textContent = text;
+    d.append(h, p);
+    box.appendChild(d);
   }
-  renderStage();
-  setGenBusy(false);
-  genStatus(failed.length ? `完了しました。作れなかった枠：${failed.join("、")}（手動で登録するか、もう一度試してください）` : "10枠すべて作り終えました。");
-});
+}
+$("#makePrompts").addEventListener("click", () => { renderPromptExamples(); $("#promptHelp").hidden = false; });
 
 /* ---------- 初期画像 ---------- */
 async function seedImages(force = false, c = char()) {
@@ -2131,6 +2259,7 @@ $("#importInput").addEventListener("change", async (e) => {
     dlg.close();
     renderAll();
     seedAll();
+    adoptOldBg();
   } catch (err) {
     alert("このファイルは読み込めませんでした。書き出したバックアップを選んでください。");
   }
@@ -2227,8 +2356,6 @@ function openGroupMenu() {
     gl.appendChild(l);
   }
   groupErr("");
-  $("#clearBg").hidden = true;
-  slotUrl(BG_KEY).then((u) => { $("#clearBg").hidden = !u; });
   groupMenu.showModal();
 }
 function groupErr(t) { $("#groupErr").textContent = t; $("#groupErr").hidden = !t; }
@@ -2239,27 +2366,72 @@ $("#startGroup").addEventListener("click", () => {
   groupMenu.close();
   startGroup(ids);
 });
-$("#pickBg").addEventListener("click", () => $("#bgInput").click());
+const roomMenu = $("#roomMenu");
+async function openRoomMenu() {
+  const list = $("#roomList");
+  list.textContent = "";
+  const all = [["", "部屋なし"], ...ROOMS, ...app.rooms.map((r) => [r.id, r.name])];
+  for (const [id, name] of all) {
+    const w = document.createElement("div");
+    w.className = `room${id === app.room ? " on" : ""}`;
+    const b = document.createElement("button");
+    const th = document.createElement("span");
+    th.className = "thumb";
+    const u = await roomUrl(id);
+    if (u) th.style.backgroundImage = `url("${u}")`;
+    else th.textContent = "なし";
+    const nm = document.createElement("span");
+    nm.className = "rname";
+    nm.textContent = name;
+    b.append(th, nm);
+    b.addEventListener("click", () => { app.room = id; save(); roomMenu.close(); renderStage(); });
+    w.appendChild(b);
+    if (app.rooms.some((r) => r.id === id)) {
+      const x = document.createElement("button");
+      x.className = "rdel";
+      x.textContent = "×";
+      x.setAttribute("aria-label", `${name}を削除`);
+      x.addEventListener("click", async () => {
+        if (!confirm(`「${name}」を削除しますか？`)) return;
+        await imgDel(roomKey(id));
+        dropCache(roomKey(id));
+        app.rooms = app.rooms.filter((r) => r.id !== id);
+        if (app.room === id) app.room = DEFAULT_ROOM;
+        save();
+        renderStage();
+        openRoomMenu();
+      });
+      w.appendChild(x);
+    }
+    list.appendChild(w);
+  }
+  if (!roomMenu.open) roomMenu.showModal();
+}
+document.querySelectorAll(".pick-room").forEach((b) => b.addEventListener("click", () => {
+  charMenu.close();
+  groupMenu.close();
+  openRoomMenu();
+}));
+$("#addRoom").addEventListener("click", () => $("#bgInput").click());
 $("#bgInput").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   e.target.value = "";
   if (!file) return;
   try {
-    await imgPut(BG_KEY, await resizeImage(file, 1200));
-    dropCache(BG_KEY);
-    $("#clearBg").hidden = false;
+    const id = `u${Date.now().toString(36)}`;
+    await imgPut(roomKey(id), await resizeImage(file, 1200));
+    let n = app.rooms.length + 1;
+    while (app.rooms.some((r) => r.name === `追加した部屋${n}`)) n++;
+    app.rooms.push({ id, name: `追加した部屋${n}` });
+    app.room = id;
+    save();
     renderStage();
+    openRoomMenu();
   } catch (err) {
     alert("画像を読み込めませんでした。別の画像で試してください。");
   }
 });
-$("#clearBg").addEventListener("click", async () => {
-  if (!confirm("共通の背景を外しますか？")) return;
-  await imgDel(BG_KEY);
-  dropCache(BG_KEY);
-  $("#clearBg").hidden = true;
-  renderStage();
-});
+roomMenu.addEventListener("click", (e) => { if (e.target === roomMenu) roomMenu.close(); });
 $("#toggleArt").addEventListener("click", () => {
   app.settings.hideArt = !app.settings.hideArt;
   save();
@@ -2375,6 +2547,7 @@ if (noelRemoved) {
 }
 renderAll();
 seedAll();
+adoptOldBg();
 checkUpdate();
 if (char().state.charging) { char().state.charging = false; setCharging(true); }
 </script>
