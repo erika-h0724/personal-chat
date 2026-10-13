@@ -1687,11 +1687,10 @@ const PENDANT_SIZE = { w: 0.032, h: 0.055 };
 const NOEL_PENDANT = { x: 0.29, y: 0.6, w: 0.032, h: 0.07 };
 // みんなで話すときの立ち絵の大きさ（高さの割合）。ノエルはヤモリなので小さめ
 const FIG_SCALE = { noel: 0.6 };
-const RIKA_PENDANT = { x: 0.5, y: 0.6, w: 0.04, h: 0.04 };
+const RIKA_PENDANT = { x: 0.5, y: 0.58, w: 0.04, h: 0.04 };
 const DEFAULT_PENDANT = { noel: { normal: NOEL_PENDANT, off: { ...NOEL_PENDANT, y: 0.635 } },
-  rika: { normal: { ...RIKA_PENDANT, y: 0.62 }, smile: { y: 0.62 }, surprised: { y: 0.62 }, critical: { y: 0.62 },
-    annoyed: { y: 0.61 }, tired: RIKA_PENDANT, off: RIKA_PENDANT, command: RIKA_PENDANT,
-    charging: { ...RIKA_PENDANT, x: 0.513 }, outburst: { ...RIKA_PENDANT, x: 0.47, y: 0.605 } } };
+  rika: { normal: RIKA_PENDANT, tired: { y: 0.57 }, off: { y: 0.575 }, critical: { y: 0.61 },
+    outburst: { x: 0.505, y: 0.593 }, command: { y: 0.593 } } };
 // 絵ごとのペンダントの位置（外見ページでその絵に設定した値 → 初期画像の値 → 標準の値）
 function pendantAt(c, slot) {
   const own = c.pendantPos || {}, def = DEFAULT_PENDANT[c.id] || {};
