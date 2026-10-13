@@ -75,6 +75,8 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .icon-btn{width:40px;height:40px;display:grid;place-items:center;padding:0;border:none;border-radius:50%;background:none;color:var(--muted)}
 .icon-btn:hover{background:var(--surface-2);color:var(--ink)}
 .icon-btn[hidden]{display:none}
+/* SVGの中の要素には hidden 属性が効かないので、CSSで隠す */
+#toggleArt .slash[hidden]{display:none}
 #updateBtn{color:var(--ind-orange)}
 
 .stage{position:relative;padding:0 12px 10px;border-bottom:1px solid var(--line)}
@@ -549,6 +551,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 
 <!-- 更新のお知らせに出す変更内容。変更を公開するたびに先頭へ1行足す（新しい順） -->
 <script type="application/json" id="changelog">[
+  {"date": "2026-10-13", "text": "イラストを出しているのに目のアイコンに斜線が出ていたのと、みんなで話すときにバッテリーの長押しを途中でやめても輪が残っていたのを直しました。APIキーを入れたらすぐ会話のAIモデルを選べるようにしました"},
   {"date": "2026-10-13", "text": "1対1の会話で、返事を書けたところから少しずつ表示するようにしました。考える量を元に戻し、話のつながりがよくなるようにしました"},
   {"date": "2026-10-13", "text": "会話のAIモデルの選択肢を、flash と flash-lite の新しいものだけに絞りました"},
   {"date": "2026-10-13", "text": "Geminiが混んでいる（503）ときは、少し待って自動で送り直し、それでもだめなら軽いモデルで返事するようにしました"},
@@ -1727,7 +1730,7 @@ let gaugeTimer = null;
 function cancelGaugeHold() {
   clearTimeout(gaugeTimer);
   gaugeTimer = null;
-  document.querySelectorAll(".top .ind").forEach((x) => x.classList.remove("holding"));
+  document.querySelectorAll("#groupStatus .ind, #ind").forEach((x) => x.classList.remove("holding"));
 }
 $("#ind").addEventListener("pointerdown", (e) => startGaugeHold(e, $("#ind")));
 // グループ中は、押したキャラを選んでから充電する
@@ -1954,6 +1957,8 @@ async function loadImageModels() {
   }
 }
 $("#backSettings").addEventListener("click", () => showPage(null));
+// 初めてAPIキーを入れたときも、会話のAIモデルの選択肢を出す
+$("#apiKey").addEventListener("change", () => { if (!editId) loadChatModels(); });
 window.addEventListener("resize", () => {
   if (dlg.open && !narrowDlg() && !currentPage) showPage(firstPage());
   else if (dlg.open) $("#dlgTitle").textContent = narrowDlg() && currentPage ? PAGE_TITLES[currentPage] : dlgName();
