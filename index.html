@@ -41,6 +41,12 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .char-list button:hover,.char-actions button:hover{background:var(--surface-2)}
 .char-list button[aria-current="true"]{font-weight:700;background:var(--surface-2)}
 .char-actions{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.group-pick{margin-top:8px;padding:8px 4px 0;border-top:1px solid var(--line)}
+.group-pick h3{font-size:.9rem;margin:0 8px 4px}
+.group-pick label{display:flex;align-items:center;gap:8px;padding:6px 8px;min-height:40px}
+.group-pick .btns{margin:8px}
+.group-pick .hint,.group-pick .err{margin:4px 8px}
+.chip[aria-pressed="true"]{background:var(--denim);border-color:var(--denim);color:#fff}
 /* iPhoneは16px未満の入力欄をタップすると画面を拡大してしまうので、スマホでは16pxにする */
 @media (pointer:coarse){ #settings textarea,#settings input,#settings select{font-size:16px} }
 .ghost{background:none;border:1px solid var(--line);border-radius:999px;padding:4px 14px;min-height:36px}
@@ -65,6 +71,17 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .master-badge{position:absolute;left:20px;bottom:18px;max-width:calc(100% - 40px);padding:2px 10px;border-radius:999px;background:rgba(10,16,24,.7);color:#fff;font-size:.75rem}
 .master-badge:empty{display:none}
 .portrait img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
+/* みんなで話す: 共通の背景の上に最大4人を横に並べる */
+.portrait.group{display:flex;background:var(--surface-2) center/cover no-repeat}
+.fig{position:relative;flex:1 1 0;min-width:0;height:100%;cursor:pointer}
+.fig.boxed{overflow:hidden}
+.fig + .fig.boxed{border-left:2px solid var(--surface)}
+.fig.cutout img{position:absolute;left:50%;bottom:0;width:auto;height:100%;max-width:none;transform:translateX(-50%);object-fit:contain;pointer-events:none}
+.fig .placeholder{white-space:pre-line}
+.fig .pendant{z-index:1}
+.fig-name{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);max-width:calc(100% - 8px);padding:0 8px;border-radius:999px;background:rgba(10,16,24,.55);color:#fff;font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:2}
+.fig.focus .fig-name{background:var(--denim);font-weight:700}
+.hide-art .stage{display:none}
 .placeholder{display:grid;place-items:center;height:100%;padding:10px;text-align:center;color:var(--muted);font-size:.8rem;
   background-image:linear-gradient(90deg,rgba(196,67,58,.09) 50%,transparent 50%),linear-gradient(rgba(196,67,58,.09) 50%,transparent 50%);
   background-size:28px 28px}
@@ -239,6 +256,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
         <div class="bar"><i id="emoBar"></i></div>
       </div>
     </div>
+    <button id="toggleArt" class="icon-btn" aria-label="イラストを隠す" aria-pressed="false"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16" hidden/></svg></button>
     <button id="openSettings" class="icon-btn" aria-label="設定"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   </header>
 
@@ -250,6 +268,9 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
   <main class="log" id="log" aria-live="polite"></main>
 
   <footer class="composer">
+    <div class="actions" id="groupActions" hidden>
+      <button id="autoBtn" class="chip" aria-pressed="false">自動会話</button>
+    </div>
     <div class="row">
       <textarea id="input" rows="1" enterkeyhint="send" placeholder="話しかける"></textarea>
       <button id="sendBtn" class="send icon" aria-label="送信"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -379,6 +400,17 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
       <button id="newChar">＋ 新しく作る</button>
       <button id="copyChar">＋ このキャラを複製</button>
     </div>
+    <div class="group-pick">
+      <h3>みんなで話す（4人まで）</h3>
+      <div id="groupList"></div>
+      <p class="err" id="groupErr" hidden></p>
+      <div class="btns">
+        <button id="startGroup">この顔ぶれで話す</button>
+        <button id="pickBg">共通の背景を選ぶ</button>
+        <button id="clearBg">背景を外す</button>
+      </div>
+      <p class="hint">背景を透過したPNGの立ち絵は、共通の背景の上に並びます。背景つきの絵はそのまま枠に収まります。</p>
+    </div>
   </div>
 </dialog>
 
@@ -393,6 +425,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 </dialog>
 
 <input type="file" id="fileInput" accept="image/*" hidden>
+<input type="file" id="bgInput" accept="image/*" hidden>
 <input type="file" id="importInput" accept="application/json,.json" hidden>
 
 <script>
@@ -581,10 +614,17 @@ function blankCharacter() {
   return { id: `c${Date.now().toString(36)}`, name: "新しいキャラクター", promptParts: parts, indicators: JSON.parse(JSON.stringify(DEFAULT_IND)), masterHold: DEFAULT_HOLD, useGauge: false, usePendant: false, state: defaultState(), history: [], memory: "", memIndex: 0 };
 }
 const pendantOn = (c) => c.usePendant !== false;
+// みんなで話す（グループ）の会話と記憶。状態（エネルギーなど）は各キャラのものを共通で使う
+const GROUP_MAX = 4;
+function emptyGroup() {
+  return { members: [], history: [], memory: "", memIndex: 0 };
+}
 function freshApp() {
-  return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter(), noelCharacter()], activeId: "miel", noelAdded: true };
+  return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter(), noelCharacter()], activeId: "miel", noelAdded: true, mode: "single", group: emptyGroup() };
 }
 function migrate(d) {
+  if (!d.group) d.group = emptyGroup();
+  if (d.mode !== "group") d.mode = "single";
   // ノエルは1回だけ追加する（削除したら戻さない）
   if (!d.noelAdded) {
     if (!d.characters.some((c) => c.id === "noel")) d.characters.push(noelCharacter());
@@ -616,9 +656,15 @@ function load() {
 }
 let app = load();
 const char = () => app.characters.find((c) => c.id === app.activeId) || app.characters[0];
+// グループでは activeId は「選んでいる（ゲージを表示する）メンバー」
+const inGroup = () => app.mode === "group";
+const members = () => app.group.members.map((id) => app.characters.find((c) => c.id === id)).filter(Boolean);
+// 今の会話（1対1ならキャラ、グループならグループ）。history・memory・memIndex を持つ
+const talk = () => (inGroup() ? app.group : char());
+const talkName = () => (inGroup() ? members().map((c) => c.name).join("と") : char().name);
 
 function save() {
-  for (const c of app.characters) {
+  for (const c of [...app.characters, app.group]) {
     if (c.history.length > 600 && c.memIndex >= 100) {
       c.history.splice(0, 100);
       c.memIndex -= 100;
@@ -655,9 +701,10 @@ const imgKeys = () => idbReq("readonly", (s) => s.getAllKeys());
 const imgClear = () => idbReq("readwrite", (s) => s.clear());
 
 const urlCache = {};
-const imgKey = (slot) => `${char().id}:${slot}`;
-async function slotUrl(slot) {
-  const k = imgKey(slot);
+const imgKey = (slot, c = char()) => `${c.id}:${slot}`;
+const BG_KEY = "group:bg";
+async function slotUrl(slot, c = char()) {
+  const k = slot === BG_KEY ? BG_KEY : imgKey(slot, c);
   if (k in urlCache) return urlCache[k];
   let b = null;
   try { b = await imgGet(k); } catch (e) {}
@@ -712,11 +759,17 @@ function indicator(c) {
 }
 
 /* ---------- 描画 ---------- */
+let stageSeq = 0;
 async function renderStage() {
+  if (inGroup()) return renderGroupStage();
+  const seq = ++stageSeq;
   const c = char();
   const slot = currentSlot(c);
   const url = (await slotUrl(slot)) || (await slotUrl("normal"));
+  if (seq !== stageSeq) return;
   const box = $("#portrait");
+  box.classList.remove("group");
+  box.style.backgroundImage = "";
   box.textContent = "";
   if (url) {
     const img = document.createElement("img");
@@ -737,10 +790,84 @@ async function renderStage() {
     placePendant();
   }
 }
+// 上の2隅が透けている画像は「背景なしの立ち絵」とみなし、共通の背景の上に重ねる
+const cutoutCache = {};
+function isCutout(img) {
+  if (img.src in cutoutCache) return cutoutCache[img.src];
+  let r = false;
+  try {
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = 16;
+    const g = cv.getContext("2d");
+    g.drawImage(img, 0, 0, 16, 16);
+    const d = g.getImageData(0, 0, 16, 16).data;
+    r = d[3] < 200 || d[15 * 4 + 3] < 200;
+  } catch (e) {}
+  return (cutoutCache[img.src] = r);
+}
+// みんなで話す: 共通の背景の上に、メンバーを横に並べる
+async function renderGroupStage() {
+  const seq = ++stageSeq;
+  const bg = await slotUrl(BG_KEY);
+  const figs = [];
+  for (const c of members()) {
+    const slot = currentSlot(c);
+    figs.push([c, slot, (await slotUrl(slot, c)) || (await slotUrl("normal", c))]);
+  }
+  if (seq !== stageSeq) return;
+  const box = $("#portrait");
+  box.textContent = "";
+  box.classList.add("group");
+  box.style.backgroundImage = bg ? `url("${bg}")` : "";
+  for (const [c, slot, url] of figs) {
+    const f = document.createElement("div");
+    f.className = `fig ${cutoutCache[url] ? "cutout" : "boxed"}${c.id === app.activeId ? " focus" : ""}`;
+    f.dataset.id = c.id;
+    f.addEventListener("click", () => focusMember(c.id));
+    const label = SLOTS.find((x) => x[0] === slot)[1];
+    if (url) {
+      const img = document.createElement("img");
+      img.alt = `${c.name}（${label}）`;
+      img.addEventListener("load", () => {
+        if (isCutout(img)) f.classList.replace("boxed", "cutout");
+        placePendant();
+      });
+      img.src = url;
+      f.appendChild(img);
+    } else {
+      const ph = document.createElement("div");
+      ph.className = "placeholder";
+      ph.textContent = `画像未登録\n（${label}）`;
+      f.appendChild(ph);
+    }
+    if (pendantOn(c)) f.appendChild(makePendant(c));
+    f.appendChild(Object.assign(document.createElement("span"), { className: "fig-name", textContent: c.name }));
+    box.appendChild(f);
+  }
+  paintPendant();
+  placePendant();
+}
+// グループで、ゲージを表示する（長押しの対象になる）メンバーを選ぶ
+function focusMember(id) {
+  if (id === app.activeId) return;
+  cancelHold();
+  cancelGaugeHold();
+  if (chargeTimer) setCharging(false);
+  app.activeId = id;
+  save();
+  renderStatus();
+  document.querySelectorAll("#portrait .fig").forEach((f) => f.classList.toggle("focus", f.dataset.id === id));
+}
 function renderStatus() {
   const c = char(), s = c.state;
-  $("#charName").textContent = c.name;
-  document.title = c.name;
+  $("#charName").textContent = talkName();
+  document.title = talkName();
+  $("#groupActions").hidden = !inGroup();
+  $("#autoBtn").setAttribute("aria-pressed", String(autoOn));
+  $(".app").classList.toggle("hide-art", !!app.settings.hideArt);
+  $("#toggleArt").setAttribute("aria-pressed", String(!!app.settings.hideArt));
+  $("#toggleArt").setAttribute("aria-label", app.settings.hideArt ? "イラストを表示する" : "イラストを隠す");
+  $("#toggleArt .slash").toggleAttribute("hidden", !app.settings.hideArt);
   $(".app").classList.toggle("gauge-off", !c.useGauge);
   const ind = $("#ind");
   ind.dataset.state = s.energy <= 0 && !s.charging ? "off" : "on";
@@ -749,25 +876,25 @@ function renderStatus() {
   ind.querySelectorAll(".seg").forEach((el) => el.classList.toggle("on", Number(el.dataset.seg) <= segs));
   $("#energyText").textContent = `${s.energy}%`;
   paintPendant();
-  $("#masterText").textContent = pendantOn(c) && s.master && s.command ? `マスターモード中（胸のインジケーターを${masterHold(c)}秒長押しで解除）` : "";
+  $("#masterText").textContent = pendantOn(c) && s.master && s.command ? `${inGroup() ? `${c.name}：` : ""}マスターモード中（胸のインジケーターを${masterHold(c)}秒長押しで解除）` : "";
   $("#affText").textContent = `${s.affection}%`;
   $("#affBar").style.width = `${s.affection}%`;
   $("#emoText").textContent = `${s.emotion}%`;
   $("#emoBar").style.width = `${Math.min(100, s.emotion)}%`;
 }
 function renderLog() {
-  const c = char();
+  const c = char(), t = talk();
   const log = $("#log");
   log.textContent = "";
-  if (!c.history.length) {
+  if (!t.history.length) {
     const el = document.createElement("div");
     el.className = "msg note";
     el.textContent = app.settings.apiKey
-      ? `${c.name}に話しかけてみてください。`
+      ? inGroup() ? "みんなに話しかけてみてください。名前を呼ぶと、その人が答えます。" : `${c.name}に話しかけてみてください。`
       : "右上の「設定」で Gemini のAPIキーを入れると話せます。";
     log.appendChild(el);
   }
-  for (const m of c.history) log.appendChild(msgEl(m, c));
+  for (const m of t.history) log.appendChild(msgEl(m, c));
   log.scrollTop = log.scrollHeight;
 }
 function msgEl(m, c) {
@@ -776,7 +903,8 @@ function msgEl(m, c) {
   if (m.role === "ai") {
     const who = document.createElement("span");
     who.className = "who";
-    who.textContent = c.name;
+    // グループの返事は who（キャラのid）で話し手を表す。削除済みなら保存した名前
+    who.textContent = m.who ? (app.characters.find((x) => x.id === m.who) || m).name || "" : m.name ?? c.name;
     el.appendChild(who);
     el.appendChild(document.createTextNode(m.text));
   } else {
@@ -802,7 +930,7 @@ function renderAll() {
 function addNote(text, persist = true, detail = "") {
   const c = char();
   const m = detail ? { role: "note", text, detail } : { role: "note", text };
-  if (persist) { c.history.push(m); save(); renderLog(); }
+  if (persist) { talk().history.push(m); save(); renderLog(); }
   else {
     const log = $("#log");
     log.appendChild(msgEl(m, c));
@@ -861,7 +989,7 @@ async function gemini(systemText, contents, json) {
 function errorText(e) {
   switch (e.type) {
     case "rate": {
-      const name = char().name, kind = rateKind(e);
+      const name = talkName(), kind = rateKind(e);
       if (kind === "day") return `（${name}は今日はもう話し疲れてしまったみたい……${quotaResetText()}ごろには元気を取り戻すよ）`;
       if (kind === "minute" || e.retrySec) return `（${name}は少し考えすぎてしまったみたい……${e.retrySec ? `${e.retrySec}秒` : "1分"}ほど待ってから、もう一度話しかけてみて）`;
       return `（${name}は少し休憩が必要みたい……少し待ってから、もう一度話しかけてみて）`;
@@ -870,25 +998,29 @@ function errorText(e) {
     case "network": return "通信できませんでした。接続を確認してください。";
     case "empty": return `返答が空でした（${e.detail}）。言い方を変えて送ってみてください。`;
     default:
-      if (e.status === 503) return `（${char().name}は少し首をかしげている。電波が届きにくいみたい……少し待ってから、もう一度話しかけてみて）`;
+      if (e.status === 503) return `（${talkName()}は少し首をかしげている。電波が届きにくいみたい……少し待ってから、もう一度話しかけてみて）`;
       return `Gemini側でエラーが起きました（${e.status || e.message}）。少し待ってから試してください。`;
   }
 }
 
-function buildSystem(c) {
+// キャラの今の状態（AIに渡す行）
+function statusLines(c) {
   const s = c.state;
   const [, , label] = indicator(c);
   const pendant = pendantOn(c);
   const status = c.useGauge
     ? `エネルギー${s.energy}%｜${pendant ? `${label}｜` : ""}好感度${s.affection}｜感情値${s.emotion}`
     : `感情値${s.emotion}`;
+  return `・現在の状態：${status}${pendant && s.command ? "｜マスターモード中" : ""}${pendant ? `
+・マスター登録：${s.master ? "済み（ユーザーはあなたのマスター）" : "未登録（ユーザーはまだあなたのマスターではない他人。マスターとして扱わない。インジケーターに3秒触れられると登録される）"}` : ""}
+・今の状態での振る舞い：${currentStateText(c) || "設定どおりに振る舞う"}`;
+}
+function buildSystem(c) {
   return `${composePrompt(c)}
 
 【アプリからの指示（最優先）】
 ・ステータス（エネルギー残量、インジケーター、好感度、感情値）はアプリが管理して画面に表示します。返答にステータス行は書かず、エネルギーの増減も計算しないでください。
-・現在の状態：${status}${pendant && s.command ? "｜マスターモード中" : ""}${pendant ? `
-・マスター登録：${s.master ? "済み（ユーザーはあなたのマスター）" : "未登録（ユーザーはまだあなたのマスターではない他人。マスターとして扱わない。インジケーターに3秒触れられると登録される）"}` : ""}
-・今の状態での振る舞い：${currentStateText(c) || "設定どおりに振る舞う"}
+${statusLines(c)}
 ・この状態に合った口調と反応で返答してください。
 ・返答は次の形のJSONだけを返してください。
 {"reply":"セリフと動作の描写","affection_delta":-10から10の整数,"emotion_delta":-20から20の整数,"expression":"normal・smile・annoyed・surprisedのどれか","outburst":trueまたはfalse}
@@ -910,12 +1042,18 @@ function buildContents(c) {
   while (out.length && out[0].role !== "user") out.shift();
   return out;
 }
-function parseReply(text) {
-  let o = null;
+function parseJson(text) {
   const t = text.replace(/```json|```/g, "").trim();
   const a = t.indexOf("{"), b = t.lastIndexOf("}");
-  if (a >= 0 && b > a) { try { o = JSON.parse(t.slice(a, b + 1)); } catch (e) {} }
+  if (a >= 0 && b > a) { try { return JSON.parse(t.slice(a, b + 1)); } catch (e) {} }
+  return null;
+}
+function parseReply(text) {
+  let o = parseJson(text);
   if (!o || typeof o.reply !== "string") o = { reply: text };
+  return normReply(o);
+}
+function normReply(o) {
   const int = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(v) || 0)));
   return {
     reply: o.reply.trim(),
@@ -926,6 +1064,160 @@ function parseReply(text) {
   };
 }
 
+// 返事の結果を状態に反映する。エネルギーが0%になったら true
+function applyReply(c, r, drain = true) {
+  const s = c.state;
+  s.affection = Math.max(0, Math.min(100, s.affection + r.affection_delta));
+  const emo = s.emotion + r.emotion_delta;
+  s.outburst = r.outburst || emo > 100;
+  s.emotion = s.outburst ? 30 : Math.max(0, Math.min(100, emo));
+  s.expression = r.expression;
+  if (drain && c.useGauge && !s.charging) {
+    s.energy = Math.max(0, s.energy - (4 + Math.floor(Math.random() * 5)));
+    return s.energy === 0;
+  }
+  return false;
+}
+
+/* ---------- みんなで話す ---------- */
+const canTalk = (c) => !(c.useGauge && c.state.energy <= 0 && !c.state.charging);
+const AUTO_PROMPT = "（ユーザーは黙って見守っている。キャラクター同士で自然に会話を続けてください。話すのは1〜3人で十分です）";
+function buildGroupSystem(talkers, silent) {
+  const g = app.group;
+  return `この会話には複数のキャラクターが登場します。あなたは次のキャラクター全員を演じ分けてください。ユーザーは1人の人間で、全員と同じ場所にいます。各キャラクターの設定に出てくる「あなた」は、そのキャラクター自身のことです。
+
+${talkers.map((c) => `===== ${c.name} =====
+${composePrompt(c)}
+
+【${c.name}の今の状態】
+${statusLines(c)}`).join("\n\n")}
+
+【アプリからの指示（最優先）】
+・ステータス（エネルギー残量、インジケーター、好感度、感情値）はアプリが管理して画面に表示します。返答にステータス行は書かず、エネルギーの増減も計算しないでください。
+・ユーザーに名前を呼ばれたキャラクターは、必ず反応してください。
+・それ以外も基本的には全員が返事をしますが、そのキャラクターの性格や状況によっては黙っていても構いません（黙るキャラクターは replies に入れない）。
+・キャラクター同士で話しかけたり、相手の発言に反応したりしても構いません。話す順番は自然な流れにしてください。
+・各キャラクターは自分の設定と今の状態どおりの口調で話し、他のキャラクターのセリフや動作を代わりに書かないでください。${silent.length ? `
+・${silent.map((c) => c.name).join("、")}もその場にいますが、エネルギー0%で反応しません。話させないでください。` : ""}
+・返答は次の形のJSONだけを返してください。replies は話す順に並べます。
+{"replies":[{"name":"キャラクター名","reply":"そのキャラクターのセリフと動作の描写","affection_delta":-10から10の整数,"emotion_delta":-20から20の整数,"expression":"normal・smile・annoyed・surprisedのどれか","outburst":trueまたはfalse}]}
+・affection_delta・emotion_delta は、そのキャラクターの好感度・感情値の増減です。感情値が100を超えるほどの反応をした場合は outburst を true にしてください。${g.memory ? `
+
+【これまでの記憶】
+${g.memory}` : ""}`;
+}
+function buildGroupContents(auto) {
+  const g = app.group;
+  const start = Math.max(g.memIndex, g.history.length - 30);
+  const out = [];
+  const push = (role, text) => {
+    const last = out[out.length - 1];
+    if (last && last.role === role) last.parts[0].text += "\n" + text;
+    else out.push({ role, parts: [{ text }] });
+  };
+  for (const m of g.history.slice(start)) {
+    if (m.role === "note") continue;
+    if (m.role === "user") push("user", m.text);
+    else push("model", `${(app.characters.find((x) => x.id === m.who) || m).name}：${m.text}`);
+  }
+  if (auto) push("user", AUTO_PROMPT);
+  while (out.length && out[0].role !== "user") out.shift();
+  return out;
+}
+function parseGroupReply(text, talkers) {
+  const o = parseJson(text) || {};
+  let arr = Array.isArray(o.replies) ? o.replies : [];
+  if (!arr.length && typeof o.reply === "string") arr = [{ ...o, name: o.name || talkers[0].name }];
+  const find = (n) => talkers.find((c) => c.name === n) || talkers.find((c) => n.includes(c.name));
+  return arr.filter((r) => r && typeof r.reply === "string" && r.reply.trim())
+    .map((r) => ({ c: find(String(r.name || "").trim()), ...normReply(r) }))
+    .filter((r) => r.c);
+}
+// 1回の呼び出しで、話すキャラ全員分の返事をまとめて受け取る。text が空なら自動会話。成功したら true
+async function groupTurn(text) {
+  const g = app.group, list = members();
+  const talkers = list.filter(canTalk), silent = list.filter((c) => !canTalk(c));
+  let userMsg = null;
+  if (text) {
+    userMsg = { role: "user", text };
+    g.history.push(userMsg);
+    save();
+    renderLog();
+  }
+  if (!talkers.length) {
+    addNote("みんな反応しない。（エネルギー0%。充電すると再起動します）", !!text);
+    return false;
+  }
+  busy = true;
+  $("#sendBtn").disabled = true;
+  const pending = msgEl({ role: "ai", text: "…", name: "" }, char());
+  pending.classList.add("pending");
+  $("#log").appendChild(pending);
+  $("#log").scrollTop = $("#log").scrollHeight;
+  try {
+    const rs = parseGroupReply(await gemini(buildGroupSystem(talkers, silent), buildGroupContents(!text), true), talkers);
+    if (!rs.length) throw new ApiError("empty", "返事を読み取れませんでした");
+    const drained = new Set();
+    for (const r of rs) {
+      g.history.push({ role: "ai", who: r.c.id, name: r.c.name, text: r.reply });
+      // 同じキャラが続けて話しても、エネルギーは1回分だけ減らす
+      if (applyReply(r.c, r, !drained.has(r.c))) g.history.push({ role: "note", text: `${r.c.name}のエネルギーが0%になりました。充電すると再起動します。` });
+      drained.add(r.c);
+    }
+    save();
+    renderAll();
+    maybeSummarize(g);
+    return true;
+  } catch (e) {
+    pending.remove();
+    if (userMsg) {
+      const i = g.history.lastIndexOf(userMsg);
+      if (i >= 0) g.history.splice(i, 1);
+      $("#input").value = text;
+      autoGrow();
+    }
+    save();
+    renderLog();
+    addNote(e instanceof ApiError ? errorText(e) : `エラー：${e.message}`, false, e.info || "");
+    return false;
+  } finally {
+    busy = false;
+    $("#sendBtn").disabled = false;
+  }
+}
+// 自動会話: ユーザーが黙っていても、少し間をあけてキャラ同士が話す。無料枠を使いすぎないよう、続けて5回で止める
+const AUTO_WAIT = 15000, AUTO_MAX = 5;
+let autoOn = false, autoTimer = null, autoLeft = 0;
+function setAuto(on) {
+  autoOn = on && inGroup();
+  clearTimeout(autoTimer);
+  autoTimer = null;
+  autoLeft = AUTO_MAX;
+  $("#autoBtn").setAttribute("aria-pressed", String(autoOn));
+  if (autoOn) scheduleAuto(1500);
+}
+function scheduleAuto(ms = AUTO_WAIT) {
+  clearTimeout(autoTimer);
+  if (!autoOn) return;
+  autoTimer = setTimeout(async () => {
+    if (!autoOn) return;
+    // 返事待ち・設定中・画面を見ていないときは呼ばずに待つ
+    if (busy || document.hidden || dlg.open || charMenu.open) return scheduleAuto();
+    if (!app.settings.apiKey) return setAuto(false);
+    if (!(await groupTurn(""))) return setAuto(false);
+    if (--autoLeft <= 0) {
+      setAuto(false);
+      addNote("（みんなひと息ついたみたい。自動会話を止めました）", false);
+      return;
+    }
+    scheduleAuto();
+  }, ms);
+}
+$("#autoBtn").addEventListener("click", () => {
+  if (!app.settings.apiKey) { openSettings(); return; }
+  setAuto(!autoOn);
+});
+
 /* ---------- 送信 ---------- */
 let busy = false;
 async function send() {
@@ -934,6 +1226,14 @@ async function send() {
   const text = input.value.trim();
   if (!text) return;
   if (!app.settings.apiKey) { openSettings(); return; }
+  if (inGroup()) {
+    input.value = "";
+    autoGrow();
+    await groupTurn(text);
+    // 話しかけたら自動会話の回数を数え直す
+    if (autoOn) { autoLeft = AUTO_MAX; scheduleAuto(); }
+    return;
+  }
   const c = char(), s = c.state;
   const userMsg = { role: "user", text };
   c.history.push(userMsg);
@@ -958,15 +1258,7 @@ async function send() {
     const raw = await gemini(buildSystem(c), buildContents(c), true);
     const r = parseReply(raw);
     c.history.push({ role: "ai", text: r.reply });
-    s.affection = Math.max(0, Math.min(100, s.affection + r.affection_delta));
-    const emo = s.emotion + r.emotion_delta;
-    s.outburst = r.outburst || emo > 100;
-    s.emotion = s.outburst ? 30 : Math.max(0, Math.min(100, emo));
-    s.expression = r.expression;
-    if (c.useGauge && !s.charging) {
-      s.energy = Math.max(0, s.energy - (4 + Math.floor(Math.random() * 5)));
-      if (s.energy === 0) c.history.push({ role: "note", text: "エネルギーが0%になりました。充電すると再起動します。" });
-    }
+    if (applyReply(c, r)) c.history.push({ role: "note", text: "エネルギーが0%になりました。充電すると再起動します。" });
     save();
     renderAll();
     maybeSummarize(c);
@@ -990,10 +1282,12 @@ let summarizing = false, summarizeAfter = 0;
 async function maybeSummarize(c) {
   if (summarizing || Date.now() < summarizeAfter || c.history.length - c.memIndex <= 40) return;
   summarizing = true;
+  const group = c === app.group;
+  const name = group ? talkName() : c.name, user = group ? "ユーザー" : "マスター";
   const chunk = c.history.slice(c.memIndex, c.memIndex + 20)
     .filter((m) => m.role !== "note")
-    .map((m) => `${m.role === "user" ? "マスター" : c.name}：${m.text}`).join("\n");
-  const p = `あなたは会話の記録係です。次の「これまでの記憶」と「新しい会話」をまとめて、${c.name}が今後の会話で覚えておくべきこと（マスターについて分かったこと、約束、出来事、関係の変化）を箇条書きで更新してください。全体で400字以内。箇条書きだけを出力してください。
+    .map((m) => `${m.role === "user" ? user : m.name || c.name}：${m.text}`).join("\n");
+  const p = `あなたは会話の記録係です。次の「これまでの記憶」と「新しい会話」をまとめて、${name}が今後の会話で覚えておくべきこと（${user}について分かったこと、約束、出来事、関係の変化）を箇条書きで更新してください。全体で400字以内。箇条書きだけを出力してください。
 
 【これまでの記憶】
 ${c.memory || "なし"}
@@ -1105,13 +1399,14 @@ function pendantDone(note, action) {
   addNote(note);
   if (navigator.vibrate) navigator.vibrate(80);
   if (app.settings.apiKey && !busy) {
-    $("#input").value = action;
+    $("#input").value = inGroup() ? action.replace("（胸の", `（${char().name}の胸の`) : action;
     send();
   }
 }
 function startHold(e) {
   e.preventDefault();
   const el = e.currentTarget;
+  if (el.dataset.id) focusMember(el.dataset.id);
   const c = char(), s = c.state;
   if (c.useGauge && s.energy <= 0 && !s.charging) { addNote(`${c.name}は反応しない。（エネルギー0%）`, false); return; }
   // マスター登録は3秒、登録後のマスターモード切替は設定した秒数
@@ -1133,39 +1428,43 @@ function startHold(e) {
     }
   }, sec * 1000);
 }
-function makePendant() {
+function makePendant(c = char()) {
   const b = document.createElement("button");
   b.className = "pendant";
-  const c = char();
+  b.dataset.id = c.id;
   b.setAttribute("aria-label", c.state.master ? `胸のインジケーター（${masterHold(c)}秒長押しでマスターモード）` : "胸のインジケーター（3秒長押しでマスター登録）");
   b.appendChild(Object.assign(document.createElement("span"), { className: "pendant-light" }));
   b.addEventListener("pointerdown", startHold);
   ["pointerup", "pointercancel"].forEach((ev) => b.addEventListener(ev, cancelHold));
   b.addEventListener("contextmenu", (e) => e.preventDefault());
+  b.addEventListener("click", (e) => e.stopPropagation());
   return b;
 }
 // 胸のペンダントを、詳細設定のインジケーターの色・光り方で光らせる
 function paintPendant() {
-  const b = $("#portrait .pendant");
-  if (!b) return;
-  const [color, mode] = indicator(char());
-  b.dataset.state = color === "off" ? "off" : "on";
-  b.dataset.mode = mode;
-  b.style.setProperty("--c", `var(--ind-${color})`);
+  document.querySelectorAll("#portrait .pendant").forEach((b) => {
+    const [color, mode] = indicator(app.characters.find((x) => x.id === b.dataset.id) || char());
+    b.dataset.state = color === "off" ? "off" : "on";
+    b.dataset.mode = mode;
+    b.style.setProperty("--c", `var(--ind-${color})`);
+  });
 }
 function placePendant() {
-  const box = $("#portrait"), b = box.querySelector(".pendant");
-  if (!b) return;
-  const img = box.querySelector("img");
-  const w = box.clientWidth, h = box.clientHeight;
-  if (!img || !img.naturalWidth) { b.style.left = "50%"; b.style.top = "50%"; b.style.setProperty("--lw", "0px"); return; }
-  const sc = Math.max(w / img.naturalWidth, h / img.naturalHeight);
-  const rw = img.naturalWidth * sc, rh = img.naturalHeight * sc;
-  const ox = (w - rw) * 0.5, oy = (h - rh) * 0.18;
-  b.style.left = `${ox + rw * PENDANT_POS.x}px`;
-  b.style.top = `${oy + rh * PENDANT_POS.y}px`;
-  b.style.setProperty("--lw", `${rw * PENDANT_SIZE.w}px`);
-  b.style.setProperty("--lh", `${rh * PENDANT_SIZE.h}px`);
+  document.querySelectorAll("#portrait .pendant").forEach((b) => {
+    const box = b.parentElement;
+    const img = box.querySelector("img");
+    const w = box.clientWidth, h = box.clientHeight;
+    if (!img || !img.naturalWidth) { b.style.left = "50%"; b.style.top = "50%"; b.style.setProperty("--lw", "0px"); return; }
+    // 背景なしの立ち絵は高さいっぱい・下揃え、それ以外は枠いっぱい（object-position 50% 18%）
+    const cut = box.classList.contains("cutout");
+    const sc = cut ? h / img.naturalHeight : Math.max(w / img.naturalWidth, h / img.naturalHeight);
+    const rw = img.naturalWidth * sc, rh = img.naturalHeight * sc;
+    const ox = (w - rw) * 0.5, oy = cut ? h - rh : (h - rh) * 0.18;
+    b.style.left = `${ox + rw * PENDANT_POS.x}px`;
+    b.style.top = `${oy + rh * PENDANT_POS.y}px`;
+    b.style.setProperty("--lw", `${rw * PENDANT_SIZE.w}px`);
+    b.style.setProperty("--lh", `${rh * PENDANT_SIZE.h}px`);
+  });
 }
 window.addEventListener("resize", placePendant);
 $("#portrait").addEventListener("transitionend", placePendant);
@@ -1344,9 +1643,12 @@ $("#deleteChar").addEventListener("click", async () => {
     if (String(k).startsWith(`${c.id}:`)) { await imgDel(k); dropCache(k); }
   }
   app.characters = app.characters.filter((x) => x !== c);
+  app.group.members = app.group.members.filter((id) => id !== c.id);
   skipSave = true;
   dlg.close();
-  switchChar(app.characters[0].id);
+  // グループに2人以上残っていれば、そのまま続ける
+  if (inGroup() && members().length >= 2) { app.activeId = members()[0].id; save(); renderAll(); }
+  else switchChar(app.characters[0].id);
 });
 $("#closeSettings").addEventListener("click", () => {
   if (!checkSettings()) return showSettingsError();
@@ -1531,12 +1833,11 @@ $("#genAll").addEventListener("click", async () => {
 });
 
 /* ---------- 初期画像 ---------- */
-async function seedImages(force = false) {
-  const c = char();
+async function seedImages(force = false, c = char()) {
   if (!DEFAULT_IMAGES[c.id] || (!force && c.imagesSeeded)) return;
   let ok = true;
   for (const [slot, path] of Object.entries(DEFAULT_IMAGES[c.id])) {
-    const k = imgKey(slot);
+    const k = imgKey(slot, c);
     if (!force) {
       let has = null;
       try { has = await imgGet(k); } catch (e) {}
@@ -1588,6 +1889,7 @@ $("#importInput").addEventListener("change", async (e) => {
     const images = d.images || {};
     delete d.images;
     if (chargeTimer) { clearInterval(chargeTimer); chargeTimer = null; }
+    setAuto(false);
     app = migrate(d);
     app.settings = { ...app.settings, apiKey: key };
     await imgClear();
@@ -1597,6 +1899,7 @@ $("#importInput").addEventListener("change", async (e) => {
     if (char().state.charging) { char().state.charging = false; setCharging(true); }
     dlg.close();
     renderAll();
+    seedAll();
   } catch (err) {
     alert("このファイルは読み込めませんでした。書き出したバックアップを選んでください。");
   }
@@ -1630,11 +1933,26 @@ function switchChar(id) {
   cancelHold();
   cancelGaugeHold();
   if (chargeTimer) setCharging(false);
+  setAuto(false);
+  app.mode = "single";
   app.activeId = id;
   save();
   renderAll();
   seedImages();
 }
+function startGroup(ids) {
+  cancelHold();
+  cancelGaugeHold();
+  if (chargeTimer) setCharging(false);
+  setAuto(false);
+  app.mode = "group";
+  app.group.members = ids;
+  if (!ids.includes(app.activeId)) app.activeId = ids[0];
+  save();
+  renderAll();
+  seedAll();
+}
+const seedAll = () => (inGroup() ? members() : [char()]).forEach((c) => seedImages(false, c));
 function openCharMenu() {
   if (busy) { addNote("返事を待っているあいだは切り替えられません。", false); return; }
   const list = $("#charList");
@@ -1642,13 +1960,68 @@ function openCharMenu() {
   for (const c of app.characters) {
     const b = document.createElement("button");
     b.textContent = c.name;
-    if (c.id === app.activeId) b.setAttribute("aria-current", "true");
+    if (!inGroup() && c.id === app.activeId) b.setAttribute("aria-current", "true");
     b.addEventListener("click", () => { charMenu.close(); if (c.id !== app.activeId) switchChar(c.id); });
     list.appendChild(b);
   }
   $("#copyChar").textContent = `＋ ${char().name}を複製`;
+  const gl = $("#groupList");
+  gl.textContent = "";
+  const picked = app.group.members.length ? app.group.members : app.characters.slice(0, 2).map((c) => c.id);
+  for (const c of app.characters) {
+    const l = document.createElement("label");
+    const x = document.createElement("input");
+    x.type = "checkbox";
+    x.value = c.id;
+    x.checked = picked.includes(c.id);
+    x.addEventListener("change", () => {
+      const over = x.checked && gl.querySelectorAll("input:checked").length > GROUP_MAX;
+      if (over) x.checked = false;
+      groupErr(over ? `${GROUP_MAX}人まで選べます` : "");
+    });
+    l.append(x, c.name);
+    gl.appendChild(l);
+  }
+  groupErr("");
+  $("#clearBg").hidden = true;
+  slotUrl(BG_KEY).then((u) => { $("#clearBg").hidden = !u; });
   charMenu.showModal();
 }
+function groupErr(t) { $("#groupErr").textContent = t; $("#groupErr").hidden = !t; }
+$("#startGroup").addEventListener("click", () => {
+  const ids = [...$("#groupList").querySelectorAll("input:checked")].map((x) => x.value);
+  if (ids.length < 2) return groupErr("2人以上選んでください");
+  if (ids.length > GROUP_MAX) return groupErr(`${GROUP_MAX}人まで選べます`);
+  charMenu.close();
+  startGroup(ids);
+});
+$("#pickBg").addEventListener("click", () => $("#bgInput").click());
+$("#bgInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  try {
+    await imgPut(BG_KEY, await resizeImage(file, 1200));
+    dropCache(BG_KEY);
+    $("#clearBg").hidden = false;
+    renderStage();
+  } catch (err) {
+    alert("画像を読み込めませんでした。別の画像で試してください。");
+  }
+});
+$("#clearBg").addEventListener("click", async () => {
+  if (!confirm("共通の背景を外しますか？")) return;
+  await imgDel(BG_KEY);
+  dropCache(BG_KEY);
+  $("#clearBg").hidden = true;
+  renderStage();
+});
+$("#toggleArt").addEventListener("click", () => {
+  app.settings.hideArt = !app.settings.hideArt;
+  save();
+  renderStatus();
+  if (!app.settings.hideArt) placePendant();
+});
 async function addChar(copy) {
   charMenu.close();
   let c;
@@ -1674,8 +2047,9 @@ $("#copyChar").addEventListener("click", () => addChar(true));
 charMenu.addEventListener("click", (e) => { if (e.target === charMenu) charMenu.close(); });
 
 /* ---------- 起動 ---------- */
+if (inGroup() && members().length < 2) app.mode = "single";
 renderAll();
-seedImages();
+seedAll();
 if (char().state.charging) { char().state.charging = false; setCharging(true); }
 </script>
 </body>
