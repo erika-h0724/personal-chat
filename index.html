@@ -549,6 +549,8 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 
 <!-- 更新のお知らせに出す変更内容。変更を公開するたびに先頭へ1行足す（新しい順） -->
 <script type="application/json" id="changelog">[
+  {"date": "2026-10-13", "text": "1対1の会話で、返事を書けたところから少しずつ表示するようにしました。考える量を元に戻し、話のつながりがよくなるようにしました"},
+  {"date": "2026-10-13", "text": "会話のAIモデルの選択肢を、flash と flash-lite の新しいものだけに絞りました"},
   {"date": "2026-10-13", "text": "Geminiが混んでいる（503）ときは、少し待って自動で送り直し、それでもだめなら軽いモデルで返事するようにしました"},
   {"date": "2026-10-13", "text": "設定の「Gemini API」で、会話に使うAIモデルを選べるようにしました（混んでいるときは別のモデルにすると返ってくることがあります）"},
   {"date": "2026-10-13", "text": "返事が早く返ってくるように、AIが考え込む量を少なめにしました"},
@@ -1277,8 +1279,6 @@ function quotaResetText() {
   const t = new Date(now.getTime() + (86400 - (la.getHours() * 3600 + la.getMinutes() * 60 + la.getSeconds())) * 1000);
   return `${t.getDate() !== now.getDate() ? "明日の" : ""}${t.getHours()}時${t.getMinutes() ? `${t.getMinutes()}分` : ""}`;
 }
-// 返事が遅くならないよう、AIが考え込む量を少なめにする。モデルが受け付けなければ（400）、外して送り直し、そのモデルには以後付けない
-const noThinkLow = new Set();
 const chatModel = () => app.settings.chatModel || DEFAULT_MODEL;
 // 混雑（503）なら3秒待って1回送り直し、それでも混んでいたら軽いモデル（名前に flash-lite を含むもの）で返事させる
 const waitMs = (ms, signal) => new Promise((ok, ng) => {
@@ -1292,27 +1292,17 @@ async function liteModel(key, now) {
     return names.find((n) => !/preview|exp/i.test(n)) || names[0] || null;
   } catch (e) { return null; }
 }
-async function gemini(systemText, contents, json, signal) {
+// onText を渡すと、返事を少しずつ受け取り（ストリーミング）、届いたところまでの文を渡す
+async function gemini(systemText, contents, json, signal, onText) {
   const { apiKey } = app.settings;
   const body = { contents, generationConfig: { temperature: json ? 0.9 : 0.3 } };
   if (systemText) body.systemInstruction = { parts: [{ text: systemText }] };
   if (json) body.generationConfig.responseMimeType = "application/json";
   const post = async (model) => {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
-    for (;;) {
-      const think = !noThinkLow.has(model);
-      if (think) body.generationConfig.thinkingConfig = { thinkingLevel: "low" };
-      else delete body.generationConfig.thinkingConfig;
-      let r;
-      try {
-        r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal });
-      } catch (e) { if (e.name === "AbortError") throw e; throw new ApiError("network"); }
-      if (think && r.status === 400) {
-        const t = await r.clone().text().catch(() => "");
-        if (/think/i.test(t)) { noThinkLow.add(model); continue; }
-      }
-      return r;
-    }
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:${onText ? "streamGenerateContent?alt=sse&" : "generateContent?"}key=${encodeURIComponent(apiKey.trim())}`;
+    try {
+      return await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal });
+    } catch (e) { if (e.name === "AbortError") throw e; throw new ApiError("network"); }
   };
   const model = chatModel();
   let res = await post(model);
@@ -1325,11 +1315,52 @@ async function gemini(systemText, contents, json, signal) {
     if (lite) res = await post(lite);
   }
   if (!res.ok) throw await apiErrorFrom(res);
-  const data = await res.json();
-  const cand = data.candidates?.[0];
-  const text = (cand?.content?.parts || []).map((p) => (p.thought ? "" : p.text || "")).join("").trim();
-  if (!text) throw new ApiError("empty", cand?.finishReason || data.promptFeedback?.blockReason || "");
+  const partText = (d) => (d.candidates?.[0]?.content?.parts || []).map((p) => (p.thought ? "" : p.text || "")).join("");
+  let text = "", last = {};
+  if (onText) {
+    // SSE（"data: {...}" の行）を読みながら文をつなげる
+    const reader = res.body.getReader(), dec = new TextDecoder();
+    let buf = "";
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let i;
+        while ((i = buf.indexOf("\n")) >= 0) {
+          const line = buf.slice(0, i).trim();
+          buf = buf.slice(i + 1);
+          if (!line.startsWith("data:")) continue;
+          try { last = JSON.parse(line.slice(5)); } catch (e) { continue; }
+          const t = partText(last);
+          if (t) { text += t; onText(text); }
+        }
+      }
+    } catch (e) { if (e.name === "AbortError") throw e; throw new ApiError("network"); }
+  } else {
+    last = await res.json();
+    text = partText(last);
+  }
+  text = text.trim();
+  const cand = last.candidates?.[0];
+  if (!text) throw new ApiError("empty", cand?.finishReason || last.promptFeedback?.blockReason || "");
   return text;
+}
+// 受け取り途中のJSONから、"reply" の文だけを届いたところまで取り出す
+function partialReply(raw) {
+  const m = /"reply"\s*:\s*"/.exec(raw);
+  if (!m) return "";
+  let out = "";
+  for (let i = m.index + m[0].length; i < raw.length; i++) {
+    const ch = raw[i];
+    if (ch === '"') break;
+    if (ch !== "\\") { out += ch; continue; }
+    const n = raw[++i];
+    if (n === undefined) break;
+    if (n === "u") { if (i + 4 >= raw.length) break; out += String.fromCharCode(parseInt(raw.slice(i + 1, i + 5), 16)); i += 4; }
+    else out += { n: "\n", t: "\t", r: "" }[n] ?? n;
+  }
+  return out;
 }
 function errorText(e) {
   switch (e.type) {
@@ -1610,7 +1641,12 @@ async function send() {
   $("#log").scrollTop = $("#log").scrollHeight;
 
   try {
-    const raw = await gemini(buildSystem(c), buildContents(c), true, chatAbort.signal);
+    const raw = await gemini(buildSystem(c), buildContents(c), true, chatAbort.signal, (t) => {
+      const r = partialReply(t);
+      if (!r) return;
+      pending.lastChild.textContent = r;
+      $("#log").scrollTop = $("#log").scrollHeight;
+    });
     const r = parseReply(raw);
     c.history.push({ role: "ai", text: r.reply });
     if (applyReply(c, r)) c.history.push({ role: "note", text: "エネルギーが0%になりました。充電すると再起動します。" });
@@ -1897,8 +1933,12 @@ async function loadChatModels() {
   if (!key) return;
   try {
     const ms = await listModels(key);
-    setChatModels(ms.filter((m) => /^models\/gemini/i.test(m.name) && !/image|tts|audio|live|embedding|vision/i.test(m.name) && (m.supportedGenerationMethods || []).includes("generateContent"))
-      .map((m) => m.name.replace(/^models\//, "")).sort().reverse());
+    // 多すぎないよう、flash 系の正式版（お試し版・日付つき・音声などの専用版を除く）で、新しいほうから2世代だけにする
+    const names = ms.filter((m) => /^models\/gemini-[\d.]+-flash(-lite)?$/i.test(m.name) && (m.supportedGenerationMethods || []).includes("generateContent"))
+      .map((m) => m.name.replace(/^models\//, ""));
+    const ver = (n) => parseFloat(n.split("-")[1]);
+    const top = [...new Set(names.map(ver))].sort((x, y) => y - x).slice(0, 2);
+    setChatModels(names.filter((n) => top.includes(ver(n))).sort((x, y) => ver(y) - ver(x) || x.length - y.length));
   } catch (e) {}
 }
 async function loadImageModels() {
