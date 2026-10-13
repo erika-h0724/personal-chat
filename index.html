@@ -135,6 +135,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 /* みんなで話す: 2行目を全員分のゲージ（1人1行）にする */
 .group-on .top > .status{display:none}
 .gs{order:3;flex:1 0 100%;display:flex;flex-direction:column;gap:2px}
+.gs[hidden]{display:none}
 .gs .status{gap:10px;flex:none}
 .gs-name{flex:0 0 4.5em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.75rem;color:var(--muted)}
 .gs .focus .gs-name{color:var(--ink);font-weight:700}
@@ -521,6 +522,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 
 <!-- 更新のお知らせに出す変更内容。変更を公開するたびに先頭へ1行足す（新しい順） -->
 <script type="application/json" id="changelog">[
+  {"date": "2026-10-13", "text": "1人の会話に戻ったとき、ほかのキャラのゲージが残らないようにしました"},
   {"date": "2026-10-13", "text": "「部屋をえらぶ」で背景の部屋を選べるようになりました（9部屋＋自分で追加）。1人と話すときも部屋が後ろに出ます"},
   {"date": "2026-10-13", "text": "ミエルとノエルの初期の絵を、背景を抜いた立ち絵にしました（外見の「画像を最初の状態に戻す」で反映）"},
   {"date": "2026-10-13", "text": "キャラクターの設定の見出しと、メニューの「基本設定」の名前を変えました"},
