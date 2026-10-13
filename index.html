@@ -101,7 +101,8 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .fig{position:relative;flex:1 1 0;min-width:0;height:100%;cursor:pointer}
 .fig.boxed{overflow:hidden}
 .fig + .fig.boxed{border-left:2px solid var(--surface)}
-.fig.cutout img{position:absolute;left:50%;bottom:0;width:auto;height:100%;max-width:none;transform:translateX(-50%);object-fit:contain;pointer-events:none}
+/* 立ち絵は自分の列（左右に少しはみ出してよい）に収まるよう縮める。人数が増えて幅が足りないときは小さくなる */
+.fig.cutout img{position:absolute;left:-15%;bottom:0;width:130%;height:calc(100% * var(--fs,1));max-width:none;object-fit:contain;object-position:50% 100%;pointer-events:none}
 .fig .placeholder{white-space:pre-line}
 .fig .pendant{z-index:1}
 .fig-name{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);max-width:calc(100% - 8px);padding:0 8px;border-radius:999px;background:rgba(10,16,24,.55);color:#fff;font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:2}
@@ -148,6 +149,19 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .gs .meter-head{flex:none;min-width:3.4em}
 .gs .bar{flex:1;margin-top:0;height:4px}
 .gs .status.no-gauge > :not(.gs-name){visibility:hidden}
+.gs .meters{flex:1;min-width:0;display:flex;gap:10px}
+/* イラストを出しているときは、各キャラのゲージをその立ち絵の上に重ねる（並び順は立ち絵と同じ） */
+.gs.on-art{position:absolute;top:4px;left:12px;right:12px;flex-direction:row;gap:0;z-index:3;pointer-events:none}
+.gs.on-art .status{flex:1 1 0;min-width:0;flex-direction:column;align-items:center;gap:0;padding:0 1px}
+.gs.on-art .status > *{pointer-events:auto}
+.gs.on-art .gs-name{display:none}
+.gs.on-art .ind,.gs.on-art .meters{padding:1px 6px;background:rgba(255,255,255,.8);color:#1f2a36}
+.gs.on-art .ind{border-radius:8px 8px 0 0;padding-top:3px}
+.gs.on-art .meters{display:flex;gap:6px;border-radius:0 0 8px 8px;padding-bottom:3px}
+.gs.on-art .meter{flex:none;font-size:.65rem}
+.gs.on-art .meter-head{min-width:0;color:#1f2a36}
+.gs.on-art .bar{display:none}
+.gs.on-art .status.no-gauge{visibility:hidden}
 
 .log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
 .msg{max-width:85%;padding:7px 11px;border-radius:14px;font-size:.75rem;line-height:1.65;white-space:pre-wrap;word-break:break-word}
@@ -533,6 +547,11 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 
 <!-- 更新のお知らせに出す変更内容。変更を公開するたびに先頭へ1行足す（新しい順） -->
 <script type="application/json" id="changelog">[
+  {"date": "2026-10-13", "text": "みんなで話すとき、ヤモリのノエルは小さめに表示するようにしました"},
+  {"date": "2026-10-13", "text": "みんなで話すとき、人数が多くて幅が足りなければ立ち絵を小さくして重ならないようにしました"},
+  {"date": "2026-10-13", "text": "みんなで話すとき、それぞれのゲージをそのキャラの絵の上に出すようにしました（絵を隠しているときは今までどおり上の行）"},
+  {"date": "2026-10-13", "text": "ミエル・ノエルの絵が背景つきのまま残ってしまうことがあったのを直しました"},
+  {"date": "2026-10-13", "text": "ミエル・ノエルの「初期データに戻す」で、画像とペンダントの位置も最初に戻るようにしました"},
   {"date": "2026-10-13", "text": "「初期データに戻す」「ココロを調律する」「忘却の彼方へ」を押したら、終わったことがわかるようにしました（初期データはノエルならノエルの最初の設定に戻ります）"},
   {"date": "2026-10-13", "text": "「プロンプトを最初の内容に戻す」を「初期データに戻す」にして、キャラクターの設定の左メニューの「さようなら」の上に移しました"},
   {"date": "2026-10-13", "text": "「AI指示文作成」の文章を、画像AIに断られにくい言い方に少し直しました"},
@@ -1024,6 +1043,7 @@ async function renderGroupStage() {
     const f = document.createElement("div");
     f.className = `fig ${cutoutCache[url] ? "cutout" : "boxed"}${c.id === app.activeId ? " focus" : ""}`;
     f.dataset.id = c.id;
+    if (FIG_SCALE[c.id]) f.style.setProperty("--fs", FIG_SCALE[c.id]);
     f.addEventListener("click", () => focusMember(c.id));
     const label = SLOTS.find((x) => x[0] === slot)[1];
     if (url) {
@@ -1099,6 +1119,11 @@ function renderGroupStatus() {
   const box = $("#groupStatus");
   box.hidden = !inGroup();
   if (!inGroup()) return;
+  // イラストを出しているときは立ち絵の上、隠しているときは2行目に出す
+  const onArt = !app.settings.hideArt;
+  if (onArt && box.parentElement !== $("#stage")) $("#stage").appendChild(box);
+  if (!onArt && box.parentElement !== $(".top")) $(".top").insertBefore(box, $("#updateBtn"));
+  box.classList.toggle("on-art", onArt);
   const list = members(), key = list.map((c) => c.id).join(",");
   if (box.dataset.key !== key) {
     box.dataset.key = key;
@@ -1110,6 +1135,10 @@ function renderGroupStatus() {
       const name = Object.assign(document.createElement("span"), { className: "gs-name" });
       name.addEventListener("click", () => focusMember(c.id));
       row.prepend(name);
+      // 好感度と感情値をひとまとめにする（立ち絵の上では横に並べる）
+      const meters = Object.assign(document.createElement("div"), { className: "meters" });
+      meters.append(...row.querySelectorAll(".meter"));
+      row.appendChild(meters);
       const ind = row.querySelector(".ind");
       ind.addEventListener("pointerdown", (e) => startGaugeHold(e, ind, c.id));
       ["pointerup", "pointercancel"].forEach((ev) => ind.addEventListener(ev, cancelGaugeHold));
@@ -1631,6 +1660,8 @@ const PENDANT_POS = { x: 0.51, y: 0.52 };
 const PENDANT_SIZE = { w: 0.032, h: 0.055 };
 // 初期画像ごとのペンダントの位置と大きさ。ミエルは PENDANT_POS / PENDANT_SIZE のまま
 const NOEL_PENDANT = { x: 0.29, y: 0.6, w: 0.032, h: 0.07 };
+// みんなで話すときの立ち絵の大きさ（高さの割合）。ノエルはヤモリなので小さめ
+const FIG_SCALE = { noel: 0.6 };
 const DEFAULT_PENDANT = { noel: { normal: NOEL_PENDANT, off: { ...NOEL_PENDANT, y: 0.635 } } };
 // 絵ごとのペンダントの位置（外見ページでその絵に設定した値 → 初期画像の値 → 標準の値）
 function pendantAt(c, slot) {
@@ -1709,10 +1740,10 @@ function placePendant() {
     const img = box.querySelector("img");
     const w = box.clientWidth, h = box.clientHeight;
     if (!img || !img.naturalWidth) { b.style.left = "50%"; b.style.top = "50%"; b.style.setProperty("--lw", "0px"); return; }
-    // 背景なしの立ち絵は高さいっぱい・下揃え、グループの背景つきの絵は枠いっぱい（object-position 50% 18%）
+    // 背景なしの立ち絵は列の幅×1.3と高さに収めて下揃え、グループの背景つきの絵は枠いっぱい（object-position 50% 18%）
     // 1対1は全体を収める（object-fit: contain、中央）
     const cut = box.classList.contains("cutout"), whole = box.id === "portrait";
-    const sc = cut ? h / img.naturalHeight : whole ? Math.min(w / img.naturalWidth, h / img.naturalHeight) : Math.max(w / img.naturalWidth, h / img.naturalHeight);
+    const sc = cut ? Math.min(w * 1.3 / img.naturalWidth, h * (FIG_SCALE[b.dataset.id] || 1) / img.naturalHeight) : whole ? Math.min(w / img.naturalWidth, h / img.naturalHeight) : Math.max(w / img.naturalWidth, h / img.naturalHeight);
     const rw = img.naturalWidth * sc, rh = img.naturalHeight * sc;
     const ox = (w - rw) * 0.5, oy = cut ? h - rh : whole ? (h - rh) * 0.5 : (h - rh) * 0.18;
     const pos = pendantAt(app.characters.find((x) => x.id === b.dataset.id) || char(), img.dataset.slot);
@@ -1952,8 +1983,9 @@ dlg.addEventListener("cancel", (e) => {
   if (!checkSettings()) { e.preventDefault(); showSettingsError(); }
 });
 dlg.addEventListener("close", saveSettings);
-$("#resetPrompt").addEventListener("click", () => {
-  if (!confirm("初期データに戻しますか？（設定の文章や数値が最初の内容に戻ります）")) return;
+$("#resetPrompt").addEventListener("click", async () => {
+  const hasImg = !!DEFAULT_IMAGES[editChar().id];
+  if (!confirm(`初期データに戻しますか？（設定の文章や数値${hasImg ? "・画像" : ""}が最初の内容に戻ります）`)) return;
   // そのキャラの最初の内容（ミエル・ノエルは初期の設定、ほかは空）
   const id = editChar().id;
   const d = (id === "miel" ? newCharacter() : id === "noel" ? noelCharacter() : blankCharacter()).promptParts;
@@ -1965,6 +1997,13 @@ $("#resetPrompt").addEventListener("click", () => {
   document.querySelectorAll("#stateParts select").forEach((x) => { x.value = DEFAULT_IND[x.dataset.ind][x.dataset.k]; });
   updateHighLabel();
   saveSettings();
+  // ミエル・ノエルは画像とペンダントの位置も最初に戻す
+  if (hasImg) {
+    const c = editChar();
+    delete c.pendantPos;
+    save();
+    await seedImages(true, c);
+  }
   alert("初期データに戻しました");
 });
 
@@ -2229,7 +2268,7 @@ async function seedImages(force = false, c = char()) {
       if (has) continue;
     }
     try {
-      const r = await fetch(path);
+      const r = await fetch(path, { cache: "no-store" });
       if (!r.ok) throw new Error(String(r.status));
       await imgPut(k, await r.blob());
       dropCache(k);
@@ -2239,25 +2278,26 @@ async function seedImages(force = false, c = char()) {
   renderStage();
   if (dlg.open) renderSlots();
 }
-// 背景つきだった前の初期画像（ファイルの大きさで見分ける）を、透過の立ち絵に1回だけ置き換える
+// 背景つきだった前の初期画像（ファイルの大きさで見分ける）が残っていたら、起動のたびに透過の立ち絵に置き換える
 const OLD_SAMPLE_SIZES = new Set([877157, 869934, 870492, 875680, 880509, 875052, 1112978, 882234, 878238, 885260,
   120650, 128692, 121466, 128668, 119508, 117600, 163718, 126760, 121040, 119148]);
 async function refreshCutouts() {
   for (const c of app.characters) {
-    if (!DEFAULT_IMAGES[c.id] || c.cutoutSeeded) continue;
-    let ok = true;
+    if (!DEFAULT_IMAGES[c.id]) continue;
     for (const [slot, path] of Object.entries(DEFAULT_IMAGES[c.id])) {
       const k = imgKey(slot, c);
       try {
         const old = await imgGet(k);
         if (!old || !OLD_SAMPLE_SIZES.has(old.size)) continue;
-        const r = await fetch(path);
+        const r = await fetch(path, { cache: "no-store" });
         if (!r.ok) throw new Error(String(r.status));
-        await imgPut(k, await r.blob());
+        const b = await r.blob();
+        // ブラウザに残っていた古いファイルが返ってきたら入れない（次の起動でまた試す）
+        if (OLD_SAMPLE_SIZES.has(b.size)) continue;
+        await imgPut(k, b);
         dropCache(k);
-      } catch (e) { ok = false; }
+      } catch (e) {}
     }
-    if (ok) { c.cutoutSeeded = true; save(); }
   }
   renderStage();
 }
