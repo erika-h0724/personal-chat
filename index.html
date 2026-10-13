@@ -46,15 +46,25 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .char-actions{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
 .top h1{display:flex;align-items:center;gap:6px}
 #charSwitch{min-width:0}
-.group-switch{flex:none;font-size:.8rem;letter-spacing:0;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 6px 2px 10px;min-height:32px}
-.group-switch[aria-pressed="true"]{background:var(--denim);border-color:var(--denim);color:#fff}
-.group-switch[aria-pressed="true"] svg{color:#fff}
+/* 「みんなで話す」も名前と同じ見た目（枠なし）。グループ中は文字を青くする */
+.group-switch{flex:none;white-space:nowrap}
+.group-switch[aria-pressed="true"]{color:var(--denim)}
 .copy-from-list{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 8px}
 .copy-from-list button{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 14px;min-height:36px;max-width:100%;overflow-wrap:anywhere}
 .group-pick{padding:0 4px}
 .group-pick label{display:flex;align-items:center;gap:8px;padding:6px 8px;min-height:40px}
 .group-pick .btns{margin:8px}
 .group-pick .hint,.group-pick .err{margin:4px 8px}
+/* 部屋をえらぶ */
+.room-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0 4px;max-height:60dvh;overflow-y:auto}
+.room-grid:focus{outline:none}
+.room{position:relative;min-width:0}
+.room > button{display:block;width:100%;padding:0;border:2px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-2);color:var(--ink)}
+.room.on > button{border-color:var(--denim)}
+.room .thumb{display:grid;place-items:center;aspect-ratio:4/3;background:center/cover no-repeat;font-size:.8rem;color:var(--muted)}
+.room .rname{display:block;padding:4px 6px;font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.room.on .rname{color:var(--denim);font-weight:700}
+.room .rdel{position:absolute;top:4px;right:4px;width:26px;height:26px;padding:0;border:none;border-radius:50%;background:rgba(10,16,24,.6);color:#fff;font-size:.9rem;line-height:1}
 .chip[aria-pressed="true"]{background:var(--denim);border-color:var(--denim);color:#fff}
 /* iPhoneは16px未満の入力欄をタップすると画面を拡大してしまうので、スマホでは16pxにする */
 @media (pointer:coarse){ #settings textarea,#settings input,#settings select{font-size:16px} }
@@ -66,7 +76,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 #updateBtn{color:var(--denim)}
 
 .stage{position:relative;padding:0 12px 10px;border-bottom:1px solid var(--line)}
-.portrait{position:relative;width:100%;height:min(50vh,696px);border-radius:14px;overflow:hidden;background:var(--surface-2);transition:height .2s}
+.portrait{position:relative;width:100%;height:min(50vh,696px);border-radius:14px;overflow:hidden;background:var(--surface-2) center/cover no-repeat;transition:height .2s}
 .pendant{position:absolute;left:50%;top:50%;width:48px;height:48px;transform:translate(-50%,-50%);border:none;padding:0;border-radius:50%;background:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
 .pendant::after{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid var(--ind-blue);opacity:0}
 .pendant.holding::after{animation:pendantHold var(--hold,3s) linear forwards}
@@ -82,6 +92,8 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .master-badge{position:absolute;left:20px;bottom:18px;max-width:calc(100% - 40px);padding:2px 10px;border-radius:999px;background:rgba(10,16,24,.7);color:#fff;font-size:.75rem}
 .master-badge:empty{display:none}
 .portrait img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
+/* 1対1では登録した画像を切らずに全体を見せる */
+.portrait:not(.group) > img{object-fit:contain;object-position:50% 50%}
 /* みんなで話す: 共通の背景の上に最大4人を横に並べる */
 .portrait.group{display:flex;background:var(--surface-2) center/cover no-repeat}
 .fig{position:relative;flex:1 1 0;min-width:0;height:100%;cursor:pointer}
@@ -135,9 +147,9 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .gs .status.no-gauge > :not(.gs-name){visibility:hidden}
 
 .log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
-.msg{max-width:85%;padding:7px 11px;border-radius:14px;font-size:.875rem;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.msg{max-width:85%;padding:7px 11px;border-radius:14px;font-size:.75rem;line-height:1.65;white-space:pre-wrap;word-break:break-word}
 .msg.ai{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-top-left-radius:4px}
-.msg.ai .who{display:block;font-size:.7rem;color:var(--muted)}
+.msg.ai .who{display:block;font-size:.65rem;color:var(--muted)}
 .msg.user{align-self:flex-end;background:var(--user-bubble);color:#fff;border-top-right-radius:4px}
 .msg.note{align-self:center;max-width:100%;padding:2px 8px;color:var(--muted);font-size:.75rem;text-align:center}
 .msg.pending{color:var(--muted)}
@@ -210,8 +222,10 @@ button:disabled{opacity:.5;cursor:default}
 .reset-block{margin-top:24px}
 .reset-block:first-child{margin-top:0}
 .dlg-body section[data-page="data"]:not([hidden]){display:flex;flex-direction:column;min-height:100%}
-.danger-zone{margin-top:auto;padding-top:24px;border-top:1px solid var(--line)}
-.data-top{margin-bottom:120px}
+/* 「ココロを調律する」「忘却の彼方へ」は左右に並べ、太めの罫線で区切る */
+.danger-zone{margin-top:32px;padding-top:20px;border-top:3px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.danger-zone .reset-block{margin-top:0;min-width:0}
+.danger-zone .reset-block > button{width:100%;padding:6px 6px;font-size:.85rem;white-space:nowrap}
 .reset-block > button{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:6px 14px;min-height:40px}
 .hint.plain{list-style:none;padding:0;margin:6px 0 0}
 dialog.small{width:min(360px,calc(100vw - 32px))}
@@ -248,6 +262,8 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 }
 @media (max-width:380px){
   .top h1{font-size:1rem}
+  .group-switch{font-size:.85rem}
+  .top .icon-btn{width:34px}
   .status{gap:10px}
   .ind svg{width:38px;height:19px}
   .chip{padding:3px 12px}
@@ -270,7 +286,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 <body>
 <div class="app">
   <header class="top">
-    <h1><button id="charSwitch" class="char-switch" aria-haspopup="dialog" aria-label="キャラクターを切り替える"><span id="charName">ミエル</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><button id="groupSwitch" class="char-switch group-switch" aria-haspopup="dialog" aria-pressed="false">みんな<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></h1>
+    <h1><button id="charSwitch" class="char-switch" aria-haspopup="dialog" aria-label="キャラクターを切り替える"><span id="charName">ミエル</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><button id="groupSwitch" class="char-switch group-switch" aria-haspopup="dialog" aria-pressed="false">みんなで話す<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></h1>
     <div class="status">
       <div class="ind" id="ind" data-state="on" role="img" aria-label="バッテリー">
           <svg viewBox="0 0 70 34" aria-hidden="true">
@@ -328,7 +344,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
     </div>
     <div class="dlg-main">
     <nav class="dlg-nav" aria-label="設定メニュー">
-      <button data-go="character" data-scope="char">キャラクター</button>
+      <button data-go="character" data-scope="char">基本設定</button>
       <button data-go="images" data-scope="char" class="sub">外見</button>
       <button data-go="affection" data-scope="char" class="sub">好感度</button>
       <button data-go="emotion" data-scope="char" class="sub">感情値</button>
@@ -443,6 +459,17 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
     <div class="char-list" id="charList"></div>
     <div class="char-actions">
       <button id="newChar">＋ 新しく作る</button>
+      <button class="pick-room">部屋をえらぶ</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="roomMenu" class="small">
+  <div class="char-menu">
+    <h2>部屋をえらぶ</h2>
+    <div class="room-grid" id="roomList"></div>
+    <div class="char-actions">
+      <button id="addRoom">＋ 部屋を追加</button>
     </div>
   </div>
 </dialog>
@@ -455,10 +482,9 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
       <p class="err" id="groupErr" hidden></p>
       <div class="btns">
         <button id="startGroup">この顔ぶれで話す</button>
-        <button id="pickBg">共通の背景を選ぶ</button>
-        <button id="clearBg">背景を外す</button>
+        <button class="pick-room">部屋をえらぶ</button>
       </div>
-      <p class="hint">背景を透過したPNGの立ち絵は、共通の背景の上に並びます。背景つきの絵はそのまま枠に収まります。</p>
+      <p class="hint">背景を透過したPNGの立ち絵は、部屋の上に並びます。背景つきの絵はそのまま枠に収まります。</p>
     </div>
   </div>
 </dialog>
@@ -495,6 +521,13 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 
 <!-- 更新のお知らせに出す変更内容。変更を公開するたびに先頭へ1行足す（新しい順） -->
 <script type="application/json" id="changelog">[
+  {"date": "2026-10-13", "text": "「部屋をえらぶ」で背景の部屋を選べるようになりました（9部屋＋自分で追加）。1人と話すときも部屋が後ろに出ます"},
+  {"date": "2026-10-13", "text": "ミエルとノエルの初期の絵を、背景を抜いた立ち絵にしました（外見の「画像を最初の状態に戻す」で反映）"},
+  {"date": "2026-10-13", "text": "キャラクターの設定の見出しと、メニューの「基本設定」の名前を変えました"},
+  {"date": "2026-10-13", "text": "名前の右の「みんな」を「みんなで話す」にして、枠をなくしました"},
+  {"date": "2026-10-13", "text": "データのページで、下の2つのボタンを横に並べました"},
+  {"date": "2026-10-13", "text": "会話の文字を少し小さくしました"},
+  {"date": "2026-10-13", "text": "1人と話すとき、イラストを切らずに全体が見えるようにしました"},
   {"date": "2026-10-13", "text": "新しい版が公開されたら、右上に更新アイコンが出るようになりました"},
   {"date": "2026-10-13", "text": "目のアイコンに「顔をみたくない」のツールチップを付けました"},
   {"date": "2026-10-13", "text": "みんなで話すとき、全員分のゲージが並ぶようになりました"},
@@ -710,12 +743,21 @@ const GROUP_MAX = 4;
 function emptyGroup() {
   return { members: [], history: [], memory: "", memIndex: 0 };
 }
+// 部屋（背景）。最初から入っている部屋と、自分で追加した部屋（画像は IndexedDB の group:{id}）
+const ROOMS = [
+  ["living", "リビング"], ["beach", "海辺"], ["hill", "山の展望台"], ["school", "学校"],
+  ["meadow", "草原"], ["bedroom", "だれかの部屋"], ["neon", "サイバールーム"],
+  ["lab", "未来ガジェット研究所"], ["plainroom", "ふつうの部屋"]
+];
+const DEFAULT_ROOM = "living";
 function freshApp() {
-  return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter(), noelCharacter()], activeId: "miel", noelAdded: true, mode: "single", group: emptyGroup() };
+  return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter(), noelCharacter()], activeId: "miel", noelAdded: true, mode: "single", group: emptyGroup(), rooms: [], room: DEFAULT_ROOM };
 }
 let noelRemoved = false;
 function migrate(d) {
   if (!d.group) d.group = emptyGroup();
+  // 部屋ができる前の人：前に選んだ共通の背景（group:bg）があれば、追加した部屋として引き継ぐ（adoptOldBg）
+  if (!Array.isArray(d.rooms)) { d.rooms = []; d.room = DEFAULT_ROOM; d.bgAdopt = true; }
   if (d.mode !== "group") d.mode = "single";
   // ノエルは1回だけ追加する（削除したら戻さない）。自分で作った「ノエル」がいる人には足さない
   if (!d.noelAdded) {
@@ -806,8 +848,9 @@ const imgClear = () => idbReq("readwrite", (s) => s.clear());
 const urlCache = {};
 const imgKey = (slot, c = char()) => `${c.id}:${slot}`;
 const BG_KEY = "group:bg";
+const roomKey = (id) => `group:${id}`;
 async function slotUrl(slot, c = char()) {
-  const k = slot === BG_KEY ? BG_KEY : imgKey(slot, c);
+  const k = slot.startsWith("group:") ? slot : imgKey(slot, c);
   if (k in urlCache) return urlCache[k];
   let b = null;
   try { b = await imgGet(k); } catch (e) {}
@@ -837,6 +880,26 @@ async function resizeImage(file, max = 900) {
   } finally {
     URL.revokeObjectURL(src);
   }
+}
+
+// 今の部屋の画像（部屋なしなら null）
+async function roomUrl(id = app.room) {
+  if (!id) return null;
+  if (ROOMS.some(([k]) => k === id)) return `sample_pic/rooms/${id}.webp`;
+  return app.rooms.some((r) => r.id === id) ? slotUrl(roomKey(id)) : null;
+}
+// 部屋ができる前に選んでいた共通の背景を、追加した部屋「前の背景」にする
+async function adoptOldBg() {
+  if (!app.bgAdopt) return;
+  delete app.bgAdopt;
+  let b = null;
+  try { b = await imgGet(BG_KEY); } catch (e) {}
+  if (b && !app.rooms.some((r) => r.id === "bg")) {
+    app.rooms.push({ id: "bg", name: "前の背景" });
+    app.room = "bg";
+  }
+  save();
+  renderStage();
 }
 
 /* ---------- 状態の判定 ---------- */
@@ -870,6 +933,7 @@ async function renderStage() {
   const slot = currentSlot(c);
   const own = await slotUrl(slot);
   const url = own || (await slotUrl("normal"));
+  const room = await roomUrl();
   if (seq !== stageSeq) return;
   const box = $("#portrait");
   box.classList.remove("group");
@@ -881,6 +945,8 @@ async function renderStage() {
     img.alt = `${c.name}（${SLOTS.find((x) => x[0] === slot)[1]}）`;
     img.dataset.slot = own ? slot : "normal";
     img.addEventListener("load", placePendant);
+    // 背景を抜いた立ち絵なら、後ろに部屋を出す
+    img.addEventListener("load", () => { if (seq === stageSeq && room && isCutout(img)) box.style.backgroundImage = `url("${room}")`; });
     box.appendChild(img);
   } else {
     const ph = document.createElement("div");
@@ -913,7 +979,7 @@ function isCutout(img) {
 // みんなで話す: 共通の背景の上に、メンバーを横に並べる
 async function renderGroupStage() {
   const seq = ++stageSeq;
-  const bg = await slotUrl(BG_KEY);
+  const bg = await roomUrl();
   const figs = [];
   for (const c of members()) {
     const slot = currentSlot(c);
@@ -1352,7 +1418,7 @@ function scheduleAuto(ms = AUTO_WAIT) {
   autoTimer = setTimeout(async () => {
     if (!autoOn) return;
     // 返事待ち・設定中・画面を見ていないときは呼ばずに待つ
-    if (busy || document.hidden || dlg.open || charMenu.open || groupMenu.open) return scheduleAuto();
+    if (busy || document.hidden || dlg.open || charMenu.open || groupMenu.open || roomMenu.open) return scheduleAuto();
     if (!app.settings.apiKey) return setAuto(false);
     if (!(await groupTurn(""))) return setAuto(false);
     if (--autoLeft <= 0) {
@@ -1615,11 +1681,12 @@ function placePendant() {
     const img = box.querySelector("img");
     const w = box.clientWidth, h = box.clientHeight;
     if (!img || !img.naturalWidth) { b.style.left = "50%"; b.style.top = "50%"; b.style.setProperty("--lw", "0px"); return; }
-    // 背景なしの立ち絵は高さいっぱい・下揃え、それ以外は枠いっぱい（object-position 50% 18%）
-    const cut = box.classList.contains("cutout");
-    const sc = cut ? h / img.naturalHeight : Math.max(w / img.naturalWidth, h / img.naturalHeight);
+    // 背景なしの立ち絵は高さいっぱい・下揃え、グループの背景つきの絵は枠いっぱい（object-position 50% 18%）
+    // 1対1は全体を収める（object-fit: contain、中央）
+    const cut = box.classList.contains("cutout"), whole = box.id === "portrait";
+    const sc = cut ? h / img.naturalHeight : whole ? Math.min(w / img.naturalWidth, h / img.naturalHeight) : Math.max(w / img.naturalWidth, h / img.naturalHeight);
     const rw = img.naturalWidth * sc, rh = img.naturalHeight * sc;
-    const ox = (w - rw) * 0.5, oy = cut ? h - rh : (h - rh) * 0.18;
+    const ox = (w - rw) * 0.5, oy = cut ? h - rh : whole ? (h - rh) * 0.5 : (h - rh) * 0.18;
     const pos = pendantAt(app.characters.find((x) => x.id === b.dataset.id) || char(), img.dataset.slot);
     b.style.left = `${ox + rw * pos.x}px`;
     b.style.top = `${oy + rh * pos.y}px`;
@@ -1632,14 +1699,14 @@ $("#portrait").addEventListener("transitionend", placePendant);
 
 /* ---------- 設定 ---------- */
 const dlg = $("#settings");
-const PAGE_TITLES = { character: "キャラクター", images: "外見", affection: "好感度", emotion: "感情値", master: "マスターモード", detail: "詳細設定", api: "Gemini API", data: "データ" };
+const PAGE_TITLES = { character: "基本設定", images: "外見", affection: "好感度", emotion: "感情値", master: "マスターモード", detail: "詳細設定", api: "Gemini API", data: "データ" };
 const narrowDlg = () => window.matchMedia("(max-width:600px)").matches;
 let currentPage = null;
 // 設定は2種類: キャラ一覧の歯車から開く「そのキャラの設定」と、右上の歯車から開く「Gemini API・データ」
 let editId = null;
 const editChar = () => app.characters.find((c) => c.id === editId) || char();
 const firstPage = () => (editId ? "character" : "api");
-const dlgName = () => (editId ? `${editChar().name}の設定` : "設定");
+const dlgName = () => (editId ? "キャラクターの設定" : "設定");
 function showPage(name) {
   currentPage = name;
   document.querySelectorAll("#settings section[data-page]").forEach((sec) => { sec.hidden = !!name && sec.dataset.page !== name; });
@@ -2131,6 +2198,7 @@ $("#importInput").addEventListener("change", async (e) => {
     dlg.close();
     renderAll();
     seedAll();
+    adoptOldBg();
   } catch (err) {
     alert("このファイルは読み込めませんでした。書き出したバックアップを選んでください。");
   }
@@ -2227,8 +2295,6 @@ function openGroupMenu() {
     gl.appendChild(l);
   }
   groupErr("");
-  $("#clearBg").hidden = true;
-  slotUrl(BG_KEY).then((u) => { $("#clearBg").hidden = !u; });
   groupMenu.showModal();
 }
 function groupErr(t) { $("#groupErr").textContent = t; $("#groupErr").hidden = !t; }
@@ -2239,27 +2305,72 @@ $("#startGroup").addEventListener("click", () => {
   groupMenu.close();
   startGroup(ids);
 });
-$("#pickBg").addEventListener("click", () => $("#bgInput").click());
+const roomMenu = $("#roomMenu");
+async function openRoomMenu() {
+  const list = $("#roomList");
+  list.textContent = "";
+  const all = [["", "部屋なし"], ...ROOMS, ...app.rooms.map((r) => [r.id, r.name])];
+  for (const [id, name] of all) {
+    const w = document.createElement("div");
+    w.className = `room${id === app.room ? " on" : ""}`;
+    const b = document.createElement("button");
+    const th = document.createElement("span");
+    th.className = "thumb";
+    const u = await roomUrl(id);
+    if (u) th.style.backgroundImage = `url("${u}")`;
+    else th.textContent = "なし";
+    const nm = document.createElement("span");
+    nm.className = "rname";
+    nm.textContent = name;
+    b.append(th, nm);
+    b.addEventListener("click", () => { app.room = id; save(); roomMenu.close(); renderStage(); });
+    w.appendChild(b);
+    if (app.rooms.some((r) => r.id === id)) {
+      const x = document.createElement("button");
+      x.className = "rdel";
+      x.textContent = "×";
+      x.setAttribute("aria-label", `${name}を削除`);
+      x.addEventListener("click", async () => {
+        if (!confirm(`「${name}」を削除しますか？`)) return;
+        await imgDel(roomKey(id));
+        dropCache(roomKey(id));
+        app.rooms = app.rooms.filter((r) => r.id !== id);
+        if (app.room === id) app.room = DEFAULT_ROOM;
+        save();
+        renderStage();
+        openRoomMenu();
+      });
+      w.appendChild(x);
+    }
+    list.appendChild(w);
+  }
+  if (!roomMenu.open) roomMenu.showModal();
+}
+document.querySelectorAll(".pick-room").forEach((b) => b.addEventListener("click", () => {
+  charMenu.close();
+  groupMenu.close();
+  openRoomMenu();
+}));
+$("#addRoom").addEventListener("click", () => $("#bgInput").click());
 $("#bgInput").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   e.target.value = "";
   if (!file) return;
   try {
-    await imgPut(BG_KEY, await resizeImage(file, 1200));
-    dropCache(BG_KEY);
-    $("#clearBg").hidden = false;
+    const id = `u${Date.now().toString(36)}`;
+    await imgPut(roomKey(id), await resizeImage(file, 1200));
+    let n = app.rooms.length + 1;
+    while (app.rooms.some((r) => r.name === `追加した部屋${n}`)) n++;
+    app.rooms.push({ id, name: `追加した部屋${n}` });
+    app.room = id;
+    save();
     renderStage();
+    openRoomMenu();
   } catch (err) {
     alert("画像を読み込めませんでした。別の画像で試してください。");
   }
 });
-$("#clearBg").addEventListener("click", async () => {
-  if (!confirm("共通の背景を外しますか？")) return;
-  await imgDel(BG_KEY);
-  dropCache(BG_KEY);
-  $("#clearBg").hidden = true;
-  renderStage();
-});
+roomMenu.addEventListener("click", (e) => { if (e.target === roomMenu) roomMenu.close(); });
 $("#toggleArt").addEventListener("click", () => {
   app.settings.hideArt = !app.settings.hideArt;
   save();
@@ -2375,6 +2486,7 @@ if (noelRemoved) {
 }
 renderAll();
 seedAll();
+adoptOldBg();
 checkUpdate();
 if (char().state.charging) { char().state.charging = false; setCharging(true); }
 </script>
