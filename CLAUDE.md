@@ -25,8 +25,10 @@
 
 ## AI（Gemini API）
 
-- 会話モデルは `gemini-3.8-flash` に固定（`DEFAULT_MODEL`）。設定画面にモデル欄は置かない。
+- 会話モデルの初期値は `gemini-3.8-flash`（`DEFAULT_MODEL`）。設定の「Gemini API」の「会話のAIモデル」で選べる（`settings.chatModel`。前からある `settings.model` は古い値が残っている人がいるので使わない）。選択肢は設定を開いたときに ListModels を1回呼び、名前が gemini で始まり generateContent が使えるもの（image・tts・audio・live・embedding・vision を除く）。
+- 混雑（503）なら3秒待って1回送り直し、それでも503なら名前に flash-lite を含むモデル（preview・exp 以外を優先）で返事させる。
 - APIキーは使う人が自分で作り、ブラウザに保存する（無料枠前提。請求先は設定しない）。
+- 返事を速くするため `thinkingConfig: { thinkingLevel: "low" }` を付ける。モデルが受け付けず400（文に think を含む）なら外して送り直し、以後は付けない（`useThinkLow`）。
 - `generateContent` を JSON モードで呼び、AIは次の形で返す。
   `{"reply", "affection_delta"(-10〜10), "emotion_delta"(-20〜20), "expression"(normal/smile/annoyed/surprised), "outburst"(bool)}`
 - 数値（エネルギー・好感度・感情値）はアプリが管理し、AIには現在値だけを渡す。
