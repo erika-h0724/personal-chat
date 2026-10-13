@@ -40,9 +40,18 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .char-list button,.char-actions button{text-align:left;background:none;border:none;border-radius:10px;padding:10px 12px;min-height:44px}
 .char-list button:hover,.char-actions button:hover{background:var(--surface-2)}
 .char-list button[aria-current="true"]{font-weight:700;background:var(--surface-2)}
+.char-row{display:flex;align-items:center;gap:4px}
+.char-row > button:first-child{flex:1;min-width:0;overflow-wrap:anywhere}
+.char-list .char-gear{flex:none;width:44px;height:44px;padding:0;display:grid;place-items:center;border-radius:50%;color:var(--muted)}
 .char-actions{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
-.group-pick{margin-top:8px;padding:8px 4px 0;border-top:1px solid var(--line)}
-.group-pick h3{font-size:.9rem;margin:0 8px 4px}
+.top h1{display:flex;align-items:center;gap:6px}
+#charSwitch{min-width:0}
+.group-switch{flex:none;font-size:.8rem;letter-spacing:0;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 6px 2px 10px;min-height:32px}
+.group-switch[aria-pressed="true"]{background:var(--denim);border-color:var(--denim);color:#fff}
+.group-switch[aria-pressed="true"] svg{color:#fff}
+.copy-from-list{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 8px}
+.copy-from-list button{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 14px;min-height:36px;max-width:100%;overflow-wrap:anywhere}
+.group-pick{padding:0 4px}
 .group-pick label{display:flex;align-items:center;gap:8px;padding:6px 8px;min-height:40px}
 .group-pick .btns{margin:8px}
 .group-pick .hint,.group-pick .err{margin:4px 8px}
@@ -109,6 +118,19 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .bar i{display:block;height:100%;width:0;background:var(--denim);transition:width .4s}
 .meter.emo .bar i{background:var(--check)}
 .gauge-off .status > *{display:none}
+/* みんなで話す: 2行目を全員分のゲージ（1人1行）にする */
+.group-on .top > .status{display:none}
+.gs{order:3;flex:1 0 100%;display:flex;flex-direction:column;gap:2px}
+.gs .status{gap:10px;flex:none}
+.gs-name{flex:0 0 4.5em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.75rem;color:var(--muted)}
+.gs .focus .gs-name{color:var(--ink);font-weight:700}
+.gs .ind{padding:3px 0;gap:4px}
+.gs .ind svg{width:28px;height:14px}
+.gs .energy{font-size:.8rem;min-width:2.6em}
+.gs .meter{display:flex;align-items:center;gap:4px;font-size:.72rem}
+.gs .meter-head{flex:none;min-width:3.4em}
+.gs .bar{flex:1;margin-top:0;height:4px}
+.gs .status.no-gauge > :not(.gs-name){visibility:hidden}
 
 .log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
 .msg{max-width:85%;padding:7px 11px;border-radius:14px;font-size:.875rem;line-height:1.65;white-space:pre-wrap;word-break:break-word}
@@ -123,6 +145,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 
 .composer{border-top:1px solid var(--line);padding:10px 12px}
 .actions{display:flex;gap:8px;margin-bottom:8px}
+.actions[hidden]{display:none}
 .chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 14px;font-size:.85rem;min-height:36px}
 .row{display:flex;gap:8px;align-items:flex-end}
 textarea,input[type="text"],input[type="password"]{width:100%;font:inherit;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
@@ -141,6 +164,7 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
 .dlg-nav button{text-align:left;background:none;border:none;border-radius:10px;padding:10px 12px;min-height:44px}
 .dlg-nav button[aria-current="page"]{background:var(--surface-2);font-weight:700}
 .dlg-nav button.sub{padding-left:28px;font-size:.92rem}
+.dlg-nav button[hidden]{display:none!important}
 .dlg-body{flex:1;min-width:0}
 .back{display:none}
 @media (max-width:600px){
@@ -197,6 +221,14 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 .slot .thumb.has{border-style:solid}
 .slot .thumb-wrap{position:relative}
 .slot .thumb{width:100%}
+.slot .pd-open{font-size:.7rem;padding:2px 4px;min-height:28px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.pd{padding:16px}
+.pd h2{font-size:1rem;margin:0 0 4px}
+.pd-box{position:relative;cursor:crosshair;margin-top:6px}
+.pd-box img{display:block;width:100%;height:auto;border-radius:10px}
+.pd-mark{position:absolute;transform:translate(-50%,-50%);border:2px solid #fff;box-shadow:0 0 0 2px var(--ind-blue);border-radius:50%;pointer-events:none}
+.pd-size{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:.9rem}
+.pd-size input{flex:1;min-width:0}
 .slot .del{position:absolute;top:4px;right:4px;width:28px;height:28px;display:grid;place-items:center;padding:0;border:none;border-radius:50%;background:rgba(20,26,34,.65);color:#fff}
 
 @media (max-width:520px){
@@ -231,7 +263,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 <body>
 <div class="app">
   <header class="top">
-    <h1><button id="charSwitch" class="char-switch" aria-haspopup="dialog" aria-label="キャラクターを切り替える"><span id="charName">ミエル</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></h1>
+    <h1><button id="charSwitch" class="char-switch" aria-haspopup="dialog" aria-label="キャラクターを切り替える"><span id="charName">ミエル</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><button id="groupSwitch" class="char-switch group-switch" aria-haspopup="dialog" aria-pressed="false">みんな<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></h1>
     <div class="status">
       <div class="ind" id="ind" data-state="on" role="img" aria-label="バッテリー">
           <svg viewBox="0 0 70 34" aria-hidden="true">
@@ -256,6 +288,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
         <div class="bar"><i id="emoBar"></i></div>
       </div>
     </div>
+    <div class="gs" id="groupStatus" hidden></div>
     <button id="toggleArt" class="icon-btn" aria-label="イラストを隠す" aria-pressed="false"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16" hidden/></svg></button>
     <button id="openSettings" class="icon-btn" aria-label="設定"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   </header>
@@ -287,14 +320,14 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
     </div>
     <div class="dlg-main">
     <nav class="dlg-nav" aria-label="設定メニュー">
-      <button data-go="character">キャラクター</button>
-      <button data-go="images" class="sub">外見</button>
-      <button data-go="affection" class="sub">好感度</button>
-      <button data-go="emotion" class="sub">感情値</button>
-      <button data-go="master" class="sub">マスターモード</button>
-      <button data-go="detail" class="sub">詳細設定</button>
-      <button data-go="api">Gemini API</button>
-      <button data-go="data">データ</button>
+      <button data-go="character" data-scope="char">キャラクター</button>
+      <button data-go="images" data-scope="char" class="sub">外見</button>
+      <button data-go="affection" data-scope="char" class="sub">好感度</button>
+      <button data-go="emotion" data-scope="char" class="sub">感情値</button>
+      <button data-go="master" data-scope="char" class="sub">マスターモード</button>
+      <button data-go="detail" data-scope="char" class="sub">詳細設定</button>
+      <button data-go="api" data-scope="app">Gemini API</button>
+      <button data-go="data" data-scope="app">データ</button>
     </nav>
     <div class="dlg-body">
       <section data-page="api">
@@ -312,6 +345,10 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
         </details>
       </section>
       <section data-page="character">
+        <div id="copyFromBox" hidden>
+          <div class="btns"><button id="copyFromBtn">仲間から複製</button></div>
+          <div class="copy-from-list" id="copyFromList" hidden></div>
+        </div>
         <label>名前<input id="name" type="text"></label>
         <div id="promptParts"></div>
         <p class="hint">名前は上の「名前」欄から自動で入ります。</p>
@@ -398,10 +435,14 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
     <div class="char-list" id="charList"></div>
     <div class="char-actions">
       <button id="newChar">＋ 新しく作る</button>
-      <button id="copyChar">＋ このキャラを複製</button>
     </div>
+  </div>
+</dialog>
+
+<dialog id="groupMenu" class="small">
+  <div class="char-menu">
+    <h2>みんなで話す（4人まで）</h2>
     <div class="group-pick">
-      <h3>みんなで話す（4人まで）</h3>
       <div id="groupList"></div>
       <p class="err" id="groupErr" hidden></p>
       <div class="btns">
@@ -410,6 +451,23 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
         <button id="clearBg">背景を外す</button>
       </div>
       <p class="hint">背景を透過したPNGの立ち絵は、共通の背景の上に並びます。背景つきの絵はそのまま枠に収まります。</p>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="pendantDlg" class="small">
+  <div class="pd">
+    <h2 id="pdTitle">ペンダントの位置</h2>
+    <p class="hint">絵の中のペンダントのところをタップしてください。</p>
+    <div class="pd-box" id="pdBox"><img id="pdImg" alt=""><span class="pd-mark" id="pdMark"></span></div>
+    <label class="pd-size">大きさ<input id="pdSize" type="range" min="10" max="150" step="1"></label>
+    <div class="btns center">
+      <button id="pdOne">この絵に使う</button>
+      <button id="pdAll">すべての絵に使う</button>
+    </div>
+    <div class="btns center">
+      <button id="pdReset">最初の位置に戻す</button>
+      <button id="pdCancel">やめる</button>
     </div>
   </div>
 </dialog>
@@ -622,13 +680,25 @@ function emptyGroup() {
 function freshApp() {
   return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter(), noelCharacter()], activeId: "miel", noelAdded: true, mode: "single", group: emptyGroup() };
 }
+let noelRemoved = false;
 function migrate(d) {
   if (!d.group) d.group = emptyGroup();
   if (d.mode !== "group") d.mode = "single";
-  // ノエルは1回だけ追加する（削除したら戻さない）
+  // ノエルは1回だけ追加する（削除したら戻さない）。自分で作った「ノエル」がいる人には足さない
   if (!d.noelAdded) {
-    if (!d.characters.some((c) => c.id === "noel")) d.characters.push(noelCharacter());
+    if (!d.characters.some((c) => c.id === "noel" || c.name === "ノエル")) d.characters.push(noelCharacter());
     d.noelAdded = true;
+  }
+  // 自分で作ったノエルと初期のノエルの2人になった人は、初期のノエルがまだ話していなければ1回だけ外す
+  if (!d.noelDeduped) {
+    const builtin = d.characters.find((c) => c.id === "noel");
+    if (builtin && !builtin.history.length && d.characters.some((c) => c.id !== "noel" && c.name === "ノエル")) {
+      d.characters = d.characters.filter((c) => c !== builtin);
+      d.group.members = d.group.members.filter((id) => id !== "noel");
+      if (d.activeId === "noel") d.activeId = d.characters[0].id;
+      noelRemoved = true;
+    }
+    d.noelDeduped = true;
   }
   for (const c of d.characters) {
     if (!c.promptParts) {
@@ -765,7 +835,8 @@ async function renderStage() {
   const seq = ++stageSeq;
   const c = char();
   const slot = currentSlot(c);
-  const url = (await slotUrl(slot)) || (await slotUrl("normal"));
+  const own = await slotUrl(slot);
+  const url = own || (await slotUrl("normal"));
   if (seq !== stageSeq) return;
   const box = $("#portrait");
   box.classList.remove("group");
@@ -775,6 +846,7 @@ async function renderStage() {
     const img = document.createElement("img");
     img.src = url;
     img.alt = `${c.name}（${SLOTS.find((x) => x[0] === slot)[1]}）`;
+    img.dataset.slot = own ? slot : "normal";
     img.addEventListener("load", placePendant);
     box.appendChild(img);
   } else {
@@ -812,14 +884,15 @@ async function renderGroupStage() {
   const figs = [];
   for (const c of members()) {
     const slot = currentSlot(c);
-    figs.push([c, slot, (await slotUrl(slot, c)) || (await slotUrl("normal", c))]);
+    const own = await slotUrl(slot, c);
+    figs.push([c, slot, own || (await slotUrl("normal", c)), own ? slot : "normal"]);
   }
   if (seq !== stageSeq) return;
   const box = $("#portrait");
   box.textContent = "";
   box.classList.add("group");
   box.style.backgroundImage = bg ? `url("${bg}")` : "";
-  for (const [c, slot, url] of figs) {
+  for (const [c, slot, url, shown] of figs) {
     const f = document.createElement("div");
     f.className = `fig ${cutoutCache[url] ? "cutout" : "boxed"}${c.id === app.activeId ? " focus" : ""}`;
     f.dataset.id = c.id;
@@ -828,6 +901,7 @@ async function renderGroupStage() {
     if (url) {
       const img = document.createElement("img");
       img.alt = `${c.name}（${label}）`;
+      img.dataset.slot = shown;
       img.addEventListener("load", () => {
         if (isCutout(img)) f.classList.replace("boxed", "cutout");
         placePendant();
@@ -860,7 +934,9 @@ function focusMember(id) {
 }
 function renderStatus() {
   const c = char(), s = c.state;
-  $("#charName").textContent = talkName();
+  // 左上の名前は1対1用。グループ中は「みんな」ボタンを押した状態にする
+  $("#charName").textContent = c.name;
+  $("#groupSwitch").setAttribute("aria-pressed", String(inGroup()));
   document.title = talkName();
   $("#groupActions").hidden = !inGroup();
   $("#autoBtn").setAttribute("aria-pressed", String(autoOn));
@@ -868,19 +944,59 @@ function renderStatus() {
   $("#toggleArt").setAttribute("aria-pressed", String(!!app.settings.hideArt));
   $("#toggleArt").setAttribute("aria-label", app.settings.hideArt ? "イラストを表示する" : "イラストを隠す");
   $("#toggleArt .slash").toggleAttribute("hidden", !app.settings.hideArt);
-  $(".app").classList.toggle("gauge-off", !c.useGauge);
-  const ind = $("#ind");
-  ind.dataset.state = s.energy <= 0 && !s.charging ? "off" : "on";
-  ind.setAttribute("aria-label", `バッテリー：${s.energy}%${s.charging ? "（充電中）" : ""}（3秒長押しで充電）`);
-  const segs = s.energy >= 67 ? 3 : s.energy >= 34 ? 2 : s.energy >= 1 ? 1 : 0;
-  ind.querySelectorAll(".seg").forEach((el) => el.classList.toggle("on", Number(el.dataset.seg) <= segs));
-  $("#energyText").textContent = `${s.energy}%`;
+  $(".app").classList.toggle("gauge-off", !c.useGauge && !inGroup());
+  $(".app").classList.toggle("group-on", inGroup());
+  paintGauge($(".top > .status"), c);
+  renderGroupStatus();
   paintPendant();
   $("#masterText").textContent = pendantOn(c) && s.master && s.command ? `${inGroup() ? `${c.name}：` : ""}マスターモード中（胸のインジケーターを${masterHold(c)}秒長押しで解除）` : "";
-  $("#affText").textContent = `${s.affection}%`;
-  $("#affBar").style.width = `${s.affection}%`;
-  $("#emoText").textContent = `${s.emotion}%`;
-  $("#emoBar").style.width = `${Math.min(100, s.emotion)}%`;
+}
+// バッテリー・好感度・感情値の1行を、キャラの今の値で塗る
+function paintGauge(row, c) {
+  const s = c.state;
+  const ind = row.querySelector(".ind");
+  ind.dataset.state = s.energy <= 0 && !s.charging ? "off" : "on";
+  ind.setAttribute("aria-label", `${inGroup() ? c.name : ""}バッテリー：${s.energy}%${s.charging ? "（充電中）" : ""}（3秒長押しで充電）`);
+  const segs = s.energy >= 67 ? 3 : s.energy >= 34 ? 2 : s.energy >= 1 ? 1 : 0;
+  ind.querySelectorAll(".seg").forEach((el) => el.classList.toggle("on", Number(el.dataset.seg) <= segs));
+  row.querySelector(".energy").textContent = `${s.energy}%`;
+  const [aff, emo] = row.querySelectorAll(".meter");
+  aff.querySelector(".meter-head span").textContent = `${s.affection}%`;
+  aff.querySelector(".bar i").style.width = `${s.affection}%`;
+  emo.querySelector(".meter-head span").textContent = `${s.emotion}%`;
+  emo.querySelector(".bar i").style.width = `${Math.min(100, s.emotion)}%`;
+}
+// グループ中は全員分のゲージを1人1行で出す。行は顔ぶれが変わったときだけ作り直す（長押し中に消さないため）
+function renderGroupStatus() {
+  const box = $("#groupStatus");
+  box.hidden = !inGroup();
+  if (!inGroup()) return;
+  const list = members(), key = list.map((c) => c.id).join(",");
+  if (box.dataset.key !== key) {
+    box.dataset.key = key;
+    box.textContent = "";
+    for (const c of list) {
+      const row = $(".top > .status").cloneNode(true);
+      row.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id"));
+      row.dataset.id = c.id;
+      const name = Object.assign(document.createElement("span"), { className: "gs-name" });
+      name.addEventListener("click", () => focusMember(c.id));
+      row.prepend(name);
+      const ind = row.querySelector(".ind");
+      ind.addEventListener("pointerdown", (e) => startGaugeHold(e, ind, c.id));
+      ["pointerup", "pointercancel"].forEach((ev) => ind.addEventListener(ev, cancelGaugeHold));
+      ind.addEventListener("contextmenu", (e) => e.preventDefault());
+      box.appendChild(row);
+    }
+  }
+  for (const row of box.children) {
+    const c = list.find((x) => x.id === row.dataset.id);
+    if (!c) continue;
+    row.querySelector(".gs-name").textContent = c.name;
+    row.classList.toggle("focus", c.id === app.activeId);
+    row.classList.toggle("no-gauge", !c.useGauge);
+    paintGauge(row, c);
+  }
 }
 function renderLog() {
   const c = char(), t = talk();
@@ -1202,7 +1318,7 @@ function scheduleAuto(ms = AUTO_WAIT) {
   autoTimer = setTimeout(async () => {
     if (!autoOn) return;
     // 返事待ち・設定中・画面を見ていないときは呼ばずに待つ
-    if (busy || document.hidden || dlg.open || charMenu.open) return scheduleAuto();
+    if (busy || document.hidden || dlg.open || charMenu.open || groupMenu.open) return scheduleAuto();
     if (!app.settings.apiKey) return setAuto(false);
     if (!(await groupTurn(""))) return setAuto(false);
     if (--autoLeft <= 0) {
@@ -1337,12 +1453,14 @@ let gaugeTimer = null;
 function cancelGaugeHold() {
   clearTimeout(gaugeTimer);
   gaugeTimer = null;
-  $("#ind").classList.remove("holding");
+  document.querySelectorAll(".top .ind").forEach((x) => x.classList.remove("holding"));
 }
-$("#ind").addEventListener("pointerdown", (e) => {
+$("#ind").addEventListener("pointerdown", (e) => startGaugeHold(e, $("#ind")));
+// グループ中は、押したキャラを選んでから充電する
+function startGaugeHold(e, ind, id) {
   e.preventDefault();
+  if (id) focusMember(id);
   if (!char().useGauge) return;
-  const ind = $("#ind");
   try { ind.setPointerCapture(e.pointerId); } catch (err) {}
   ind.classList.remove("holding");
   void ind.getBoundingClientRect();
@@ -1351,10 +1469,10 @@ $("#ind").addEventListener("pointerdown", (e) => {
     cancelGaugeHold();
     const on = !char().state.charging;
     setCharging(on);
-    addNote(on ? "充電を始めました。" : "充電を止めました。");
+    addNote(`${inGroup() ? `${char().name}の` : ""}${on ? "充電を始めました。" : "充電を止めました。"}`);
     if (navigator.vibrate) navigator.vibrate(80);
   }, 3000);
-});
+}
 ["pointerup", "pointercancel"].forEach((ev) => $("#ind").addEventListener(ev, cancelGaugeHold));
 $("#ind").addEventListener("contextmenu", (e) => e.preventDefault());
 
@@ -1383,6 +1501,14 @@ $("#sendBtn").addEventListener("click", send);
 const PENDANT_POS = { x: 0.51, y: 0.52 };
 // 光らせる楕円の大きさ（画像の幅・高さに対する割合）
 const PENDANT_SIZE = { w: 0.032, h: 0.055 };
+// 初期画像ごとのペンダントの位置と大きさ。ミエルは PENDANT_POS / PENDANT_SIZE のまま
+const NOEL_PENDANT = { x: 0.29, y: 0.6, w: 0.032, h: 0.07 };
+const DEFAULT_PENDANT = { noel: { normal: NOEL_PENDANT, off: { ...NOEL_PENDANT, y: 0.635 } } };
+// 絵ごとのペンダントの位置（外見ページでその絵に設定した値 → 初期画像の値 → 標準の値）
+function pendantAt(c, slot) {
+  const own = c.pendantPos || {}, def = DEFAULT_PENDANT[c.id] || {};
+  return { ...PENDANT_POS, ...PENDANT_SIZE, ...(def.normal || {}), ...(def[slot] || {}), ...(own[slot] || {}) };
+}
 let holdTimer = null, holdEl = null;
 function cancelHold() {
   clearTimeout(holdTimer);
@@ -1460,10 +1586,11 @@ function placePendant() {
     const sc = cut ? h / img.naturalHeight : Math.max(w / img.naturalWidth, h / img.naturalHeight);
     const rw = img.naturalWidth * sc, rh = img.naturalHeight * sc;
     const ox = (w - rw) * 0.5, oy = cut ? h - rh : (h - rh) * 0.18;
-    b.style.left = `${ox + rw * PENDANT_POS.x}px`;
-    b.style.top = `${oy + rh * PENDANT_POS.y}px`;
-    b.style.setProperty("--lw", `${rw * PENDANT_SIZE.w}px`);
-    b.style.setProperty("--lh", `${rh * PENDANT_SIZE.h}px`);
+    const pos = pendantAt(app.characters.find((x) => x.id === b.dataset.id) || char(), img.dataset.slot);
+    b.style.left = `${ox + rw * pos.x}px`;
+    b.style.top = `${oy + rh * pos.y}px`;
+    b.style.setProperty("--lw", `${rw * pos.w}px`);
+    b.style.setProperty("--lh", `${rh * pos.h}px`);
   });
 }
 window.addEventListener("resize", placePendant);
@@ -1474,6 +1601,11 @@ const dlg = $("#settings");
 const PAGE_TITLES = { character: "キャラクター", images: "外見", affection: "好感度", emotion: "感情値", master: "マスターモード", detail: "詳細設定", api: "Gemini API", data: "データ" };
 const narrowDlg = () => window.matchMedia("(max-width:600px)").matches;
 let currentPage = null;
+// 設定は2種類: キャラ一覧の歯車から開く「そのキャラの設定」と、右上の歯車から開く「Gemini API・データ」
+let editId = null;
+const editChar = () => app.characters.find((c) => c.id === editId) || char();
+const firstPage = () => (editId ? "character" : "api");
+const dlgName = () => (editId ? `${editChar().name}の設定` : "設定");
 function showPage(name) {
   currentPage = name;
   document.querySelectorAll("#settings section[data-page]").forEach((sec) => { sec.hidden = !!name && sec.dataset.page !== name; });
@@ -1481,17 +1613,18 @@ function showPage(name) {
     if (b.dataset.go === name) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
   });
   $(".dlg").classList.toggle("on-page", !!name);
-  $("#dlgTitle").textContent = narrowDlg() && name ? PAGE_TITLES[name] : "設定";
+  $("#dlgTitle").textContent = narrowDlg() && name ? PAGE_TITLES[name] : dlgName();
   $(".dlg-body").scrollTop = 0;
 }
 document.querySelectorAll(".dlg-nav button").forEach((b) => b.addEventListener("click", () => showPage(b.dataset.go)));
 $("#backSettings").addEventListener("click", () => showPage(null));
 window.addEventListener("resize", () => {
-  if (dlg.open && !narrowDlg() && !currentPage) showPage("character");
-  else if (dlg.open) $("#dlgTitle").textContent = narrowDlg() && currentPage ? PAGE_TITLES[currentPage] : "設定";
+  if (dlg.open && !narrowDlg() && !currentPage) showPage(firstPage());
+  else if (dlg.open) $("#dlgTitle").textContent = narrowDlg() && currentPage ? PAGE_TITLES[currentPage] : dlgName();
 });
-function openSettings() {
-  const c = char();
+function openSettings(id = null) {
+  editId = typeof id === "string" ? id : null;
+  const c = editChar();
   $("#apiKey").value = app.settings.apiKey;
   $("#imageModel").value = app.settings.imageModel || DEFAULT_IMAGE_MODEL;
   $("#name").value = c.name;
@@ -1567,18 +1700,21 @@ function openSettings() {
   updateHighLabel();
   $("#useGauge").checked = c.useGauge;
   $("#usePendant").checked = pendantOn(c);
-  $('.dlg-nav [data-go="master"]').hidden = !pendantOn(c);
+  document.querySelectorAll(".dlg-nav button").forEach((b) => { b.hidden = b.dataset.scope !== (editId ? "char" : "app"); });
+  if (editId) $('.dlg-nav [data-go="master"]').hidden = !pendantOn(c);
   $("#deleteChar").disabled = app.characters.length <= 1;
   $("#mielImgHint").hidden = $("#resetImages").hidden = !DEFAULT_IMAGES[c.id];
   $("#mielImgHint").textContent = `最初から${c.name}の画像が入っています。`;
+  $("#copyFromBox").hidden = !editId || editId !== newCharId;
+  $("#copyFromList").hidden = true;
   renderSlots();
-  showPage(!app.settings.apiKey ? "api" : narrowDlg() ? null : "character");
+  showPage(!editId && !app.settings.apiKey ? "api" : narrowDlg() ? null : firstPage());
   dlg.showModal();
 }
 let skipSave = false;
 function saveSettings() {
   if (skipSave) { skipSave = false; return; }
-  const c = char();
+  const c = editChar();
   app.settings.apiKey = $("#apiKey").value.trim();
   app.settings.imageModel = $("#imageModel").value.trim() || DEFAULT_IMAGE_MODEL;
   c.name = $("#name").value.trim() || c.name;
@@ -1595,7 +1731,7 @@ function saveSettings() {
   document.querySelectorAll("#settings textarea[data-state]").forEach((t) => { c.promptParts.states[t.dataset.state] = t.value.trim(); });
   c.useGauge = $("#useGauge").checked;
   c.usePendant = $("#usePendant").checked;
-  if (!c.useGauge && c.state.charging) setCharging(false);
+  if (!c.useGauge && c.state.charging && c === char()) setCharging(false);
   save();
   renderAll();
 }
@@ -1632,13 +1768,13 @@ function showSettingsError() {
   err.scrollIntoView({ block: "center" });
 }
 $("#masterHold").addEventListener("input", updateHighLabel);
-$("#openSettings").addEventListener("click", openSettings);
-$("#usePendant").addEventListener("change", (e) => { $('.dlg-nav [data-go="master"]').hidden = !e.target.checked; });
+$("#openSettings").addEventListener("click", () => openSettings());
+$("#usePendant").addEventListener("change", (e) => { $('.dlg-nav [data-go="master"]').hidden = !e.target.checked; renderSlots(); });
 $("#deleteChar").addEventListener("click", async () => {
-  const c = char();
+  const c = editChar();
   if (app.characters.length <= 1) return;
   if (!confirm(`「${c.name}」を削除しますか？（設定・会話・記憶・画像がすべて消えます）`)) return;
-  if (chargeTimer) setCharging(false);
+  if (chargeTimer && c === char()) setCharging(false);
   for (const k of await imgKeys()) {
     if (String(k).startsWith(`${c.id}:`)) { await imgDel(k); dropCache(k); }
   }
@@ -1647,8 +1783,12 @@ $("#deleteChar").addEventListener("click", async () => {
   skipSave = true;
   dlg.close();
   // グループに2人以上残っていれば、そのまま続ける
-  if (inGroup() && members().length >= 2) { app.activeId = members()[0].id; save(); renderAll(); }
-  else switchChar(app.characters[0].id);
+  if (inGroup() && members().length >= 2) {
+    if (!app.group.members.includes(app.activeId)) app.activeId = members()[0].id;
+    save();
+    renderAll();
+  } else if (inGroup() || c.id === app.activeId) switchChar(app.characters[0].id);
+  else { save(); renderAll(); }
 });
 $("#closeSettings").addEventListener("click", () => {
   if (!checkSettings()) return showSettingsError();
@@ -1674,7 +1814,7 @@ async function renderSlots() {
   const box = $("#slots");
   box.textContent = "";
   for (const [slot, label] of SLOTS) {
-    const url = await slotUrl(slot);
+    const url = await slotUrl(slot, editChar());
     const wrap = document.createElement("div");
     wrap.className = "slot";
     const btn = document.createElement("button");
@@ -1684,11 +1824,18 @@ async function renderSlots() {
     else btn.textContent = "＋";
     btn.addEventListener("click", () => { pickingSlot = slot; $("#fileInput").click(); });
     const name = document.createElement("span");
-    name.textContent = slotLabel(slot, label);
+    name.textContent = slotLabel(slot, label, editChar());
     const tw = document.createElement("div");
     tw.className = "thumb-wrap";
     tw.appendChild(btn);
     wrap.append(tw, name);
+    if (url && $("#usePendant").checked) {
+      const pb = document.createElement("button");
+      pb.className = "pd-open";
+      pb.textContent = "ペンダントの位置";
+      pb.addEventListener("click", () => openPendantEditor(slot, url));
+      wrap.appendChild(pb);
+    }
     if (url) {
       const del = document.createElement("button");
       del.className = "del";
@@ -1696,7 +1843,7 @@ async function renderSlots() {
       del.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
       del.addEventListener("click", async () => {
         if (!confirm(`「${label}」の画像を削除しますか？`)) return;
-        const k = imgKey(slot);
+        const k = imgKey(slot, editChar());
         await imgDel(k);
         dropCache(k);
         renderSlots();
@@ -1707,13 +1854,63 @@ async function renderSlots() {
     box.appendChild(wrap);
   }
 }
+// ペンダントの位置を、絵をタップして決める（大きさはスライダー）
+const pdDlg = $("#pendantDlg");
+let pd = null;
+function openPendantEditor(slot, url) {
+  pd = { slot, ...pendantAt(editChar(), slot) };
+  $("#pdTitle").textContent = `ペンダントの位置（${SLOTS.find((x) => x[0] === slot)[1]}）`;
+  $("#pdImg").src = url;
+  $("#pdSize").value = Math.round(pd.w * 1000);
+  drawPdMark();
+  pdDlg.showModal();
+}
+function drawPdMark() {
+  const m = $("#pdMark");
+  m.style.left = `${pd.x * 100}%`;
+  m.style.top = `${pd.y * 100}%`;
+  m.style.width = `${pd.w * 100}%`;
+  m.style.height = `${pd.h * 100}%`;
+}
+$("#pdBox").addEventListener("click", (e) => {
+  const r = $("#pdImg").getBoundingClientRect();
+  const clamp = (v) => Math.max(0, Math.min(1, Math.round(v * 1000) / 1000));
+  pd.x = clamp((e.clientX - r.left) / r.width);
+  pd.y = clamp((e.clientY - r.top) / r.height);
+  drawPdMark();
+});
+$("#pdSize").addEventListener("input", () => {
+  const w = Number($("#pdSize").value) / 1000;
+  pd.h = Math.round((pd.h / pd.w) * w * 1000) / 1000;
+  pd.w = w;
+  drawPdMark();
+});
+function savePendant(slots) {
+  const c = editChar();
+  c.pendantPos = c.pendantPos || {};
+  for (const s of slots) c.pendantPos[s] = { x: pd.x, y: pd.y, w: pd.w, h: pd.h };
+  save();
+  pdDlg.close();
+  renderStage();
+}
+$("#pdOne").addEventListener("click", () => savePendant([pd.slot]));
+$("#pdAll").addEventListener("click", () => savePendant(SLOTS.map(([k]) => k)));
+$("#pdReset").addEventListener("click", () => {
+  const c = editChar();
+  if (c.pendantPos) delete c.pendantPos[pd.slot];
+  save();
+  pdDlg.close();
+  renderStage();
+});
+$("#pdCancel").addEventListener("click", () => pdDlg.close());
+
 $("#fileInput").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   e.target.value = "";
   if (!file || !pickingSlot) return;
   try {
     const blob = await resizeImage(file);
-    const k = imgKey(pickingSlot);
+    const k = imgKey(pickingSlot, editChar());
     await imgPut(k, blob);
     dropCache(k);
     renderSlots();
@@ -1791,7 +1988,7 @@ $("#genNormal").addEventListener("click", async () => {
 });
 $("#genUseNormal").addEventListener("click", async () => {
   if (!genBlob || generating) return;
-  const k = imgKey("normal");
+  const k = imgKey("normal", editChar());
   await imgPut(k, genBlob);
   dropCache(k);
   renderSlots();
@@ -1802,7 +1999,7 @@ $("#genAll").addEventListener("click", async () => {
   if (!genBlob || generating) return;
   if (!confirm("「通常」に登録して、残り9枠の画像を作ります。今の画像は置き換わります。続けますか？")) return;
   setGenBusy(true);
-  const k0 = imgKey("normal");
+  const k0 = imgKey("normal", editChar());
   await imgPut(k0, genBlob);
   dropCache(k0);
   renderSlots();
@@ -1816,7 +2013,7 @@ $("#genAll").addEventListener("click", async () => {
     genStatus(`「${label}」を作っています…（${done + 1}/${entries.length}）`);
     try {
       const blob = await geminiImage([refPart, { text: `この画像と同じキャラクター、同じ服、同じ構図、同じ背景のまま、表情と次の点だけを変えて、正方形で1枚描いてください。文字は入れない。\n${expr}` }]);
-      const k = imgKey(slot);
+      const k = imgKey(slot, editChar());
       await imgPut(k, blob);
       dropCache(k);
       renderSlots();
@@ -1855,7 +2052,7 @@ async function seedImages(force = false, c = char()) {
   if (dlg.open) renderSlots();
 }
 $("#resetImages").addEventListener("click", () => {
-  if (confirm("10枠すべてを最初の画像に戻しますか？（登録した画像は消えます）")) seedImages(true);
+  if (confirm("10枠すべてを最初の画像に戻しますか？（登録した画像は消えます）")) seedImages(true, editChar());
 });
 
 /* ---------- バックアップ ---------- */
@@ -1958,13 +2155,26 @@ function openCharMenu() {
   const list = $("#charList");
   list.textContent = "";
   for (const c of app.characters) {
+    const row = document.createElement("div");
+    row.className = "char-row";
     const b = document.createElement("button");
     b.textContent = c.name;
     if (!inGroup() && c.id === app.activeId) b.setAttribute("aria-current", "true");
-    b.addEventListener("click", () => { charMenu.close(); if (c.id !== app.activeId) switchChar(c.id); });
-    list.appendChild(b);
+    b.addEventListener("click", () => { charMenu.close(); if (inGroup() || c.id !== app.activeId) switchChar(c.id); });
+    // 右端の歯車で、そのキャラの設定を開く
+    const gear = document.createElement("button");
+    gear.className = "char-gear";
+    gear.setAttribute("aria-label", `${c.name}の設定`);
+    gear.innerHTML = $("#openSettings").innerHTML;
+    gear.addEventListener("click", () => { charMenu.close(); openSettings(c.id); });
+    row.append(b, gear);
+    list.appendChild(row);
   }
-  $("#copyChar").textContent = `＋ ${char().name}を複製`;
+  charMenu.showModal();
+}
+const groupMenu = $("#groupMenu");
+function openGroupMenu() {
+  if (busy) { addNote("返事を待っているあいだは切り替えられません。", false); return; }
   const gl = $("#groupList");
   gl.textContent = "";
   const picked = app.group.members.length ? app.group.members : app.characters.slice(0, 2).map((c) => c.id);
@@ -1985,14 +2195,14 @@ function openCharMenu() {
   groupErr("");
   $("#clearBg").hidden = true;
   slotUrl(BG_KEY).then((u) => { $("#clearBg").hidden = !u; });
-  charMenu.showModal();
+  groupMenu.showModal();
 }
 function groupErr(t) { $("#groupErr").textContent = t; $("#groupErr").hidden = !t; }
 $("#startGroup").addEventListener("click", () => {
   const ids = [...$("#groupList").querySelectorAll("input:checked")].map((x) => x.value);
   if (ids.length < 2) return groupErr("2人以上選んでください");
   if (ids.length > GROUP_MAX) return groupErr(`${GROUP_MAX}人まで選べます`);
-  charMenu.close();
+  groupMenu.close();
   startGroup(ids);
 });
 $("#pickBg").addEventListener("click", () => $("#bgInput").click());
@@ -2022,32 +2232,71 @@ $("#toggleArt").addEventListener("click", () => {
   renderStatus();
   if (!app.settings.hideArt) placePendant();
 });
-async function addChar(copy) {
+// 新しく作ったキャラ（作成画面に「仲間から複製」を出す）
+let newCharId = null;
+function addChar() {
   charMenu.close();
-  let c;
-  if (copy) {
-    const src = char();
-    c = JSON.parse(JSON.stringify(src));
-    Object.assign(c, { id: `c${Date.now().toString(36)}`, name: `${src.name}（コピー）`, state: defaultState(), history: [], memory: "", memIndex: 0 });
-    delete c.imagesSeeded;
-    for (const k of await imgKeys()) {
-      if (String(k).startsWith(`${src.id}:`)) await imgPut(`${c.id}:${String(k).slice(src.id.length + 1)}`, await imgGet(k));
-    }
-  } else {
-    c = blankCharacter();
-  }
+  const c = blankCharacter();
   app.characters.push(c);
+  newCharId = c.id;
   switchChar(c.id);
-  openSettings();
+  openSettings(c.id);
   showPage("character");
 }
+// 仲間の設定と画像を、作ったばかりのキャラに写す（状態・会話・記憶は引き継がない）
+async function copyInto(dst, src) {
+  const id = dst.id;
+  for (const k of Object.keys(dst)) delete dst[k];
+  Object.assign(dst, JSON.parse(JSON.stringify(src)), { id, name: `${src.name}（コピー）`, state: defaultState(), history: [], memory: "", memIndex: 0 });
+  delete dst.imagesSeeded;
+  // 初期画像の位置は id で決まるので、複製には値として持たせる
+  if (DEFAULT_PENDANT[src.id]) dst.pendantPos = Object.fromEntries(SLOTS.map(([k]) => [k, { ...pendantAt(src, k) }]));
+  for (const k of await imgKeys()) {
+    if (String(k).startsWith(`${id}:`)) { await imgDel(k); dropCache(k); }
+  }
+  for (const k of await imgKeys()) {
+    if (String(k).startsWith(`${src.id}:`)) {
+      const nk = `${id}:${String(k).slice(src.id.length + 1)}`;
+      await imgPut(nk, await imgGet(k));
+      dropCache(nk);
+    }
+  }
+}
+$("#copyFromBtn").addEventListener("click", () => {
+  const box = $("#copyFromList");
+  box.textContent = "";
+  for (const src of app.characters) {
+    if (src.id === editId) continue;
+    const b = document.createElement("button");
+    b.textContent = src.name;
+    b.addEventListener("click", async () => {
+      if (!confirm(`${src.name}の設定と画像を複製しますか？（今入力した内容は置き換わります）`)) return;
+      const dst = editChar();
+      await copyInto(dst, src);
+      save();
+      skipSave = true;
+      dlg.close();
+      renderAll();
+      openSettings(dst.id);
+      showPage("character");
+    });
+    box.appendChild(b);
+  }
+  box.hidden = !box.hidden;
+});
 $("#charSwitch").addEventListener("click", openCharMenu);
-$("#newChar").addEventListener("click", () => addChar(false));
-$("#copyChar").addEventListener("click", () => addChar(true));
+$("#groupSwitch").addEventListener("click", openGroupMenu);
+$("#newChar").addEventListener("click", () => addChar());
 charMenu.addEventListener("click", (e) => { if (e.target === charMenu) charMenu.close(); });
+groupMenu.addEventListener("click", (e) => { if (e.target === groupMenu) groupMenu.close(); });
 
 /* ---------- 起動 ---------- */
 if (inGroup() && members().length < 2) app.mode = "single";
+// 外した初期のノエルの画像を片付ける
+if (noelRemoved) {
+  save();
+  imgKeys().then(async (ks) => { for (const k of ks) if (String(k).startsWith("noel:")) await imgDel(k); }).catch(() => {});
+}
 renderAll();
 seedAll();
 if (char().state.charging) { char().state.charging = false; setCharging(true); }
