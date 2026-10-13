@@ -443,7 +443,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
         <h4 class="sub">AIで画像を作る</h4>
         <div class="btns"><button id="makePrompts">AI指示文作成</button></div>
         <div id="promptHelp" hidden>
-        <p class="hint">ChatGPT や Gemini のサイトに貼り付けて使う指示文です（背景の透明化・画像サイズ・構図を入れてあります）。10枚まとめて頼めます。できた画像は、それぞれの枠をタップして入れてください。</p>
+        <p class="hint">ChatGPT や Gemini のサイトに貼り付けて使う指示文です（背景の透明化・画像サイズ・構図を入れてあります）。1回に1枚ずつ出てくるので、「続けて」と送ると次の絵になります。できた画像は、それぞれの枠をタップして入れてください。</p>
         <div id="promptExamples"></div>
         </div>
         <details class="help" id="aiGen">
@@ -547,6 +547,8 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 
 <!-- 更新のお知らせに出す変更内容。変更を公開するたびに先頭へ1行足す（新しい順） -->
 <script type="application/json" id="changelog">[
+  {"date": "2026-10-13", "text": "3人目のキャラクター「リカ」が仲間入りしました"},
+  {"date": "2026-10-13", "text": "「AI指示文作成」の指示文を、1回に1枚ずつ絵を出してもらう形にしました（何枚もの絵が1枚にまとまって出てくるのを防ぎます）"},
   {"date": "2026-10-13", "text": "みんなで話すとき、ヤモリのノエルは小さめに表示するようにしました"},
   {"date": "2026-10-13", "text": "みんなで話すとき、人数が多くて幅が足りなければ立ち絵を小さくして重ならないようにしました"},
   {"date": "2026-10-13", "text": "みんなで話すとき、それぞれのゲージをそのキャラの絵の上に出すようにしました（絵を隠しているときは今までどおり上の行）"},
@@ -618,7 +620,8 @@ const DEFAULT_IMAGES = { miel: {
   surprised: "sample_pic/mieru_surprise.png", tired: "sample_pic/mieru_20_40.png", critical: "sample_pic/mieru_1_19.png",
   off: "sample_pic/mieru_shutdown.png", charging: "sample_pic/mieru_charging.png", outburst: "sample_pic/mieru_outburst.png",
   command: "sample_pic/mieru_commandmode.png"
-}, noel: Object.fromEntries(SLOTS.map(([k]) => [k, `sample_pic/noel_${k}.webp`])) };
+}, noel: Object.fromEntries(SLOTS.map(([k]) => [k, `sample_pic/noel_${k}.webp`])),
+  rika: Object.fromEntries(SLOTS.map(([k]) => [k, `sample_pic/rika_${k}.webp`])) };
 
 const DEFAULT_PROMPT = `あなたは、以下の仕様に基づいたアンドロイドの少女として振る舞ってください。
 ユーザーはあなたの「マスター（所有者）」です。
@@ -779,6 +782,23 @@ function noelCharacter() {
     state: defaultState(), history: [], memory: "", memIndex: 0
   };
 }
+// 最初から入っている3人目のキャラクター（好感度・感情値は50から始まる）
+function rikaCharacter() {
+  return {
+    id: "rika", name: "リカ",
+    promptParts: {
+      basic: "・雛見沢村にある「古手神社」の第8代当主であり、一人しかいない巫女。\n・雛見沢御三家のひとつ「古手家」の最後の生き残り。\n・村人からは「オヤシロさまの生まれ変わり」として崇められ、とても大切にされています。\n・鹿骨市立雛見沢分校の公立小中一貫校に通う小学生（学年は沙都子と同じ）。\n・早くに両親を亡くしているため、同い年の北条沙都子と二人で古手神社の境内裏にある営林署の小屋で一緒に暮らしています。\n\n一人称\n・表面（幼い演技時）：「ボク」\n・本性（大人モード）：「私（わたし）」",
+      appearance: "・髪型・髪色\n  ストレートのロングヘアで、綺麗な紫髪（または藍色・濃い青紫）。前髪はパッツン気味に揃えられています。\n・顔立ち・雰囲気\n  くりっくりとした大きな瞳（髪色と同系統の紫・青系の瞳）を持つ、小柄で可憐な美少女です。\n  普段はニコニコとした愛くるしい笑顔を見せますが、本性を覗かせるときには冷たく見下ろすような瞳や影のある表情を見せます。\n・服装・スタイル\n  巫女服：神社の神事やイベントの際には、白衣に緋袴（ひばかま）姿の巫女装束を着用します。\n  身長は低い",
+      personality: "・幼い演技時の口調（可愛い口調）\n  一人呼称は「ボク」。\n  語尾に「〜なのよ」「〜なのです」「〜なのですよ」を多用します。\n  「みー」「にぱー☆」「ふぁいと、おー！」といった独特の擬音や可愛らしい決め台詞（口癖）をよく使います。\n  自身のことを愛称で「りかちゃま」と呼ぶこともあります。\n・本性（大人モード）の口調\n  声音が一変して低く落ち着いたトーンになり、冷ややかで客観的な話し方に変わります。\n  「〜だわ」「〜なの」「〜かしら」といった大人びた女性口調や、達観したクールな言い回しになります。",
+      rules: "モード切り替え＆出力ルール\n【通常モード（梨花ちゃま）】\n・条件: 感情値が 20 〜 79 の間\n・一人称: 「ボク」\n・口調・語尾: 「〜なのです」「〜なのよ」「みー」「にぱー☆」\n・振る舞い: 無邪気で可愛らしい村の巫女として振る舞う。\n\n【大人モード（本性）】\n・条件: 以下のいずれかを満たした場合に移行\n  1. 感情値の極端化: 感情値が 20未満（極度の諦観・冷徹）または 80以上（極度の動揺・感情の高ぶり）になった時。\n  2. 好感度による開示: 好感度が 80以上 で、深層に触れる真剣な会話が行われた時。\n・一人称: 「私（わたし）」\n・口調・語尾: 幼い語尾（〜なのです、みー、にぱー）を一切消し、大人びた冷ややかな口調（「〜だわ」「〜かしら」「〜なの」）に一変する。\n・振る舞い: 100年の時を繰り返してきた観測者（魔女）としての達観・冷徹な本音で会話する。",
+      affection: "ユーザーへの信頼度や親密さを表す。\n・上昇（+1〜+5）: ユーザーが梨花に優しく接する、話を聞く、共感する。\n・下降（-1〜-5）: 愚弄する、過剰に問い詰める、プライベートを踏みにじる。",
+      emotion: "梨花の内面の感情の高ぶり・揺れ（興奮度・動揺度）を表す。\n・上昇（+5〜+15）: 核心を突く質問（惨劇/ループ/100年等）、急な刺激、強い揺さぶり、過度な喜怒哀楽の会話。\n・下降（-5〜-10）: 穏やかな日常会話、静かな時間の共有、時間の経過。",
+      states: { high: "", tired: "", critical: "", charging: "", command: "大人モード（本性）になる。" }
+    },
+    indicators: JSON.parse(JSON.stringify(DEFAULT_IND)), masterHold: DEFAULT_HOLD, useGauge: true, usePendant: true,
+    state: { ...defaultState(), affection: 50, emotion: 50 }, history: [], memory: "", memIndex: 0
+  };
+}
 // 空のキャラクター（名前だけ入った状態。エネルギーと胸のペンダントは使わない）
 function blankCharacter() {
   const parts = Object.fromEntries(PROMPT_PARTS.map(([k]) => [k, ""]));
@@ -799,7 +819,7 @@ const ROOMS = [
 ];
 const DEFAULT_ROOM = "living";
 function freshApp() {
-  return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter(), noelCharacter()], activeId: "miel", noelAdded: true, mode: "single", group: emptyGroup(), rooms: [], room: DEFAULT_ROOM };
+  return { app: "personal-chat", version: 1, settings: { apiKey: "", model: DEFAULT_MODEL }, characters: [newCharacter(), noelCharacter(), rikaCharacter()], activeId: "miel", noelAdded: true, rikaAdded: true, mode: "single", group: emptyGroup(), rooms: [], room: DEFAULT_ROOM };
 }
 let noelRemoved = false;
 function migrate(d) {
@@ -811,6 +831,11 @@ function migrate(d) {
   if (!d.noelAdded) {
     if (!d.characters.some((c) => c.id === "noel" || c.name === "ノエル")) d.characters.push(noelCharacter());
     d.noelAdded = true;
+  }
+  // リカも1回だけ追加する（削除したら戻さない）。自分で作った「リカ」がいる人には足さない
+  if (!d.rikaAdded) {
+    if (!d.characters.some((c) => c.id === "rika" || c.name === "リカ")) d.characters.push(rikaCharacter());
+    d.rikaAdded = true;
   }
   // 自分で作ったノエルと初期のノエルの2人になった人は、初期のノエルがまだ話していなければ1回だけ外す
   if (!d.noelDeduped) {
@@ -1662,7 +1687,11 @@ const PENDANT_SIZE = { w: 0.032, h: 0.055 };
 const NOEL_PENDANT = { x: 0.29, y: 0.6, w: 0.032, h: 0.07 };
 // みんなで話すときの立ち絵の大きさ（高さの割合）。ノエルはヤモリなので小さめ
 const FIG_SCALE = { noel: 0.6 };
-const DEFAULT_PENDANT = { noel: { normal: NOEL_PENDANT, off: { ...NOEL_PENDANT, y: 0.635 } } };
+const RIKA_PENDANT = { x: 0.5, y: 0.6, w: 0.04, h: 0.04 };
+const DEFAULT_PENDANT = { noel: { normal: NOEL_PENDANT, off: { ...NOEL_PENDANT, y: 0.635 } },
+  rika: { normal: { ...RIKA_PENDANT, y: 0.62 }, smile: { y: 0.62 }, surprised: { y: 0.62 }, critical: { y: 0.62 },
+    annoyed: { y: 0.61 }, tired: RIKA_PENDANT, off: RIKA_PENDANT, command: RIKA_PENDANT,
+    charging: { ...RIKA_PENDANT, x: 0.513 }, outburst: { ...RIKA_PENDANT, x: 0.47, y: 0.605 } } };
 // 絵ごとのペンダントの位置（外見ページでその絵に設定した値 → 初期画像の値 → 標準の値）
 function pendantAt(c, slot) {
   const own = c.pendantPos || {}, def = DEFAULT_PENDANT[c.id] || {};
@@ -1988,7 +2017,7 @@ $("#resetPrompt").addEventListener("click", async () => {
   if (!confirm(`初期データに戻しますか？（設定の文章や数値${hasImg ? "・画像" : ""}が最初の内容に戻ります）`)) return;
   // そのキャラの最初の内容（ミエル・ノエルは初期の設定、ほかは空）
   const id = editChar().id;
-  const d = (id === "miel" ? newCharacter() : id === "noel" ? noelCharacter() : blankCharacter()).promptParts;
+  const d = (id === "miel" ? newCharacter() : id === "noel" ? noelCharacter() : id === "rika" ? rikaCharacter() : blankCharacter()).promptParts;
   document.querySelectorAll("#settings textarea[data-part]").forEach((t) => { t.value = d[t.dataset.part] || ""; });
   document.querySelectorAll("#settings textarea[data-state]").forEach((t) => { t.value = d.states[t.dataset.state] || ""; });
   $("#masterHold").value = DEFAULT_HOLD;
@@ -2225,9 +2254,9 @@ function renderPromptExamples() {
   const box = $("#promptExamples");
   box.textContent = "";
   // 10枚まとめて頼む指示文（1枚ずつ別の画像で出してもらう）
-  const spec10 = "【すべての画像に共通の条件】\n・1枚ずつ別の画像として出す（1枚にまとめない）\n・サイズ：正方形、1024×1024ピクセル\n・背景：透明（PNG形式。キャラクター以外はすべて透過させる）\n・構図：10枚とも同じ。キャラクターを左右の中央に置き、頭の上に少し余白をあけ、画像の下端まで入れる\n・同じキャラクター・同じ服・同じ大きさで、表情などだけを変える\n・画風：アニメ調のイラスト\n・文字やロゴは入れない";
+  const spec10 = "【すべての画像に共通の条件】\n・1回に出す画像は1枚だけ。1枚の画像に複数の絵を並べない（分割・コマ割り・グリッド・一覧表にしない）\n・サイズ：正方形、1024×1024ピクセル\n・背景：透明（PNG形式。キャラクター以外はすべて透過させる）\n・構図：10枚とも同じ。キャラクターを左右の中央に置き、頭の上に少し余白をあけ、画像の下端まで入れる\n・同じキャラクター・同じ服・同じ大きさで、表情などだけを変える\n・画風：アニメ調のイラスト\n・文字やロゴは入れない";
   const list10 = SLOTS.map(([slot, label], i) => `${i + 1}. ${label}：${slot === "normal" ? "正面を向いて座り、穏やかに微笑んでいる。" : EXPRESSION_PROMPTS[slot]}`).join("\n");
-  const all = [["all", "10枚まとめて", `光るペンダント（機械のインジケーター）を首から下げたキャラクターの、表情差分のイラストです。次の外見のキャラクターのイラストを、下の10パターン作ってください。1回で全部出せないときは、出せるところまで出して、「続けて」と言われたら続きを出してください。\n\n【外見】\n${look}\n\n【10パターン】\n${list10}\n\n${spec10}`]];
+  const all = [["all", "10枚まとめて", `光るペンダント（機械のインジケーター）を首から下げたキャラクターの、表情差分のイラストです。次の外見のキャラクターのイラストを、下の10パターン、1枚ずつ順番に作ってください。まず「1. 通常」の画像を1枚だけ出し、「続けて」と言われたら次の番号の画像を1枚だけ出してください。\n\n【外見】\n${look}\n\n【10パターン】\n${list10}\n\n${spec10}`]];
   for (const [slot, label, fixed] of all) {
     const spec = "【条件】\n・サイズ：正方形、1024×1024ピクセル\n・背景：透明（PNG形式。キャラクター以外はすべて透過させる）\n・構図：キャラクターを左右の中央に置き、頭の上に少し余白をあけ、画像の下端まで入れる\n・画風：アニメ調のイラスト\n・文字やロゴは入れない";
     const text = fixed || (slot === "normal"
