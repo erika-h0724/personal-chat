@@ -54,6 +54,15 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .group-pick{padding:0 4px}
 .group-pick label{display:flex;align-items:center;gap:8px;padding:6px 8px;min-height:40px}
 .group-pick .btns{margin:8px}
+.gp-h{display:flex;align-items:center;font-size:.95rem;margin:12px 8px 2px;color:var(--ink)}
+.gp-h #pickGroupRoom{margin-left:10px;font-size:.8rem;font-weight:700;color:var(--denim);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:2px 12px;min-height:28px}
+.gp-h #pickGroupRoom[hidden],.gp-place[hidden]{display:none}
+.gp-place{display:flex;align-items:center;gap:8px;width:calc(100% - 8px);margin:2px 4px;padding:4px;min-width:0;border:none;border-radius:10px;background:none;color:var(--ink);text-align:left}
+.gp-place:hover{background:var(--surface-2)}
+.gp-thumb{flex:none;width:48px;height:36px;border-radius:6px;border:1px solid var(--line);background:var(--surface-2) center/cover no-repeat}
+.gp-room{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btns button:disabled{opacity:.45}
+#startGroup{margin-left:auto;font-size:.85rem;font-weight:700;color:var(--surface);background:var(--denim);border-color:var(--denim)}
 .group-pick .hint,.group-pick .err{margin:4px 8px}
 /* 部屋をえらぶ */
 .room-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0 4px;max-height:60dvh;overflow-y:auto}
@@ -73,7 +82,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .icon-btn{width:40px;height:40px;display:grid;place-items:center;padding:0;border:none;border-radius:50%;background:none;color:var(--muted)}
 .icon-btn:hover{background:var(--surface-2);color:var(--ink)}
 .icon-btn[hidden]{display:none}
-#updateBtn{color:var(--denim)}
+#updateBtn{color:var(--ind-orange)}
 
 .stage{position:relative;padding:0 12px 10px;border-bottom:1px solid var(--line)}
 .portrait{position:relative;width:100%;height:min(50vh,696px);border-radius:14px;overflow:hidden;background:var(--surface-2) center/cover no-repeat;transition:height .2s}
@@ -180,12 +189,16 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
 .dlg-nav button[aria-current="page"]{background:var(--surface-2);font-weight:700}
 .dlg-nav button.sub{padding-left:28px;font-size:.92rem}
 .dlg-nav button[hidden]{display:none!important}
+.dlg-nav .del-char{margin-top:auto;color:var(--check);font-weight:700}
+.dlg-nav .del-char:disabled{opacity:.4}
 .dlg-body{flex:1;min-width:0}
 .back{display:none}
 @media (max-width:600px){
   .dlg-nav{width:100%;border-right:none;padding:4px 12px;gap:0}
   .dlg-nav button{display:flex;justify-content:space-between;align-items:center;border-radius:0;border-bottom:1px solid var(--line);padding:14px 4px}
   .dlg-nav button::after{content:"›";color:var(--muted);font-size:1.2rem}
+  .dlg-nav .del-char{margin-top:16px}
+  .dlg-nav .del-char::after{content:none}
   .dlg-nav button[aria-current="page"]{background:none;font-weight:400}
   .dlg:not(.on-page) .dlg-body{display:none}
   .dlg.on-page .dlg-nav{display:none}
@@ -204,6 +217,9 @@ dialog::backdrop{background:rgba(10,16,24,.5)}
 .dlg-body label.unused{opacity:.4}
 .hint{margin:4px 0;font-size:.8rem;color:var(--muted)}
 .dlg-body h4.sub{margin:16px 0 0;font-size:.9rem}
+.dlg-body h4.sub-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.reset-img{flex:none;padding:2px 0;border:none;background:none;color:var(--check);font-size:.7rem;font-weight:400}
+.reset-img[hidden]{display:none}
 .state-head{display:block}
 .ind-sel{display:flex;flex-wrap:wrap;gap:4px 12px;margin:4px 0}
 .ind-sel select{font:inherit;padding:2px 6px;margin-left:4px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
@@ -322,7 +338,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
       </div>
     </div>
     <div class="gs" id="groupStatus" hidden></div>
-    <button id="updateBtn" class="icon-btn" aria-label="新しい版があります（押すと更新）" title="新しい版があります（押すと更新）" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg></button>
+    <button id="updateBtn" class="icon-btn" aria-label="新しい版があります（押すと更新）" title="新しい版があります（押すと更新）" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10.5l5 5 5-5"/><path d="M3 15v3.5A2.5 2.5 0 0 0 5.5 21h13a2.5 2.5 0 0 0 2.5-2.5V15"/></svg></button>
     <button id="toggleArt" class="icon-btn" aria-label="イラストを隠す" title="顔をみたくない" aria-pressed="false"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16" hidden/></svg></button>
     <button id="openSettings" class="icon-btn" aria-label="設定"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   </header>
@@ -362,6 +378,7 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
       <button data-go="detail" data-scope="char" class="sub">詳細設定</button>
       <button data-go="api" data-scope="app">Gemini API</button>
       <button data-go="data" data-scope="app">データ</button>
+      <button id="deleteChar" class="del-char" data-scope="char" title="このキャラクターを削除します" aria-label="このキャラクターを削除します">さようなら</button>
     </nav>
     <div class="dlg-body">
       <section data-page="api">
@@ -389,7 +406,6 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
         <div class="btns"><button id="resetPrompt">プロンプトを最初の内容に戻す</button></div>
         <label class="check"><input type="checkbox" id="useGauge"> エネルギー・好感度・感情値を使う</label>
         <label class="check"><input type="checkbox" id="usePendant"> 胸のペンダント（マスター登録・マスターモード）を使う</label>
-        <div class="btns"><button id="deleteChar" class="danger">このキャラクターを削除</button></div>
       </section>
       <section data-page="detail">
         <div id="rulesPart"></div>
@@ -412,21 +428,23 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
       </section>
       <section data-page="images">
         <div id="appearancePart"></div>
-        <h4 class="sub">画像</h4>
-        <p class="hint">枠をタップして画像を選びます。画像はこの端末のブラウザにだけ保存され、AIには送られません。<span id="mielImgHint">最初からミエルの画像が入っています。</span>登録していない枠は「通常」の画像で代わりに表示します。</p>
+        <h4 class="sub sub-row">画像<button id="resetImages" class="reset-img">画像を最初の状態に戻す</button></h4>
+        <p class="hint">枠をタップして画像を選びます。画像はこの端末のブラウザにだけ保存され、AIには送られません。登録していない枠は「通常」の画像で代わりに表示します。</p>
         <div class="slots" id="slots"></div>
-        <div class="btns"><button id="resetImages">画像を最初の状態に戻す</button></div>
-        <h4 class="sub">AI生成（お試し）</h4>
+        <h4 class="sub">AIで画像を作る</h4>
+        <div class="btns"><button id="makePrompts">AI指示文作成</button></div>
+        <div id="promptHelp" hidden>
+        <p class="hint">ChatGPT や Gemini のサイトに貼り付けて使う指示文です（背景の透明化・画像サイズ・構図を入れてあります）。10枚まとめて頼めます。できた画像は、それぞれの枠をタップして入れてください。</p>
+        <div id="promptExamples"></div>
+        </div>
+        <details class="help" id="aiGen">
+        <summary>AI生成（お試し）</summary>
         <p class="hint">各枠の名前の右の「AI生成」で、Geminiで画像を作ります。「通常」は上の「外見」の欄から、ほかの枠は「通常」の画像をもとに作ります（「通常」が入るまでは押せません）。</p>
         <p class="hint">※AI生成は、GeminiのAPIの有料プランが必要です。無料のAPIキーでは画像を作れる回数が0回のため、「429」のエラーになります。使うには Google AI Studio でAPIキーに請求先（支払い方法）を設定してください。Gemini アプリの有料プランとは別の支払いです。無料で作りたいときは、ChatGPT や Gemini のサイトで画像を作って、枠に入れてください。</p>
         <label>画像生成AIモデル<select id="imageModel"></select></label>
         <p class="hint" id="imageModelHint"></p>
         <p class="hint" id="genStatus" aria-live="polite"></p>
-        <div class="btns"><button id="makePrompts">AI指示文作成</button></div>
-        <div id="promptHelp" hidden>
-        <p class="hint">ChatGPT や Gemini のサイトに貼り付けて使う指示文です（背景の透明化・画像サイズ・構図を入れてあります）。一番上の「10枚まとめて」で一度に頼めます。うまくいかないときは、まず「通常」を作り、ほかの枠はできた「通常」の画像を添付して頼むと、同じキャラのまま作れます。できた画像は枠をタップして入れてください。</p>
-        <div id="promptExamples"></div>
-        </div>
+        </details>
       </section>
       <section data-page="data">
         <h4 class="sub">バックアップ</h4>
@@ -489,13 +507,17 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
   <div class="char-menu">
     <h2>みんなで話す（4人まで）</h2>
     <div class="group-pick">
+      <h3 class="gp-h">参加メンバー</h3>
       <div id="groupList"></div>
       <p class="err" id="groupErr" hidden></p>
+      <h3 class="gp-h">場所<button id="pickGroupRoom">選択</button></h3>
+      <button class="gp-place" id="groupPlace" aria-label="場所を選び直す" hidden>
+        <span class="gp-thumb" id="groupRoomThumb"></span>
+        <span class="gp-room" id="groupRoomName"></span>
+      </button>
       <div class="btns">
         <button id="startGroup">この顔ぶれで話す</button>
-        <button class="pick-room">部屋をえらぶ</button>
       </div>
-      <p class="hint">背景を透過したPNGの立ち絵は、部屋の上に並びます。背景つきの絵はそのまま枠に収まります。</p>
     </div>
   </div>
 </dialog>
@@ -533,7 +555,13 @@ dialog.small{width:min(360px,calc(100vw - 32px))}
 <!-- 更新のお知らせに出す変更内容。変更を公開するたびに先頭へ1行足す（新しい順） -->
 <script type="application/json" id="changelog">[
   {"date": "2026-10-13", "text": "画像を作るモデルを、使えるものから選ぶ形にしました"},
-  {"date": "2026-10-13", "text": "外見のページに「AI指示文作成」ボタンを付けました（ChatGPTなどで画像を作るための指示文を、10枚まとめて・枠ごとにコピーできます）"},
+  {"date": "2026-10-13", "text": "外見のページのアプリからのAI生成は、一番下の開閉式「AI生成（お試し）」にまとめました（開いているときだけ枠に「AI生成」が出ます）"},
+  {"date": "2026-10-13", "text": "外見のページで画像の枠が増えてしまう不具合を直しました"},
+  {"date": "2026-10-13", "text": "更新アイコンを、オレンジの下向き矢印に変えました"},
+  {"date": "2026-10-13", "text": "「みんなで話す」で、参加メンバーと場所（部屋）を選んでから始めるようにしました"},
+  {"date": "2026-10-13", "text": "外見のページの「画像を最初の状態に戻す」を、「画像」の見出しの右に小さく置きました"},
+  {"date": "2026-10-13", "text": "キャラクターの削除を、設定の左メニューの一番下の「さようなら」に移しました"},
+  {"date": "2026-10-13", "text": "外見のページに「AI指示文作成」ボタンを付けました（ChatGPTなどで10枚まとめて画像を作るための指示文をコピーできます）"},
   {"date": "2026-10-13", "text": "外見の画像の枠ごとに「AI生成」ボタンを付けました（「通常」が入ると、ほかの枠も作れます）"},
   {"date": "2026-10-13", "text": "1人の会話に戻ったとき、ほかのキャラのゲージが残らないようにしました"},
   {"date": "2026-10-13", "text": "「部屋をえらぶ」で背景の部屋を選べるようになりました（9部屋＋自分で追加）。1人と話すときも部屋が後ろに出ます"},
@@ -1732,7 +1760,7 @@ function showPage(name) {
   $("#dlgTitle").textContent = narrowDlg() && name ? PAGE_TITLES[name] : dlgName();
   $(".dlg-body").scrollTop = 0;
 }
-document.querySelectorAll(".dlg-nav button").forEach((b) => b.addEventListener("click", () => { showPage(b.dataset.go); if (b.dataset.go === "images") loadImageModels(); }));
+document.querySelectorAll(".dlg-nav button[data-go]").forEach((b) => b.addEventListener("click", () => { showPage(b.dataset.go); }));
 // 画像モデルは選択式。APIキーで使える画像生成AIモデルを Gemini に1回だけ問い合わせて選択肢にする
 let imageModelList = null;
 function setImageModels(list, hint = "", found = false) {
@@ -1845,8 +1873,7 @@ function openSettings(id = null) {
   document.querySelectorAll(".dlg-nav button").forEach((b) => { b.hidden = b.dataset.scope !== (editId ? "char" : "app"); });
   if (editId) $('.dlg-nav [data-go="master"]').hidden = !pendantOn(c);
   $("#deleteChar").disabled = app.characters.length <= 1;
-  $("#mielImgHint").hidden = $("#resetImages").hidden = !DEFAULT_IMAGES[c.id];
-  $("#mielImgHint").textContent = `最初から${c.name}の画像が入っています。`;
+  $("#resetImages").hidden = !DEFAULT_IMAGES[c.id];
   $("#copyFromBox").hidden = !editId || editId !== newCharId;
   $("#copyFromList").hidden = true;
   renderSlots();
@@ -1952,12 +1979,20 @@ $("#resetPrompt").addEventListener("click", () => {
 });
 
 let pickingSlot = null;
+// 何度も続けて呼ばれても枠が重ならないよう、画像を全部読んでから最新の1回だけで作り直す
+let slotsSeq = 0;
+// アプリからのAI生成は、外見ページの一番下の「AI生成（お試し）」を開いているあいだだけ、枠ごとの「AI生成」ボタンを出す
+const AI_GEN = () => $("#aiGen").open;
 async function renderSlots() {
+  const seq = ++slotsSeq;
+  const urls = {};
+  for (const [slot] of SLOTS) urls[slot] = await slotUrl(slot, editChar());
+  if (seq !== slotsSeq) return;
   const box = $("#slots");
   box.textContent = "";
-  const hasNormal = !!(await slotUrl("normal", editChar()));
+  const hasNormal = !!urls.normal;
   for (const [slot, label] of SLOTS) {
-    const url = await slotUrl(slot, editChar());
+    const url = urls[slot];
     const wrap = document.createElement("div");
     wrap.className = "slot";
     const btn = document.createElement("button");
@@ -1977,7 +2012,8 @@ async function renderSlots() {
     ai.setAttribute("aria-label", `${label}の画像をAIで作る`);
     ai.disabled = generating || (slot !== "normal" && !hasNormal);
     ai.addEventListener("click", () => genSlot(slot, label, !!url));
-    name.append(nt, ai);
+    name.append(nt);
+    if (AI_GEN()) name.append(ai);
     const tw = document.createElement("div");
     tw.className = "thumb-wrap";
     tw.appendChild(btn);
@@ -2163,7 +2199,6 @@ function renderPromptExamples() {
   const spec10 = "【すべての画像に共通の条件】\n・1枚ずつ別の画像として出す（1枚にまとめない）\n・サイズ：正方形、1024×1024ピクセル\n・背景：透明（PNG形式。キャラクター以外はすべて透過させる）\n・構図：10枚とも同じ。キャラクターを左右の中央に置き、頭の上に少し余白をあけ、画像の下端まで入れる\n・同じキャラクター・同じ服・同じ大きさで、表情などだけを変える\n・画風：アニメ調のイラスト\n・文字やロゴは入れない";
   const list10 = SLOTS.map(([slot, label], i) => `${i + 1}. ${label}：${slot === "normal" ? "正面を向いて座り、穏やかに微笑んでいる。" : EXPRESSION_PROMPTS[slot]}`).join("\n");
   const all = [["all", "10枚まとめて", `次の外見のキャラクターのイラストを、下の10パターン作ってください。1回で全部出せないときは、出せるところまで出して、「続けて」と言われたら続きを出してください。\n\n【外見】\n${look}\n\n【10パターン】\n${list10}\n\n${spec10}`]];
-  for (const [slot, label] of SLOTS) all.push([slot, label]);
   for (const [slot, label, fixed] of all) {
     const spec = "【条件】\n・サイズ：正方形、1024×1024ピクセル\n・背景：透明（PNG形式。キャラクター以外はすべて透過させる）\n・構図：キャラクターを左右の中央に置き、頭の上に少し余白をあけ、画像の下端まで入れる\n・画風：アニメ調のイラスト\n・文字やロゴは入れない";
     const text = fixed || (slot === "normal"
@@ -2189,6 +2224,7 @@ function renderPromptExamples() {
     box.appendChild(d);
   }
 }
+$("#aiGen").addEventListener("toggle", () => { if ($("#aiGen").open) loadImageModels(); renderSlots(); });
 $("#makePrompts").addEventListener("click", () => { renderPromptExamples(); $("#promptHelp").hidden = false; });
 
 /* ---------- 初期画像 ---------- */
@@ -2356,24 +2392,54 @@ function openGroupMenu() {
     gl.appendChild(l);
   }
   groupErr("");
+  groupRoom = null;
+  showGroupRoom();
   groupMenu.showModal();
 }
+// みんなで話すの場所（「この顔ぶれで話す」で部屋に反映する）。null は未選択
+let groupRoom = null;
+const roomName = (id) => (id === "" ? "部屋なし" : (ROOMS.find(([k]) => k === id) || app.rooms.map((r) => [r.id, r.name]).find(([k]) => k === id) || [])[1]);
+async function showGroupRoom() {
+  const name = groupRoom === null ? undefined : roomName(groupRoom);
+  if (!name) groupRoom = null;
+  $("#groupRoomName").textContent = name || "";
+  // 選んだら「選択」は消し、表示した部屋をタップで選び直す
+  $("#pickGroupRoom").hidden = groupRoom !== null;
+  $("#groupPlace").hidden = groupRoom === null;
+  const u = groupRoom ? await roomUrl(groupRoom) : null;
+  $("#groupRoomThumb").style.backgroundImage = u ? `url("${u}")` : "";
+  checkGroupStart();
+}
+function checkGroupStart() {
+  const n = $("#groupList").querySelectorAll("input:checked").length;
+  $("#startGroup").disabled = n < 2 || groupRoom === null;
+}
+$("#groupList").addEventListener("change", checkGroupStart);
+const pickGroupRoom = () => openRoomMenu((id) => { groupRoom = id; showGroupRoom(); });
+$("#pickGroupRoom").addEventListener("click", pickGroupRoom);
+$("#groupPlace").addEventListener("click", pickGroupRoom);
 function groupErr(t) { $("#groupErr").textContent = t; $("#groupErr").hidden = !t; }
 $("#startGroup").addEventListener("click", () => {
   const ids = [...$("#groupList").querySelectorAll("input:checked")].map((x) => x.value);
   if (ids.length < 2) return groupErr("2人以上選んでください");
   if (ids.length > GROUP_MAX) return groupErr(`${GROUP_MAX}人まで選べます`);
+  if (groupRoom === null) return;
+  app.room = groupRoom;
   groupMenu.close();
   startGroup(ids);
 });
 const roomMenu = $("#roomMenu");
-async function openRoomMenu() {
+// onPick を渡すと、部屋を選んだときに今の部屋は変えず onPick に渡す（みんなで話すの場所選び）
+let roomPick = null;
+async function openRoomMenu(onPick) {
+  if (onPick !== undefined) roomPick = typeof onPick === "function" ? onPick : null;
+  const cur = roomPick ? groupRoom : app.room;
   const list = $("#roomList");
   list.textContent = "";
   const all = [["", "部屋なし"], ...ROOMS, ...app.rooms.map((r) => [r.id, r.name])];
   for (const [id, name] of all) {
     const w = document.createElement("div");
-    w.className = `room${id === app.room ? " on" : ""}`;
+    w.className = `room${id === cur ? " on" : ""}`;
     const b = document.createElement("button");
     const th = document.createElement("span");
     th.className = "thumb";
@@ -2384,7 +2450,11 @@ async function openRoomMenu() {
     nm.className = "rname";
     nm.textContent = name;
     b.append(th, nm);
-    b.addEventListener("click", () => { app.room = id; save(); roomMenu.close(); renderStage(); });
+    b.addEventListener("click", () => {
+      roomMenu.close();
+      if (roomPick) return roomPick(id);
+      app.room = id; save(); renderStage();
+    });
     w.appendChild(b);
     if (app.rooms.some((r) => r.id === id)) {
       const x = document.createElement("button");
@@ -2397,6 +2467,7 @@ async function openRoomMenu() {
         dropCache(roomKey(id));
         app.rooms = app.rooms.filter((r) => r.id !== id);
         if (app.room === id) app.room = DEFAULT_ROOM;
+        if (groupRoom === id) { groupRoom = DEFAULT_ROOM; showGroupRoom(); }
         save();
         renderStage();
         openRoomMenu();
@@ -2409,8 +2480,7 @@ async function openRoomMenu() {
 }
 document.querySelectorAll(".pick-room").forEach((b) => b.addEventListener("click", () => {
   charMenu.close();
-  groupMenu.close();
-  openRoomMenu();
+  openRoomMenu(null);
 }));
 $("#addRoom").addEventListener("click", () => $("#bgInput").click());
 $("#bgInput").addEventListener("change", async (e) => {
@@ -2423,7 +2493,8 @@ $("#bgInput").addEventListener("change", async (e) => {
     let n = app.rooms.length + 1;
     while (app.rooms.some((r) => r.name === `追加した部屋${n}`)) n++;
     app.rooms.push({ id, name: `追加した部屋${n}` });
-    app.room = id;
+    if (roomPick) { groupRoom = id; showGroupRoom(); }
+    else app.room = id;
     save();
     renderStage();
     openRoomMenu();
